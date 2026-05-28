@@ -13,6 +13,16 @@ const router = createRouter({
       name: 'workspace',
       component: () => import('@/views/WorkspaceView.vue'),
     },
+    {
+      path: '/preview',
+      name: 'preview',
+      component: () => import('@/views/PreviewView.vue'),
+    },
+    {
+      path: '/preview/:id',
+      name: 'preview-shared',
+      component: () => import('@/views/PreviewView.vue'),
+    },
   ],
 })
 
