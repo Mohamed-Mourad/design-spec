@@ -22,6 +22,8 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   const schema = ref<DesignSystemSchema>(loadFromStorage())
   const activeEditorTab = ref<string>('colors')
   const activePreviewFile = ref<string>('DESIGN.md')
+  // Viewport for responsive preview + blueprint editor — kept in sync
+  const activeViewport = ref<'mobile' | 'tablet' | 'desktop' | 'fit'>('desktop')
 
   // ── Undo/redo ──
   const historyStack = ref<string[]>([JSON.stringify(schema.value)])
@@ -128,6 +130,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     schema,
     activeEditorTab,
     activePreviewFile,
+    activeViewport,
     canUndo,
     canRedo,
     // compiled

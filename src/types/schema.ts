@@ -13,7 +13,7 @@ export interface TypographyToken {
   textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
 }
 
-export interface ComponentTokenGroup {
+export type ResponsiveTokenGroup = {
   backgroundColor?: ColorValue | TokenRef
   textColor?: ColorValue | TokenRef
   typography?: TokenRef
@@ -28,6 +28,12 @@ export interface ComponentTokenGroup {
   height?: DimensionValue
   width?: DimensionValue
   [key: string]: unknown
+}
+
+export interface ComponentTokenGroup extends ResponsiveTokenGroup {
+  // Breakpoint overrides — keyed by breakpoint name from schema.breakpoints
+  // Mobile-first: base = mobile defaults, overrides are additive
+  responsive?: Record<string, ResponsiveTokenGroup>
 }
 
 export interface PropDefinition {
@@ -48,6 +54,13 @@ export interface ComponentExample {
   }
 }
 
+export interface ResponsiveBlueprintBreakpoint {
+  tokens?: ResponsiveTokenGroup
+  layout?: string        // prose: "collapses to hamburger", "stacks vertically"
+  visibleAt?: boolean    // false = component hidden at this breakpoint
+  notes?: string
+}
+
 export interface ComponentBlueprint {
   name: string
   description: string
@@ -63,6 +76,8 @@ export interface ComponentBlueprint {
     dos: string[]
     donts: string[]
   }
+  // Responsive layout/anatomy overrides per breakpoint
+  responsive?: Record<string, ResponsiveBlueprintBreakpoint>
 }
 
 export interface DesignSystemSchema {
