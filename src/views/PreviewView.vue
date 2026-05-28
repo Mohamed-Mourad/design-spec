@@ -1,11 +1,10 @@
 <script setup lang="ts">
 // Phase 5: BentoPreview renders here
 // Route params: /preview (current schema) | /preview/:id (Pro short URL) | /preview#hash (free share)
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 
-const route = useRoute()
 const router = useRouter()
 const store = useDesignSystemStore()
 const { schema } = storeToRefs(store)

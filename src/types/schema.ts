@@ -1,4 +1,4 @@
-export type ColorValue = `#${string}`
+export type ColorValue = `#${string}` | 'transparent' | 'currentColor' | 'inherit'
 export type DimensionValue = string
 export type TokenRef = `{${string}}`
 
