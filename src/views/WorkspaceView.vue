@@ -5,6 +5,7 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import LeftPanel from '@/components/layout/LeftPanel.vue'
 import CenterPanel from '@/components/layout/CenterPanel.vue'
 import RightPanel from '@/components/layout/RightPanel.vue'
+import ErrorBoundary from '@/components/shared/ErrorBoundary.vue'
 
 const store = useDesignSystemStore()
 
@@ -27,9 +28,9 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
   <div class="workspace">
     <AppHeader />
     <div class="workspace__body">
-      <LeftPanel />
-      <CenterPanel />
-      <RightPanel />
+      <ErrorBoundary><LeftPanel /></ErrorBoundary>
+      <ErrorBoundary><CenterPanel /></ErrorBoundary>
+      <ErrorBoundary><RightPanel /></ErrorBoundary>
     </div>
   </div>
 </template>

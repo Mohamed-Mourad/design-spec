@@ -6,13 +6,20 @@ import { defaultSchema } from '@/defaults/schema'
 
 const STORAGE_KEY = 'dsa-schema-v1'
 const HISTORY_LIMIT = 50
+const TRACE_LIMIT = 100
+
+export interface ActionEntry {
+  ts: number
+  action: string
+  args: unknown[]
+}
 
 function loadFromStorage(): DesignSystemSchema {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw) as DesignSystemSchema
   } catch {
-    // ignore
+    // ignore corrupt storage
   }
   return structuredClone(defaultSchema)
 }
@@ -22,8 +29,15 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   const schema = ref<DesignSystemSchema>(loadFromStorage())
   const activeEditorTab = ref<string>('colors')
   const activePreviewFile = ref<string>('DESIGN.md')
-  // Viewport for responsive preview + blueprint editor — kept in sync
   const activeViewport = ref<'mobile' | 'tablet' | 'desktop' | 'fit'>('desktop')
+
+  // ── Action trace (rolling 100 entries — attached to error reports) ──
+  const actionTrace = ref<ActionEntry[]>([])
+
+  function logAction(action: string, args: unknown[]) {
+    actionTrace.value.push({ ts: Date.now(), action, args })
+    if (actionTrace.value.length > TRACE_LIMIT) actionTrace.value.shift()
+  }
 
   // ── Undo/redo ──
   const historyStack = ref<string[]>([JSON.stringify(schema.value)])
@@ -44,24 +58,24 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
 
   function undo() {
     if (!canUndo.value) return
+    logAction('undo', [])
     historyIndex.value--
     schema.value = JSON.parse(historyStack.value[historyIndex.value]) as DesignSystemSchema
   }
 
   function redo() {
     if (!canRedo.value) return
+    logAction('redo', [])
     historyIndex.value++
     schema.value = JSON.parse(historyStack.value[historyIndex.value]) as DesignSystemSchema
   }
 
   // ── Compiled outputs (stubs — compilers implemented in later phases) ──
   const designMd = computed<string>(() => {
-    // Phase 1: real DESIGN.md compiler
     return `<!-- DESIGN.md for ${schema.value.name} — compiler coming in Phase 1 -->`
   })
 
   const skillMd = computed<string>(() => {
-    // Phase 3: real SKILL.md compiler
     return `<!-- SKILL.md for ${schema.value.name} — compiler coming in Phase 3 -->`
   })
 
@@ -77,6 +91,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
 
   // ── Actions ──
   function updateToken(group: keyof DesignSystemSchema, key: string, value: unknown) {
+    logAction('updateToken', [group, key])
     const target = schema.value[group]
     if (target !== null && typeof target === 'object' && !Array.isArray(target)) {
       ;(target as Record<string, unknown>)[key] = value
@@ -85,6 +100,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   }
 
   function addToken(group: keyof DesignSystemSchema, key: string, value: unknown) {
+    logAction('addToken', [group, key])
     const target = schema.value[group]
     if (target !== null && typeof target === 'object' && !Array.isArray(target)) {
       ;(target as Record<string, unknown>)[key] = value
@@ -93,6 +109,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   }
 
   function removeToken(group: keyof DesignSystemSchema, key: string) {
+    logAction('removeToken', [group, key])
     const target = schema.value[group]
     if (target !== null && typeof target === 'object' && !Array.isArray(target)) {
       delete (target as Record<string, unknown>)[key]
@@ -101,43 +118,46 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   }
 
   function updateMeta(updates: Partial<Pick<DesignSystemSchema, 'name' | 'description'>>) {
+    logAction('updateMeta', [Object.keys(updates)])
     Object.assign(schema.value, updates)
     snapshot()
   }
 
   function updateFrameworks(frameworks: Framework[]) {
+    logAction('updateFrameworks', [frameworks])
     schema.value.export.frameworks = frameworks
   }
 
   function loadPreset(preset: DesignSystemSchema) {
+    logAction('loadPreset', [preset.name])
     schema.value = structuredClone(preset)
     historyStack.value = [JSON.stringify(schema.value)]
     historyIndex.value = 0
   }
 
   function importFromJson(raw: string) {
+    logAction('importFromJson', [])
     const parsed = JSON.parse(raw) as DesignSystemSchema
     schema.value = parsed
     snapshot()
   }
 
   function reset() {
+    logAction('reset', [])
     loadPreset(defaultSchema)
   }
 
   return {
-    // state
     schema,
     activeEditorTab,
     activePreviewFile,
     activeViewport,
+    actionTrace,
     canUndo,
     canRedo,
-    // compiled
     designMd,
     skillMd,
     outputFiles,
-    // actions
     updateToken,
     addToken,
     removeToken,
