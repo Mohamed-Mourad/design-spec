@@ -98,8 +98,8 @@ export function registerWatch(program: Command): void {
         ui.json({ ok: true, watching: 'design-spec.schema.json' })
         ui.splash(
           splashContext(cwd, {
-            tip: 'Watching design-spec.schema.json — recompiles on every save. Press Ctrl+C to stop.',
-            status: 'Watching for changes…',
+            tip: 'Recompiles design-spec.schema.json on every save · Press Ctrl+C to stop.',
+            status: `${schema.name} · ${schema.export.frameworks.join(', ')}`,
           }),
         )
 

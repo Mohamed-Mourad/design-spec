@@ -92,8 +92,8 @@ export function registerInit(program: Command): void {
 
         ui.splash(
           splashContext(root, {
-            tip: 'Setting up — detecting your stack and generating your design system.',
-            status: 'Local-first · no account needed.',
+            tip: 'Generating your design system · local-first, no account needed.',
+            status: 'Detecting framework, synthesizing tokens, compiling output…',
           }),
         )
 

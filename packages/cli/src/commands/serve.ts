@@ -84,8 +84,8 @@ export function registerServe(program: Command): void {
         if (process.stderr.isTTY) {
           ui.splash(
             splashContext(cwd, {
-              tip: 'MCP server ready on stdio — serving scoped token context to your AI agent. Press Ctrl+C to stop.',
-              status: 'Connected · reloads on schema change.',
+              tip: 'MCP server ready on stdio · Press Ctrl+C to stop.',
+              status: `${current.name} · tools: get_component_tokens, get_layout_system, get_semantic_colors`,
             }),
             { stderr: true },
           )
