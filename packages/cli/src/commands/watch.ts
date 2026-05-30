@@ -98,7 +98,7 @@ export function registerWatch(program: Command): void {
 
         const sp = ui.spinner('Watching design-spec.schema.json — press Ctrl+C to stop')
         const handle = await startWatch(cwd, {
-          onRecompileStart: () => sp.setText('Recompiling…'),
+          onRecompileStart: () => sp.begin('Recompiling…'),
           onError: (m) => sp.fail(m),
         })
         handle.onCompiled((files, ms) => sp.done(`recompiled ${files.length} file(s) in ${ms}ms`))

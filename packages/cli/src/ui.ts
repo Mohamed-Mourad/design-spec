@@ -206,48 +206,59 @@ export async function spin<T>(label: string, fn: () => Promise<T>): Promise<T> {
 }
 
 /**
- * A long-lived spinner for terminal-resident commands (e.g. `watch`). The glyph
- * animates (ora's braille frames) in an interactive TTY; in json/non-TTY/CI it
- * degrades to plain one-shot log lines so piped output and CI logs never hang
- * on an animation that doesn't terminate.
+ * A status handle for terminal-resident commands (e.g. `watch`). The idle line
+ * is printed once and stays STATIC — we do not animate while idle, because a
+ * perpetually redrawing spinner flickers (badly on Windows conhost) and signals
+ * no real work. A spinner runs only while a unit of work is active (`begin` →
+ * `done`/`fail`); sub-100ms work just prints the result line. In
+ * json/non-TTY/CI it degrades to plain one-shot logs.
  */
 export interface Spinner {
-  /** Change the live status text (the spinning line). */
-  setText(text: string): void
-  /** Persist a completed line (✓ + text), then resume the idle spinner. */
+  /** Start animating a unit of work (no-op if already animating). */
+  begin(text: string): void
+  /** Persist a completed line (✓ + text) and stop animating. */
   done(text: string): void
-  /** Persist a failure line (✗ + text), then resume the idle spinner. */
+  /** Persist a failure line (✗ + text) and stop animating. */
   fail(text: string): void
-  /** Stop and clear the spinner. */
+  /** Stop and clear any active spinner. */
   stop(): void
 }
 
 export function spinner(idleText: string): Spinner {
+  // Print the idle line once (static) in every mode that shows output.
+  if (!state.json && !state.quiet) info(idleText)
+
   if (state.json || state.quiet || !state.interactive) {
-    // Static fallback: announce once, then log persisted lines as they come.
-    if (!state.json && !state.quiet) info(idleText)
     return {
-      setText: () => {},
+      begin: () => {},
       done: (t) => success(t),
       fail: (t) => error(t),
       stop: () => {},
     }
   }
-  const idle = idleText
-  const sp = ora({ text: idle, stream: process.stderr }).start()
+
+  let sp: Ora | null = null
   return {
-    setText: (t) => {
-      sp.text = t
+    begin: (t) => {
+      if (!sp) sp = ora({ stream: process.stderr })
+      sp.start(t)
     },
     done: (t) => {
-      sp.stopAndPersist({ symbol: c.green(SYMBOLS.success), text: t })
-      sp.start(idle)
+      if (sp) {
+        sp.stopAndPersist({ symbol: c.green(SYMBOLS.success), text: t })
+        sp = null
+      } else success(t)
     },
     fail: (t) => {
-      sp.stopAndPersist({ symbol: c.red(SYMBOLS.error), text: t })
-      sp.start(idle)
+      if (sp) {
+        sp.stopAndPersist({ symbol: c.red(SYMBOLS.error), text: t })
+        sp = null
+      } else error(t)
     },
-    stop: () => sp.stop(),
+    stop: () => {
+      sp?.stop()
+      sp = null
+    },
   }
 }
 
