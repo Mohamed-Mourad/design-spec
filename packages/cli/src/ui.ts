@@ -61,12 +61,23 @@ export function uiMode(): Readonly<UiState> {
   return state
 }
 
+// Status glyphs. Several of these characters have a color-emoji presentation
+// variant that terminal fonts render as a full-color emoji (the pink ✗, the
+// blue ℹ box) — which looks unprofessional and inconsistent. We force the
+// monochrome TEXT presentation with U+FE0E, and prefer glyphs that default to
+// text (✓ U+2713 / ✗ U+2717) over the emoji-prone heavy variants (✔/✖). Color
+// is applied separately via picocolors, so these stay crisp single-tone marks.
+// (A terminal is a text grid — raster icons/SVGs can't render portably here.)
+// U+FE0E = variation selector-15: forces the preceding glyph to its monochrome
+// text presentation instead of a color emoji. Built via escape (not a literal,
+// which is invisible/uneditable in source).
+const VS_TEXT = String.fromCodePoint(0xfe0e)
 const SYMBOLS = {
-  info: 'ℹ',
-  success: '✔',
-  warning: '⚠',
-  error: '✖',
-  arrow: '→',
+  info: 'ℹ' + VS_TEXT, // ℹ
+  success: '✓', // ✓ (text presentation by default)
+  warning: '⚠' + VS_TEXT, // ⚠
+  error: '✗', // ✗ (text presentation by default)
+  arrow: '→', // →
 } as const
 
 function out(line: string): void {
