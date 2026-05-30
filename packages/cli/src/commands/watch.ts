@@ -18,21 +18,27 @@ import * as ui from '../ui.js'
 
 const DEBOUNCE_MS = 50
 
+/** UI hooks so the command owns all rendering; startWatch stays presentation-free. */
+export interface WatchHooks {
+  onRecompileStart?: () => void
+  onError?: (message: string) => void
+}
+
 export interface WatchHandle {
   close: () => Promise<void>
-  /** Resolves after the next compile settles — for tests. */
-  onCompiled: (fn: (files: string[]) => void) => void
+  /** Fires after each compile settles — files written + elapsed ms (for tests/UI). */
+  onCompiled: (fn: (files: string[], ms: number) => void) => void
 }
 
 /** Start watching; exposed for integration tests (the command wraps this). */
-export async function startWatch(cwd: string): Promise<WatchHandle> {
+export async function startWatch(cwd: string, hooks: WatchHooks = {}): Promise<WatchHandle> {
   const schemaPath = findSchema(cwd)
   if (!schemaPath) throw new NotInitializedError(cwd)
 
   let compiling = false
   let pending = false
   let timer: NodeJS.Timeout | null = null
-  const listeners: Array<(files: string[]) => void> = []
+  const listeners: Array<(files: string[], ms: number) => void> = []
 
   async function compileOnce(): Promise<void> {
     if (compiling) {
@@ -40,14 +46,15 @@ export async function startWatch(cwd: string): Promise<WatchHandle> {
       return
     }
     compiling = true
+    hooks.onRecompileStart?.()
     try {
       const { schema, root } = await loadSchema(cwd)
       const start = Date.now()
       const files = await emit(schema, root)
-      ui.success(`recompiled ${files.length} file(s) in ${Date.now() - start}ms`)
-      listeners.forEach((fn) => fn(files))
+      const ms = Date.now() - start
+      listeners.forEach((fn) => fn(files, ms))
     } catch (e) {
-      ui.error(e instanceof Error ? e.message : String(e), { hint: 'fix the schema; watch will retry on next save' })
+      hooks.onError?.(e instanceof Error ? e.message : String(e))
     } finally {
       compiling = false
       if (pending) {
@@ -84,13 +91,21 @@ export function registerWatch(program: Command): void {
     .action(
       action(async () => {
         // Validate + initial compile up front so a bad project fails fast.
-        const { schema, root } = await loadSchema(process.cwd())
+        const cwd = process.cwd()
+        const { schema, root } = await loadSchema(cwd)
         await emit(schema, root)
-        const handle = await startWatch(process.cwd())
-        ui.info('Watching design-spec.schema.json — press Ctrl+C to stop.')
         ui.json({ ok: true, watching: 'design-spec.schema.json' })
+
+        const sp = ui.spinner('Watching design-spec.schema.json — press Ctrl+C to stop')
+        const handle = await startWatch(cwd, {
+          onRecompileStart: () => sp.setText('Recompiling…'),
+          onError: (m) => sp.fail(m),
+        })
+        handle.onCompiled((files, ms) => sp.done(`recompiled ${files.length} file(s) in ${ms}ms`))
+
         await new Promise<void>((resolve) => {
           process.on('SIGINT', () => {
+            sp.stop()
             void handle.close().then(resolve)
           })
         })

@@ -205,6 +205,52 @@ export async function spin<T>(label: string, fn: () => Promise<T>): Promise<T> {
   }
 }
 
+/**
+ * A long-lived spinner for terminal-resident commands (e.g. `watch`). The glyph
+ * animates (ora's braille frames) in an interactive TTY; in json/non-TTY/CI it
+ * degrades to plain one-shot log lines so piped output and CI logs never hang
+ * on an animation that doesn't terminate.
+ */
+export interface Spinner {
+  /** Change the live status text (the spinning line). */
+  setText(text: string): void
+  /** Persist a completed line (✓ + text), then resume the idle spinner. */
+  done(text: string): void
+  /** Persist a failure line (✗ + text), then resume the idle spinner. */
+  fail(text: string): void
+  /** Stop and clear the spinner. */
+  stop(): void
+}
+
+export function spinner(idleText: string): Spinner {
+  if (state.json || state.quiet || !state.interactive) {
+    // Static fallback: announce once, then log persisted lines as they come.
+    if (!state.json && !state.quiet) info(idleText)
+    return {
+      setText: () => {},
+      done: (t) => success(t),
+      fail: (t) => error(t),
+      stop: () => {},
+    }
+  }
+  const idle = idleText
+  const sp = ora({ text: idle, stream: process.stderr }).start()
+  return {
+    setText: (t) => {
+      sp.text = t
+    },
+    done: (t) => {
+      sp.stopAndPersist({ symbol: c.green(SYMBOLS.success), text: t })
+      sp.start(idle)
+    },
+    fail: (t) => {
+      sp.stopAndPersist({ symbol: c.red(SYMBOLS.error), text: t })
+      sp.start(idle)
+    },
+    stop: () => sp.stop(),
+  }
+}
+
 export interface Step<Ctx = unknown> {
   title: string
   task: ListrTask<Ctx>['task']
