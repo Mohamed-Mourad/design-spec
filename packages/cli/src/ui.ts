@@ -61,23 +61,21 @@ export function uiMode(): Readonly<UiState> {
   return state
 }
 
-// Status glyphs. Several of these characters have a color-emoji presentation
-// variant that terminal fonts render as a full-color emoji (the pink ✗, the
-// blue ℹ box) — which looks unprofessional and inconsistent. We force the
-// monochrome TEXT presentation with U+FE0E, and prefer glyphs that default to
-// text (✓ U+2713 / ✗ U+2717) over the emoji-prone heavy variants (✔/✖). Color
-// is applied separately via picocolors, so these stay crisp single-tone marks.
-// (A terminal is a text grid — raster icons/SVGs can't render portably here.)
-// U+FE0E = variation selector-15: forces the preceding glyph to its monochrome
-// text presentation instead of a color emoji. Built via escape (not a literal,
-// which is invisible/uneditable in source).
-const VS_TEXT = String.fromCodePoint(0xfe0e)
+// Status glyphs — chosen so they can NEVER render as a color emoji.
+//
+// The trap: ✔ (U+2714), ✖ (U+2716), ⚠ (U+26A0), ℹ (U+2139) are all in the
+// Unicode *emoji* set, so terminals/fonts (and apps like WhatsApp) may show
+// them as full-color emoji — and the U+FE0E text selector is widely ignored.
+// We therefore use only code points that are NOT emoji at all:
+//   ✓ U+2713, ✗ U+2717 (check/cross, text-only), and plain ASCII for info/warn.
+// Color (the actual signal) is applied separately via picocolors.
+// A terminal is a text grid — raster icons/SVGs can't render portably here.
 const SYMBOLS = {
-  info: 'ℹ' + VS_TEXT, // ℹ
-  success: '✓', // ✓ (text presentation by default)
-  warning: '⚠' + VS_TEXT, // ⚠
-  error: '✗', // ✗ (text presentation by default)
-  arrow: '→', // →
+  info: 'i',
+  success: '✓',
+  warning: '!',
+  error: '✗',
+  arrow: '→',
 } as const
 
 function out(line: string): void {
@@ -197,10 +195,12 @@ export async function spin<T>(label: string, fn: () => Promise<T>): Promise<T> {
   const sp: Ora = ora({ text: label, stream: process.stderr }).start()
   try {
     const result = await fn()
-    sp.succeed(label)
+    // stopAndPersist with our own glyph — ora's .succeed/.fail use log-symbols'
+    // emoji-prone ✔/✖. Keep the whole CLI on the non-emoji set.
+    sp.stopAndPersist({ symbol: c.green(SYMBOLS.success), text: label })
     return result
   } catch (e) {
-    sp.fail(label)
+    sp.stopAndPersist({ symbol: c.red(SYMBOLS.error), text: label })
     throw e
   }
 }
@@ -211,14 +211,18 @@ export interface Step<Ctx = unknown> {
 }
 
 /**
- * A multi-step task list (spinner → ✔/✖ per step). Uses the listr2 simple
+ * A multi-step task list (spinner → done/fail per step). Uses the listr2 simple
  * renderer when non-interactive so CI/piped logs stay linear and clean.
  */
 export async function tasks<Ctx extends object>(steps: Step<Ctx>[], ctx?: Ctx): Promise<Ctx> {
   // json mode renders nothing; non-interactive uses the linear "simple"
   // renderer; an interactive terminal gets the animated "default" renderer.
   // Branches are kept separate so each renderer literal types cleanly.
+  // Both listr2 renderers default to figures.tick/figures.cross (✔/✖), which are
+  // emoji code points — override them with our non-emoji glyphs on every branch.
+  const icon = { COMPLETED: SYMBOLS.success, FAILED: SYMBOLS.error }
   if (state.json) return new Listr<Ctx, 'silent'>(steps, { renderer: 'silent', ctx }).run()
-  if (!state.interactive) return new Listr<Ctx, 'simple'>(steps, { renderer: 'simple', ctx }).run()
-  return new Listr<Ctx, 'default'>(steps, { renderer: 'default', ctx }).run()
+  if (!state.interactive)
+    return new Listr<Ctx, 'simple'>(steps, { renderer: 'simple', ctx, rendererOptions: { icon } }).run()
+  return new Listr<Ctx, 'default'>(steps, { renderer: 'default', ctx, rendererOptions: { icon } }).run()
 }
