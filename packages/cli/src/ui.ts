@@ -14,7 +14,6 @@ import boxen from 'boxen'
 import Table from 'cli-table3'
 import ora, { type Ora } from 'ora'
 import { Listr, type ListrTask } from 'listr2'
-import gradient from 'gradient-string'
 
 export interface UiMode {
   json: boolean
@@ -129,14 +128,18 @@ export function json(value: unknown): void {
 
 // ── Rich rendering (auto-degrades) ─────────────────────────────────────────────
 
-/** Branded gradient banner. Suppressed in json/quiet/non-color contexts. */
+/**
+ * Branded wordmark. A single solid accent color in bold — deliberately NOT a
+ * gradient (rainbow/gradient CLI banners are an overused AI-generated tell).
+ * Suppressed in json/quiet; plain text when color is off.
+ */
 export function banner(word: string, subtitle?: string): void {
   if (state.json || state.quiet) return
   if (!state.color) {
     out(word + (subtitle ? `\n${subtitle}` : ''))
     return
   }
-  out(gradient(['#2563EB', '#7C3AED'])(word))
+  out(c.bold(c.cyan(word)))
   if (subtitle) out(c.dim(subtitle))
 }
 

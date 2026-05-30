@@ -157,7 +157,7 @@ export function registerInit(program: Command): void {
           signals: ctx.signals,
         })
 
-        ui.box(`✨ ${ctx.schema.name}`, [
+        ui.box(ctx.schema.name, [
           `Frameworks: ${ctx.frameworks.join(', ')}`,
           '',
           'Created:',
