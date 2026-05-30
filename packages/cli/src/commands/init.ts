@@ -22,6 +22,7 @@ import { scanFlutter } from '../scanners/flutter.js'
 import { synthesizeSchema } from '../synthesize.js'
 import { emit } from '../emit.js'
 import { injectAgentRules, type RuleInjection } from '../agentRules.js'
+import { splashContext } from '../branding.js'
 import type { ColorValue, DesignSystemSchema, DimensionValue } from '@design-spec/compiler'
 import { glob } from 'node:fs/promises'
 import * as ui from '../ui.js'
@@ -89,7 +90,12 @@ export function registerInit(program: Command): void {
           })
         }
 
-        ui.brandHeader('design-spec', 'Local-first design system engine')
+        ui.splash(
+          splashContext(root, {
+            tip: 'Setting up — detecting your stack and generating your design system.',
+            status: 'Local-first · no account needed.',
+          }),
+        )
 
         const ctx = await ui.tasks<InitCtx>(
           [

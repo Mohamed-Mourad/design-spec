@@ -6,10 +6,9 @@
 
 import { Command } from 'commander'
 import { createRequire } from 'node:module'
-import { readFileSync } from 'node:fs'
 import updateNotifier from 'update-notifier'
 import * as ui from './ui.js'
-import { findSchema } from './project.js'
+import { bareSplash } from './branding.js'
 import { registerInit } from './commands/init.js'
 import { registerCompile } from './commands/compile.js'
 import { registerWatch } from './commands/watch.js'
@@ -73,37 +72,10 @@ export function buildProgram(): Command {
       program.help()
       return
     }
-    ui.splash(buildSplashInfo(process.cwd(), pkg.version))
+    ui.splash(bareSplash(process.cwd()))
   })
 
   return program
-}
-
-/** Build the contextual splash content from the project's schema state. */
-function buildSplashInfo(cwd: string, version: string): ui.SplashInfo {
-  const schemaPath = findSchema(cwd)
-  let tip: string
-  let status: string
-  if (schemaPath) {
-    let name = 'Your design system'
-    try {
-      name = (JSON.parse(readFileSync(schemaPath, 'utf8')) as { name?: string }).name ?? name
-    } catch {
-      /* ignore — splash is best-effort */
-    }
-    tip = `${name} is set up. Run \`design-spec watch\` to recompile on save, or \`design-spec serve\` to feed your AI agent.`
-    status = 'Schema detected — run `design-spec status` for details.'
-  } else {
-    tip = 'Run `design-spec init` to detect your stack and generate your design system. Works best with context.'
-    status = 'No design-spec.schema.json here yet.'
-  }
-  return {
-    version,
-    cwd,
-    tip,
-    status,
-    hints: 'design-spec --help for all commands · init · watch · serve',
-  }
 }
 
 export async function main(argv: string[] = process.argv): Promise<void> {

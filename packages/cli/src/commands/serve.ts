@@ -17,6 +17,7 @@ import chokidar from 'chokidar'
 import { action } from '../run.js'
 import { findSchema, loadSchema } from '../project.js'
 import { NotInitializedError } from '../errors.js'
+import { splashContext } from '../branding.js'
 import * as ui from '../ui.js'
 import {
   get_component_tokens,
@@ -77,10 +78,18 @@ export function registerServe(program: Command): void {
 
         let current = (await loadSchema(cwd)).schema
 
-        // A human running `serve` in a terminal gets a header — on STDERR, since
-        // stdout is the MCP protocol channel. MCP clients spawn with pipes (no
-        // TTY) and see nothing extra.
-        if (process.stderr.isTTY) ui.brandHeader('design-spec serve', 'Local MCP server — scoped token context', { stderr: true })
+        // A human running `serve` in a terminal gets the splash — on STDERR,
+        // since stdout is the MCP protocol channel. MCP clients spawn with pipes
+        // (no TTY) and see nothing extra.
+        if (process.stderr.isTTY) {
+          ui.splash(
+            splashContext(cwd, {
+              tip: 'MCP server ready on stdio — serving scoped token context to your AI agent. Press Ctrl+C to stop.',
+              status: 'Connected · reloads on schema change.',
+            }),
+            { stderr: true },
+          )
+        }
 
         // Hot-reload: keep the last good schema if a save is briefly invalid.
         const watcher = chokidar.watch(schemaPath, { ignoreInitial: true })
@@ -96,7 +105,8 @@ export function registerServe(program: Command): void {
         const server = buildMcpServer(() => current)
         const transport = new StdioServerTransport()
         await server.connect(transport)
-        process.stderr.write('design-spec: MCP server ready on stdio\n')
+        // The TTY splash already says "ready"; only log for non-TTY MCP clients.
+        if (!process.stderr.isTTY) process.stderr.write('design-spec: MCP server ready on stdio\n')
 
         await new Promise<void>((resolve) => {
           process.on('SIGINT', () => {

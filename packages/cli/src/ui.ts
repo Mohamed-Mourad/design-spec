@@ -153,41 +153,30 @@ export function banner(word: string, subtitle?: string): void {
   if (subtitle) out(c.dim(subtitle))
 }
 
-/**
- * A compact branded header for individual commands (init/watch/serve): the
- * `design-spec <cmd>` wordmark in a solid accent with a one-line subtitle.
- * Writes to stdout by default; pass `stderr: true` for commands whose stdout is
- * a protocol channel (serve). Suppressed in json/quiet.
- */
-export function brandHeader(label: string, subtitle?: string, opts: { stderr?: boolean } = {}): void {
-  if (state.json || state.quiet) return
-  const sink = opts.stderr ? err : out
-  sink(c.bold(c.cyan(label)))
-  if (subtitle) sink(c.dim(subtitle))
-}
-
 export interface SplashInfo {
   version: string
   cwd: string
-  /** Contextual one-liner for the top tip box. */
+  /** The boxed headline at the top — the tip (bare run) or the live action (commands). */
   tip: string
-  /** Status line under the wordmark (e.g. detected schema). */
+  /** Status line under the wordmark. */
   status: string
   /** Bottom hint (key commands). */
   hints: string
 }
 
 /**
- * The launch splash for a bare `design-spec` invocation: a contextual tip box,
- * the block wordmark in a solid accent, version + cwd, a status line, and a
- * command hint. Shown only in an interactive TTY; callers must skip it for
- * json/quiet/non-TTY (a bare run there should print plain help instead).
+ * The branded splash: a boxed headline, the block wordmark in a solid accent,
+ * version + cwd, a status line, and a command hint. Used by the bare invocation
+ * AND by init/watch/serve (same design throughout) — each passes its own boxed
+ * headline. Writes to stdout by default; pass `stderr: true` for commands whose
+ * stdout is a protocol channel (serve). Suppressed in json/quiet.
  */
-export function splash(info: SplashInfo): void {
+export function splash(info: SplashInfo, opts: { stderr?: boolean } = {}): void {
   if (state.json || state.quiet) return
+  const sink = opts.stderr ? err : out
 
-  // Tip box at the top (full-width-ish), like Stakpak's onboarding hint.
-  out(
+  // Boxed headline at the top, like Stakpak's onboarding hint.
+  sink(
     boxen(state.color ? c.cyan(info.tip) : info.tip, {
       padding: { top: 0, bottom: 0, left: 1, right: 1 },
       borderColor: state.color ? 'cyan' : undefined,
@@ -197,19 +186,19 @@ export function splash(info: SplashInfo): void {
   )
 
   // Wordmark — block art when it fits and color is on; else the bold text mark.
-  const cols = process.stdout.columns ?? 80
+  const cols = (opts.stderr ? process.stderr.columns : process.stdout.columns) ?? 80
   if (state.color && cols >= wordmarkWidth() + 2) {
-    for (const line of renderWordmark()) out(c.cyan(line))
+    for (const line of renderWordmark()) sink(c.cyan(line))
   } else {
-    out(c.bold(state.color ? c.cyan('design-spec') : 'design-spec'))
+    sink(c.bold(state.color ? c.cyan('design-spec') : 'design-spec'))
   }
 
-  out('')
-  out(`${c.dim('version:')} ${info.version}`)
-  out(`${c.dim('cwd:')}     ${info.cwd}`)
-  out('')
-  out(info.status)
-  out(c.dim(info.hints))
+  sink('')
+  sink(`${c.dim('version:')} ${info.version}`)
+  sink(`${c.dim('cwd:')}     ${info.cwd}`)
+  sink('')
+  sink(info.status)
+  sink(c.dim(info.hints))
 }
 
 /** A boxed summary. Degrades to a plain block when color/box is unavailable. */

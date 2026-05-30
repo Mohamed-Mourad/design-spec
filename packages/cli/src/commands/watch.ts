@@ -14,6 +14,7 @@ import { action } from '../run.js'
 import { findSchema, loadSchema } from '../project.js'
 import { NotInitializedError } from '../errors.js'
 import { emit } from '../emit.js'
+import { splashContext } from '../branding.js'
 import * as ui from '../ui.js'
 
 const DEBOUNCE_MS = 50
@@ -95,9 +96,14 @@ export function registerWatch(program: Command): void {
         const { schema, root } = await loadSchema(cwd)
         await emit(schema, root)
         ui.json({ ok: true, watching: 'design-spec.schema.json' })
-        ui.brandHeader('design-spec watch', 'Recompiling on every schema save')
+        ui.splash(
+          splashContext(cwd, {
+            tip: 'Watching design-spec.schema.json — recompiles on every save. Press Ctrl+C to stop.',
+            status: 'Watching for changes…',
+          }),
+        )
 
-        const sp = ui.spinner('Watching design-spec.schema.json — press Ctrl+C to stop')
+        const sp = ui.spinner('watching for changes…')
         const handle = await startWatch(cwd, {
           onRecompileStart: () => sp.begin('Recompiling…'),
           onError: (m) => sp.fail(m),
