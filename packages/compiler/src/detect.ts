@@ -5,7 +5,7 @@
 // inline Flutter `Color(0xFF…)`, and raw `px` lengths. For each hit it resolves
 // the nearest schema token so `fix` can rewrite deterministically. No I/O.
 
-import type { DesignSystemSchema } from './types/schema'
+import type { DesignSystemSchema } from './types/schema.js'
 
 export type DriftKind = 'inline-hex' | 'arbitrary-class' | 'flutter-color' | 'raw-px'
 

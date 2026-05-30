@@ -4,9 +4,9 @@
 // the schema's token names plus a tokens.css of CSS custom properties. Phase 1
 // working-minimal; Phase 2 hardens with golden snapshots.
 
-import type { DesignSystemSchema } from './types/schema'
-import type { FileOutput } from './types/compiler'
-import { resolveValue } from './tokenResolver'
+import type { DesignSystemSchema } from './types/schema.js'
+import type { FileOutput } from './types/compiler.js'
+import { resolveValue } from './tokenResolver.js'
 
 function px(v: unknown): string {
   return typeof v === 'number' ? `${v}px` : String(v)

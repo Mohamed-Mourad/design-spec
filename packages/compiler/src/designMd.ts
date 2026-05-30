@@ -4,8 +4,8 @@
 // tokens) + markdown body (human-readable rationale) in the spec's section
 // order. Phase 1 working-minimal; Phase 2 hardens with golden snapshots.
 
-import type { DesignSystemSchema, TypographyToken } from './types/schema'
-import { toYaml, type YamlMap } from './yaml'
+import type { DesignSystemSchema, TypographyToken } from './types/schema.js'
+import { toYaml, type YamlMap } from './yaml.js'
 
 function frontmatter(schema: DesignSystemSchema): string {
   const fm: YamlMap = {

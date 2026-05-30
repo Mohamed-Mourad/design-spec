@@ -4,7 +4,7 @@
 // signals and filling everything it cannot detect from this preset. It is also
 // the seed for a fresh web-app session. Deterministic, no runtime values.
 
-import type { DesignSystemSchema, ExportConfig } from './types/schema'
+import type { DesignSystemSchema, ExportConfig } from './types/schema.js'
 
 export const defaultExportConfig: ExportConfig = {
   frameworks: ['react-tailwind'],

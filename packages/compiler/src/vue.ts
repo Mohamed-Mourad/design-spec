@@ -4,8 +4,8 @@
 // plain CSS custom properties (no Tailwind theme object). Typography is emitted
 // as grouped helper variables.
 
-import type { DesignSystemSchema } from './types/schema'
-import type { FileOutput } from './types/compiler'
+import type { DesignSystemSchema } from './types/schema.js'
+import type { FileOutput } from './types/compiler.js'
 
 function px(v: unknown): string {
   return typeof v === 'number' ? `${v}px` : String(v)

@@ -3,13 +3,13 @@
 // just prove the functions the CLI depends on behave before it leans on them.
 
 import { describe, it, expect } from 'vitest'
-import { defaultSchema } from './defaultSchema'
-import { compileDesignMd } from './designMd'
-import { compileSkillMd } from './skillMd'
-import { compileAll } from './compile'
-import { detect } from './detect'
-import { fix } from './fix'
-import { get_component_tokens, get_layout_system, get_semantic_colors } from './mcp/route'
+import { defaultSchema } from './defaultSchema.js'
+import { compileDesignMd } from './designMd.js'
+import { compileSkillMd } from './skillMd.js'
+import { compileAll } from './compile.js'
+import { detect } from './detect.js'
+import { fix } from './fix.js'
+import { get_component_tokens, get_layout_system, get_semantic_colors } from './mcp/route.js'
 
 describe('compileDesignMd', () => {
   it('emits spec.md frontmatter + the section order', () => {

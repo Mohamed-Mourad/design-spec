@@ -4,7 +4,7 @@
 // system when writing code. Base template + framework-specific sections driven
 // by `schema.export.frameworks`. Pure, deterministic.
 
-import type { DesignSystemSchema } from './types/schema'
+import type { DesignSystemSchema } from './types/schema.js'
 
 function frameworkSection(framework: string, schema: DesignSystemSchema): string {
   const prefix = schema.export.tailwindClassPrefix

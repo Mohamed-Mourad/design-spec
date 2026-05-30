@@ -5,8 +5,8 @@
 // dump the entire schema. No I/O. `design-spec serve` registers each as an MCP
 // tool; the web app and any agent client call the identical functions.
 
-import type { DesignSystemSchema, ComponentTokenGroup } from '../types/schema'
-import { resolveValue } from '../tokenResolver'
+import type { DesignSystemSchema, ComponentTokenGroup } from '../types/schema.js'
+import { resolveValue } from '../tokenResolver.js'
 
 /** Resolve every `{ref}` value in a component token group to its concrete value. */
 function resolveGroup(schema: DesignSystemSchema, group: ComponentTokenGroup): Record<string, unknown> {

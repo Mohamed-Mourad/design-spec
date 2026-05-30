@@ -9,8 +9,8 @@
 // This single function powers local `design-spec fix` and the hosted CI
 // Drift-Janitor — same drift in, same rewrite out, no second source of truth.
 
-import type { DesignSystemSchema } from './types/schema'
-import type { Drift } from './detect'
+import type { DesignSystemSchema } from './types/schema.js'
+import type { Drift } from './detect.js'
 
 export interface FixOptions {
   /** Output dialect. Web → CSS vars / Tailwind classes. Flutter → AppColors. */

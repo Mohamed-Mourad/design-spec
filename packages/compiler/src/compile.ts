@@ -4,12 +4,12 @@
 // (framework-independent). Framework-specific outputs are added per
 // `schema.export.frameworks`. Deterministic ordering.
 
-import type { DesignSystemSchema } from './types/schema'
-import type { FileOutput } from './types/compiler'
-import { compileDesignMd } from './designMd'
-import { compileSkillMd } from './skillMd'
-import { compileTailwind } from './tailwind'
-import { compileVue } from './vue'
+import type { DesignSystemSchema } from './types/schema.js'
+import type { FileOutput } from './types/compiler.js'
+import { compileDesignMd } from './designMd.js'
+import { compileSkillMd } from './skillMd.js'
+import { compileTailwind } from './tailwind.js'
+import { compileVue } from './vue.js'
 
 /** Compile all outputs for a schema, deduplicated by filename (first wins). */
 export function compileAll(schema: DesignSystemSchema): FileOutput[] {
