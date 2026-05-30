@@ -17,6 +17,7 @@ import chokidar from 'chokidar'
 import { action } from '../run.js'
 import { findSchema, loadSchema } from '../project.js'
 import { NotInitializedError } from '../errors.js'
+import * as ui from '../ui.js'
 import {
   get_component_tokens,
   get_layout_system,
@@ -75,6 +76,11 @@ export function registerServe(program: Command): void {
         if (!schemaPath) throw new NotInitializedError(cwd)
 
         let current = (await loadSchema(cwd)).schema
+
+        // A human running `serve` in a terminal gets a header — on STDERR, since
+        // stdout is the MCP protocol channel. MCP clients spawn with pipes (no
+        // TTY) and see nothing extra.
+        if (process.stderr.isTTY) ui.brandHeader('design-spec serve', 'Local MCP server — scoped token context', { stderr: true })
 
         // Hot-reload: keep the last good schema if a save is briefly invalid.
         const watcher = chokidar.watch(schemaPath, { ignoreInitial: true })

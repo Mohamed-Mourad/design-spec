@@ -153,6 +153,40 @@ export function banner(word: string, subtitle?: string): void {
   if (subtitle) out(c.dim(subtitle))
 }
 
+// ── Brand mascot ────────────────────────────────────────────────────────────
+
+const MASCOT_WIDTH = 5 // visible columns
+
+/**
+ * A small mascot evoking a design tool's shape language — five colored blocks
+ * in the arrangement of Figma's logo (orange/red/purple/blue/green, mapped to
+ * the nearest terminal colors). A discrete brand mark, not gradient text.
+ * Returns 3 rows; degrades to monochrome blocks when color is off.
+ */
+function mascotRows(): string[] {
+  if (!state.color) return ['██ ██', '██ ██', '██   ']
+  return [
+    `${c.yellow('██')} ${c.red('██')}`,
+    `${c.magenta('██')} ${c.blue('██')}`,
+    `${c.green('██')}   `,
+  ]
+}
+
+/**
+ * A compact branded header for individual commands (init/watch/serve): the
+ * mascot with `design-spec <cmd>` and a one-line subtitle to its right. Writes
+ * to stdout by default; pass `stderr: true` for commands whose stdout is a
+ * protocol channel (serve). Suppressed in json/quiet.
+ */
+export function brandHeader(label: string, subtitle?: string, opts: { stderr?: boolean } = {}): void {
+  if (state.json || state.quiet) return
+  const sink = opts.stderr ? err : out
+  const m = mascotRows()
+  sink(m[0])
+  sink(`${m[1]}  ${c.bold(c.cyan(label))}`)
+  sink(`${m[2]}  ${subtitle ? c.dim(subtitle) : ''}`)
+}
+
 export interface SplashInfo {
   version: string
   cwd: string
@@ -183,9 +217,17 @@ export function splash(info: SplashInfo): void {
     }),
   )
 
-  // Wordmark — block art when it fits and color is on; else the bold text mark.
+  // Wordmark — block art (with the mascot to its left) when it fits and color
+  // is on; else the bold text mark.
   const cols = process.stdout.columns ?? 80
-  if (state.color && cols >= wordmarkWidth() + 2) {
+  if (state.color && cols >= wordmarkWidth() + MASCOT_WIDTH + 4) {
+    const word = renderWordmark()
+    const m = mascotRows()
+    // Vertically center the 3-row mascot against the 5-row wordmark.
+    const blank = ' '.repeat(MASCOT_WIDTH)
+    const mascot5 = [blank, m[0], m[1], m[2], blank]
+    word.forEach((line, i) => out(`${mascot5[i]}  ${c.cyan(line)}`))
+  } else if (state.color && cols >= wordmarkWidth() + 2) {
     for (const line of renderWordmark()) out(c.cyan(line))
   } else {
     out(c.bold(state.color ? c.cyan('design-spec') : 'design-spec'))

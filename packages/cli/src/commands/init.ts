@@ -89,7 +89,7 @@ export function registerInit(program: Command): void {
           })
         }
 
-        ui.banner('design-spec', 'Local-first design system engine')
+        ui.brandHeader('design-spec', 'Local-first design system engine')
 
         const ctx = await ui.tasks<InitCtx>(
           [

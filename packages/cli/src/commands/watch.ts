@@ -95,6 +95,7 @@ export function registerWatch(program: Command): void {
         const { schema, root } = await loadSchema(cwd)
         await emit(schema, root)
         ui.json({ ok: true, watching: 'design-spec.schema.json' })
+        ui.brandHeader('design-spec watch', 'Recompiling on every schema save')
 
         const sp = ui.spinner('Watching design-spec.schema.json — press Ctrl+C to stop')
         const handle = await startWatch(cwd, {
