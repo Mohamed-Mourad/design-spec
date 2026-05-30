@@ -1,0 +1,30 @@
+// compile.ts — aggregate every output the schema's configured frameworks need.
+//
+// Pure (schema) => FileOutput[]. DESIGN.md and SKILL.md are always emitted
+// (framework-independent). Framework-specific outputs are added per
+// `schema.export.frameworks`. Deterministic ordering.
+
+import type { DesignSystemSchema } from './types/schema'
+import type { FileOutput } from './types/compiler'
+import { compileDesignMd } from './designMd'
+import { compileSkillMd } from './skillMd'
+import { compileTailwind } from './tailwind'
+import { compileVue } from './vue'
+
+/** Compile all outputs for a schema, deduplicated by filename (first wins). */
+export function compileAll(schema: DesignSystemSchema): FileOutput[] {
+  const outputs: FileOutput[] = [
+    { filename: 'DESIGN.md', content: compileDesignMd(schema), language: 'markdown' },
+    { filename: 'SKILL.md', content: compileSkillMd(schema), language: 'markdown' },
+  ]
+
+  for (const framework of schema.export.frameworks) {
+    if (framework === 'react-tailwind') outputs.push(...compileTailwind(schema))
+    else if (framework === 'vue-css') outputs.push(...compileVue(schema))
+    // flutter: Phase 10
+  }
+
+  // Dedup by filename (e.g. tailwind + vue both emit tokens.css) — first wins.
+  const seen = new Set<string>()
+  return outputs.filter((o) => (seen.has(o.filename) ? false : (seen.add(o.filename), true)))
+}
