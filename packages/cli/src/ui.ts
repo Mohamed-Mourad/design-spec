@@ -14,6 +14,7 @@ import boxen from 'boxen'
 import Table from 'cli-table3'
 import ora, { type Ora } from 'ora'
 import { Listr, type ListrTask } from 'listr2'
+import { renderWordmark, wordmarkWidth } from './wordmark.js'
 
 export interface UiMode {
   json: boolean
@@ -150,6 +151,52 @@ export function banner(word: string, subtitle?: string): void {
   }
   out(c.bold(c.cyan(word)))
   if (subtitle) out(c.dim(subtitle))
+}
+
+export interface SplashInfo {
+  version: string
+  cwd: string
+  /** Contextual one-liner for the top tip box. */
+  tip: string
+  /** Status line under the wordmark (e.g. detected schema). */
+  status: string
+  /** Bottom hint (key commands). */
+  hints: string
+}
+
+/**
+ * The launch splash for a bare `design-spec` invocation: a contextual tip box,
+ * the block wordmark in a solid accent, version + cwd, a status line, and a
+ * command hint. Shown only in an interactive TTY; callers must skip it for
+ * json/quiet/non-TTY (a bare run there should print plain help instead).
+ */
+export function splash(info: SplashInfo): void {
+  if (state.json || state.quiet) return
+
+  // Tip box at the top (full-width-ish), like Stakpak's onboarding hint.
+  out(
+    boxen(state.color ? c.cyan(info.tip) : info.tip, {
+      padding: { top: 0, bottom: 0, left: 1, right: 1 },
+      borderColor: state.color ? 'cyan' : undefined,
+      borderStyle: 'round',
+      margin: { top: 0, bottom: 1, left: 0, right: 0 },
+    }),
+  )
+
+  // Wordmark — block art when it fits and color is on; else the bold text mark.
+  const cols = process.stdout.columns ?? 80
+  if (state.color && cols >= wordmarkWidth() + 2) {
+    for (const line of renderWordmark()) out(c.cyan(line))
+  } else {
+    out(c.bold(state.color ? c.cyan('design-spec') : 'design-spec'))
+  }
+
+  out('')
+  out(`${c.dim('version:')} ${info.version}`)
+  out(`${c.dim('cwd:')}     ${info.cwd}`)
+  out('')
+  out(info.status)
+  out(c.dim(info.hints))
 }
 
 /** A boxed summary. Degrades to a plain block when color/box is unavailable. */
