@@ -3,11 +3,16 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
-    "type-check": "vue-tsc --noEmit"
+    "type-check": "vue-tsc --noEmit",
+    "build:compiler": "npm run build --workspace @design-spec/compiler",
+    "publish:compiler": "npm publish --workspace @design-spec/compiler"
   },
   "dependencies": {
     "@lucide/vue": "^1.17.0",
