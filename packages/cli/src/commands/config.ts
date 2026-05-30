@@ -10,6 +10,7 @@
 // project recompiles.
 
 import type { Command } from 'commander'
+import pc from 'picocolors'
 import { action } from '../run.js'
 import { loadSchema, saveSchema } from '../project.js'
 import { emit } from '../emit.js'
@@ -43,20 +44,26 @@ function applyFlags(cfg: ExportConfig, flags: ConfigFlags): ExportConfig {
 
 async function survey(cfg: ExportConfig): Promise<ExportConfig> {
   const { checkbox, select, input } = await import('@inquirer/prompts')
+  // Match the rest of the CLI: inquirer defaults to figures' tick (renders as
+  // `√` on Windows), which clashes with our `✓`. Override the answered prefix.
+  const theme = { prefix: { idle: pc.cyan('?'), done: pc.green('✓') } }
   const frameworks = (await checkbox({
     message: 'Target frameworks',
     choices: FRAMEWORKS.map((f) => ({ value: f, checked: cfg.frameworks.includes(f) })),
+    theme,
   })) as ExportConfig['frameworks']
   const webNamingConvention = (await select({
     message: 'Token naming convention',
     choices: NAMING.map((n) => ({ value: n })),
     default: cfg.webNamingConvention,
+    theme,
   })) as ExportConfig['webNamingConvention']
-  const cssVariablePrefix = await input({ message: 'CSS variable prefix (blank for none)', default: cfg.cssVariablePrefix })
+  const cssVariablePrefix = await input({ message: 'CSS variable prefix (blank for none)', default: cfg.cssVariablePrefix, theme })
   const fontLoading = (await select({
     message: 'Font loading',
     choices: FONT_LOADING.map((f) => ({ value: f })),
     default: cfg.fontLoading,
+    theme,
   })) as ExportConfig['fontLoading']
   return { ...cfg, frameworks: frameworks.length ? frameworks : cfg.frameworks, webNamingConvention, cssVariablePrefix, fontLoading }
 }
