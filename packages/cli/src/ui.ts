@@ -206,58 +206,79 @@ export async function spin<T>(label: string, fn: () => Promise<T>): Promise<T> {
 }
 
 /**
- * A status handle for terminal-resident commands (e.g. `watch`). The idle line
- * is printed once and stays STATIC — we do not animate while idle, because a
- * perpetually redrawing spinner flickers (badly on Windows conhost) and signals
- * no real work. A spinner runs only while a unit of work is active (`begin` →
- * `done`/`fail`); sub-100ms work just prints the result line. In
- * json/non-TTY/CI it degrades to plain one-shot logs.
+ * A live status handle for terminal-resident commands (e.g. `watch`). The glyph
+ * animates continuously (the command IS actively running), but flicker-free:
+ * each frame is written in place with `\r` + padding and the cursor is hidden,
+ * so we never clear-to-blank the line (the cause of ora's flicker on Windows
+ * conhost). `done`/`fail` persist a `✓`/`✗` line above the live line. In
+ * json/non-TTY/CI it degrades to plain one-shot logs (no animation can hang CI).
  */
 export interface Spinner {
-  /** Start animating a unit of work (no-op if already animating). */
+  /** Swap the live status text (e.g. idle → "Recompiling…"). */
   begin(text: string): void
-  /** Persist a completed line (✓ + text) and stop animating. */
+  /** Persist a completed line (✓ + text); the live line keeps animating. */
   done(text: string): void
-  /** Persist a failure line (✗ + text) and stop animating. */
+  /** Persist a failure line (✗ + text); the live line keeps animating. */
   fail(text: string): void
-  /** Stop and clear any active spinner. */
+  /** Stop animating, restore the cursor, clear the live line. */
   stop(): void
 }
 
-export function spinner(idleText: string): Spinner {
-  // Print the idle line once (static) in every mode that shows output.
-  if (!state.json && !state.quiet) info(idleText)
+const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
+export function spinner(idleText: string): Spinner {
   if (state.json || state.quiet || !state.interactive) {
-    return {
-      begin: () => {},
-      done: (t) => success(t),
-      fail: (t) => error(t),
-      stop: () => {},
-    }
+    // No animation when piped/CI/json — it would never terminate and would
+    // corrupt the stream. Announce once, then log persisted lines as they come.
+    if (!state.json && !state.quiet) info(idleText)
+    return { begin: () => {}, done: (t) => success(t), fail: (t) => error(t), stop: () => {} }
   }
 
-  let sp: Ora | null = null
+  let text = idleText
+  let frame = 0
+  let lastLen = 0
+
+  const writeLive = (): void => {
+    const glyph = c.cyan(SPINNER_FRAMES[frame])
+    const visibleLen = 2 + text.length // glyph + space + text (text is plain)
+    // Overwrite in place; pad with spaces to cover a previously longer line.
+    // No clear-to-EOL escape → no blank frame → no flicker.
+    let line = `\r${glyph} ${text}`
+    if (visibleLen < lastLen) line += ' '.repeat(lastLen - visibleLen)
+    lastLen = visibleLen
+    process.stderr.write(line)
+    frame = (frame + 1) % SPINNER_FRAMES.length
+  }
+
+  // Persist a finished line ABOVE the live line: blank the live line, write the
+  // persisted line + newline, then let the next tick repaint the live line.
+  const persist = (symbol: string, msg: string): void => {
+    process.stderr.write('\r' + ' '.repeat(lastLen) + '\r')
+    lastLen = 0
+    process.stderr.write(`${symbol} ${msg}\n`)
+  }
+
+  process.stderr.write('\x1B[?25l') // hide cursor (prevents cursor flicker)
+  writeLive()
+  const timer = setInterval(writeLive, 90)
+  timer.unref?.() // don't keep the event loop alive on its own
+
   return {
     begin: (t) => {
-      if (!sp) sp = ora({ stream: process.stderr })
-      sp.start(t)
+      text = t
     },
     done: (t) => {
-      if (sp) {
-        sp.stopAndPersist({ symbol: c.green(SYMBOLS.success), text: t })
-        sp = null
-      } else success(t)
+      persist(c.green(SYMBOLS.success), t)
+      text = idleText
     },
     fail: (t) => {
-      if (sp) {
-        sp.stopAndPersist({ symbol: c.red(SYMBOLS.error), text: t })
-        sp = null
-      } else error(t)
+      persist(c.red(SYMBOLS.error), t)
+      text = idleText
     },
     stop: () => {
-      sp?.stop()
-      sp = null
+      clearInterval(timer)
+      process.stderr.write('\r' + ' '.repeat(lastLen) + '\r')
+      process.stderr.write('\x1B[?25h') // restore cursor
     },
   }
 }
