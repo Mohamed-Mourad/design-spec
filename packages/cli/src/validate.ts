@@ -1,50 +1,51 @@
-// validate.ts — structural validation of a design-spec.schema.json.
+// validate.ts — authoritative schema validation against the published JSON Schema.
 //
-// Lightweight, dependency-free checks that catch the mistakes that would make a
-// compile produce garbage. Not a full JSON-Schema validation (Phase 2 owns the
-// authoritative design-spec.schema.json round-trip); enough for lint/compile to
-// fail fast with an actionable message.
+// The contract lives in one place: @design-spec/compiler's `designSpecJsonSchema`
+// (generated from the same TS types the compiler uses). The CLI compiles it once
+// with ajv and reports issues in a stable shape; lint, load, and the pre-commit
+// hook all gate on this. There is no second, hand-rolled validator to drift.
 
-import type { DesignSystemSchema } from '@design-spec/compiler'
+import Ajv2020Module, { type ErrorObject } from 'ajv/dist/2020.js'
+import { designSpecJsonSchema } from '@design-spec/compiler'
+
+// ajv is CJS; under Node ESM the default import may arrive wrapped as { default }.
+const Ajv2020 = ((Ajv2020Module as unknown as { default?: typeof Ajv2020Module }).default ??
+  Ajv2020Module) as typeof Ajv2020Module
 
 export interface ValidationIssue {
   path: string
   message: string
 }
 
-const HEX = /^#[0-9a-fA-F]{3}$|^#[0-9a-fA-F]{6}$/
+const ajv = new Ajv2020({ allErrors: true, strict: false })
+const validateFn = ajv.compile(designSpecJsonSchema)
+
+/** ajv instancePath (`/colors/primary`) → dotted schema path (`colors.primary`). */
+function issuePath(e: ErrorObject): string {
+  const base = e.instancePath.replace(/^\//, '').replace(/\//g, '.')
+  if (e.keyword === 'required') {
+    const prop = String((e.params as { missingProperty?: string }).missingProperty ?? '')
+    return base ? `${base}.${prop}` : prop
+  }
+  if (e.keyword === 'additionalProperties') {
+    const prop = String((e.params as { additionalProperty?: string }).additionalProperty ?? '')
+    return base ? `${base}.${prop}` : prop
+  }
+  return base
+}
 
 /** Return a list of validation issues; empty means valid. */
 export function validateSchema(value: unknown): ValidationIssue[] {
+  if (validateFn(value)) return []
   const issues: ValidationIssue[] = []
-  const push = (path: string, message: string) => issues.push({ path, message })
-
-  if (typeof value !== 'object' || value === null) {
-    return [{ path: '', message: 'schema must be a JSON object' }]
+  const seen = new Set<string>()
+  for (const e of validateFn.errors ?? []) {
+    const path = issuePath(e)
+    const message = e.message ?? 'is invalid'
+    const key = `${path}|${message}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    issues.push({ path, message })
   }
-  const s = value as Partial<DesignSystemSchema>
-
-  if (!s.name || typeof s.name !== 'string') push('name', 'required string')
-  if (!s.version || typeof s.version !== 'string') push('version', 'required string')
-
-  if (typeof s.colors !== 'object' || s.colors === null) {
-    push('colors', 'required object')
-  } else {
-    if (!('primary' in s.colors)) push('colors.primary', 'at least the primary color must be defined')
-    for (const [name, val] of Object.entries(s.colors)) {
-      if (typeof val !== 'string' || !HEX.test(val)) push(`colors.${name}`, `must be a hex color, got ${JSON.stringify(val)}`)
-    }
-  }
-
-  if (typeof s.typography !== 'object' || s.typography === null) push('typography', 'required object')
-  if (typeof s.spacing !== 'object' || s.spacing === null) push('spacing', 'required object')
-  if (typeof s.rounded !== 'object' || s.rounded === null) push('rounded', 'required object')
-
-  if (!s.export || typeof s.export !== 'object') {
-    push('export', 'required object (run "design-spec config")')
-  } else if (!Array.isArray(s.export.frameworks) || s.export.frameworks.length === 0) {
-    push('export.frameworks', 'at least one framework must be selected')
-  }
-
   return issues
 }
