@@ -453,7 +453,7 @@ export function planReport(records: PlannedWrite[]): void {
   const parts: string[] = []
   if (created) parts.push(`${created} to create`)
   if (modified) parts.push(`${modified} to change`)
-  out(c.bold(`Plan: ${parts.join(', ')}.`) + c.dim(' Re-run without --plan to apply.'))
+  out(c.bold(`Plan: ${parts.join(', ')}.`) + c.dim(' Re-run without --dry-run to apply.'))
 }
 
 /** Right-aligned old/new line-number gutter, e.g. "  12 14". Blank cells for add/remove. */

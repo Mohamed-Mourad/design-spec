@@ -95,7 +95,7 @@ export function registerWatch(program: Command): void {
         // watch is a continuous writer with no terminal state to diff — a one-shot
         // preview makes no sense, so opt out of plan mode and run normally.
         if (isPlanMode()) {
-          ui.warn('--plan is not supported for watch (it writes continuously); running normally.')
+          ui.warn('--dry-run is not supported for watch (it writes continuously); running normally.')
           disablePlan()
         }
         // Validate + initial compile up front so a bad project fails fast.

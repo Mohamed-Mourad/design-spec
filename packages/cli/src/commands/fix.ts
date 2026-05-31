@@ -22,7 +22,7 @@ export function registerFix(program: Command): void {
   program
     .command('fix')
     .description('rewrite raw values (hex, px, arbitrary classes) to the nearest design token')
-    .addHelpText('after', '\nExamples:\n  $ design-spec fix\n  $ design-spec fix --plan   # preview the rewrites as a diff')
+    .addHelpText('after', '\nExamples:\n  $ design-spec fix\n  $ design-spec fix --dry-run   # preview the rewrites as a diff')
     .action(
       action(async () => {
         const cwd = process.cwd()

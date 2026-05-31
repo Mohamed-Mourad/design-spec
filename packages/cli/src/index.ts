@@ -46,8 +46,8 @@ export function buildProgram(): Command {
     .option('-q, --quiet', 'errors only', false)
     .option('--verbose', 'verbose output, including stack traces on error', false)
     .option('--no-color', 'disable color output')
-    .option('--plan', 'preview changes as a diff (grouped by file) without writing anything', false)
-    .option('--dry-run', 'alias for --plan', false)
+    .option('--dry-run', 'preview changes as a diff (grouped by file) without writing anything', false)
+    .option('--plan', 'alias for --dry-run', false)
     .showHelpAfterError('(add --help for usage)')
     .showSuggestionAfterError()
 
