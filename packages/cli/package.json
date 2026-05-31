@@ -23,7 +23,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@design-spec/compiler": "0.0.1",
+    "@design-spec/compiler": "0.1.0",
     "@inquirer/prompts": "^7.2.0",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "ajv": "^8.17.1",

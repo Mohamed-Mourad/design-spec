@@ -1,13 +1,18 @@
-// fix.ts — the auto-refactor engine.
+// fix.ts — the auto-refactor heuristic engine (apply stage).
 //
-// Pure: (source, Drift[], schema, options) => patchedSource. For each fixable
-// drift it resolves the raw value to its nearest schema token and rewrites the
-// source string in place. Unfixable drift (nearestToken === null) is left
-// untouched. Idempotent: fix(fix(x)) === fix(x), because the rewritten forms
-// (`var(--…)`, `text-primary`, `AppColors.…`) contain no raw values to match.
+// Pure: (source, Drift[], schema, options) => patchedSource. The best-match
+// heuristic lives in `detect` via the shared matchers: perceptual color snapping
+// (CIELAB ΔE ≤ 2.5 → nearest token, `colorMatch`) and dimensional proximity
+// snapping (≤ 2px to the nearest scale slot, equidistant/over → bypass,
+// `scaleMatch`). Those decide each Drift's `nearestToken` + strict `fixable`
+// flag. This function applies only the fixable drifts, rewriting the raw string
+// in place; unfixable drift (nearestToken === null, ΔE > 2.5 or > 2px) is left
+// untouched and never auto-committed.
 //
-// This single function powers local `design-spec fix` and the hosted CI
-// Drift-Janitor — same drift in, same rewrite out, no second source of truth.
+// Idempotent: fix(fix(x)) === fix(x), because the rewritten forms (`var(--…)`,
+// `text-primary`, `AppColors.…`) contain no raw values left to match. This
+// single pipeline (detect → fix) powers local `design-spec fix` and the hosted
+// CI Drift-Janitor — same drift in, same rewrite out, no second source of truth.
 
 import type { DesignSystemSchema } from './types/schema.js'
 import type { Drift } from './detect.js'

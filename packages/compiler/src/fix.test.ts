@@ -96,3 +96,16 @@ describe('fix — safety', () => {
     expect(roundtrip('color: #ABCDEF;')).toBe('color: #ABCDEF;')
   })
 })
+
+describe('fix — heuristic boundary goldens', () => {
+  it('snaps a near hex in place at ΔE = 2.5, bypasses just over', () => {
+    expect(roundtrip('color: #3369F1;')).toBe('color: var(--color-primary);') // ΔE 2.5 → snap
+    expect(roundtrip('color: #3069F0;')).toBe('color: #3069F0;') // ΔE 2.61 → untouched
+  })
+
+  it('snaps a near px at Δ2px, bypasses over 2px and equidistant', () => {
+    expect(roundtrip('padding: 18px;')).toBe('padding: var(--spacing-base);') // Δ2 → snap
+    expect(roundtrip('padding: 19px;')).toBe('padding: 19px;') // Δ3 → untouched
+    expect(roundtrip('margin: 6px;')).toBe('margin: 6px;') // equidistant 4/8 → untouched
+  })
+})

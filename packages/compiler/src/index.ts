@@ -5,7 +5,7 @@
 // source-of-truth contract; see the `evolving-schema-contract` skill before
 // changing any shape.
 
-export const COMPILER_VERSION = '0.0.1' as const
+export const COMPILER_VERSION = '0.1.0' as const
 
 // Contract types (single origin)
 export * from './types/schema.js'
@@ -49,6 +49,17 @@ export { detect, nearestColorToken } from './detect.js'
 export type { Drift, DriftKind } from './detect.js'
 export { fix } from './fix.js'
 export type { FixOptions } from './fix.js'
+
+// Best-match heuristic engine (shared by detect; powers fix + the CI Janitor)
+export {
+  COLOR_DELTA_E_THRESHOLD,
+  hexToLab,
+  rgbToLab,
+  deltaE76,
+  parseHex,
+} from './colorMatch.js'
+export type { Lab, Rgb } from './colorMatch.js'
+export { SCALE_PX_THRESHOLD, nearestScaleToken } from './scaleMatch.js'
 
 // MCP semantic routing resolvers
 export {

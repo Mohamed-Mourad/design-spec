@@ -17,6 +17,8 @@ export default defineConfig({
         'src/compile.ts',
         'src/detect.ts',
         'src/fix.ts',
+        'src/colorMatch.ts',
+        'src/scaleMatch.ts',
         'src/tokenResolver.ts',
         'src/yaml.ts',
         'src/resolveResponsive.ts',

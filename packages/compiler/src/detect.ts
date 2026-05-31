@@ -3,9 +3,16 @@
 // Pure: (source, schema, options) => Drift[]. Finds raw values that should be
 // design-token references: inline hex, arbitrary Tailwind classes (`text-[#…]`),
 // inline Flutter `Color(0xFF…)`, and raw `px` lengths. For each hit it resolves
-// the nearest schema token so `fix` can rewrite deterministically. No I/O.
+// the nearest schema token via the shared best-match engine — perceptual CIELAB
+// ΔE for colors (`colorMatch`), dimensional proximity for px (`scaleMatch`) —
+// and records a strict `fixable` flag so `fix` can rewrite deterministically.
+// No I/O. The same engine powers local `design-spec fix` and the hosted Janitor.
 
 import type { DesignSystemSchema } from './types/schema.js'
+import { nearestColorToken } from './colorMatch.js'
+import { nearestScaleToken } from './scaleMatch.js'
+
+export { nearestColorToken } from './colorMatch.js'
 
 export type DriftKind = 'inline-hex' | 'arbitrary-class' | 'flutter-color' | 'raw-px'
 
@@ -21,51 +28,6 @@ export interface Drift {
   nearestToken: string | null
   /** True when `fix` can rewrite this deterministically (nearestToken != null). */
   fixable: boolean
-}
-
-interface Rgb {
-  r: number
-  g: number
-  b: number
-}
-
-function parseHex(hex: string): Rgb | null {
-  let h = hex.replace('#', '')
-  if (h.length === 3) h = h.split('').map((c) => c + c).join('')
-  if (h.length !== 6 || /[^0-9a-fA-F]/.test(h)) return null
-  return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) }
-}
-
-function dist(a: Rgb, b: Rgb): number {
-  return Math.sqrt((a.r - b.r) ** 2 + (a.g - b.g) ** 2 + (a.b - b.b) ** 2)
-}
-
-/** Nearest color token to a hex. Exact match wins; else nearest within tolerance. */
-export function nearestColorToken(schema: DesignSystemSchema, hex: string, tolerance = 12): string | null {
-  const target = parseHex(hex)
-  if (!target) return null
-  let best: { name: string; d: number } | null = null
-  for (const [name, value] of Object.entries(schema.colors)) {
-    if (value.toLowerCase() === hex.toLowerCase()) return `colors.${name}`
-    const c = parseHex(value)
-    if (!c) continue
-    const d = dist(target, c)
-    if (best === null || d < best.d) best = { name, d }
-  }
-  if (best && best.d <= tolerance) return `colors.${best.name}`
-  return null
-}
-
-/** Nearest spacing/rounded token to a `px` length. Exact match only (Phase 1). */
-function nearestPxToken(schema: DesignSystemSchema, pxValue: number): string | null {
-  for (const [name, v] of Object.entries(schema.spacing)) {
-    if (typeof v === 'string' && v === `${pxValue}px`) return `spacing.${name}`
-    if (typeof v === 'number' && v === pxValue) return `spacing.${name}`
-  }
-  for (const [name, v] of Object.entries(schema.rounded)) {
-    if (v === `${pxValue}px` || v === pxValue) return `rounded.${name}`
-  }
-  return null
 }
 
 const HEX = /#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g
@@ -114,7 +76,7 @@ export function detect(source: string, schema: DesignSystemSchema, file = '<sour
       const idx = m.index ?? 0
       if (within(idx)) continue
       const val = Number(m[1])
-      push(m[0], 'raw-px', nearestPxToken(schema, val), idx)
+      push(m[0], 'raw-px', nearestScaleToken(schema, val), idx)
     }
   })
 

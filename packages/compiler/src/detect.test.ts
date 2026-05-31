@@ -68,21 +68,48 @@ describe('detect — classification', () => {
   })
 })
 
-describe('nearestColorToken — tolerance', () => {
+describe('nearestColorToken — perceptual ΔE', () => {
   it('prefers an exact match over a near one', () => {
     expect(nearestColorToken(schema, '#2563EB')).toBe('colors.primary')
   })
 
-  it('snaps a within-tolerance near color to the nearest token', () => {
-    // one channel off by a few units — inside the default tolerance of 12.
+  it('snaps a within-ΔE near color to the nearest token', () => {
+    // one channel off by a few units — perceptually well inside ΔE 2.5.
     expect(nearestColorToken(schema, '#2563EE')).toBe('colors.primary')
   })
 
-  it('returns null for a color outside tolerance', () => {
+  it('returns null for a color beyond ΔE 2.5', () => {
     expect(nearestColorToken(schema, '#FF00FF')).toBeNull()
   })
 
   it('returns null for a malformed hex', () => {
     expect(nearestColorToken(schema, '#zzzzzz')).toBeNull()
+  })
+})
+
+describe('detect — strict fixable flag at the heuristic boundaries', () => {
+  it('color: fixable at ΔE = 2.5, unfixable just over', () => {
+    const [at] = detect('color: #3369F1;', schema) // ΔE = 2.5000 vs primary
+    expect(at.kind).toBe('inline-hex')
+    expect(at.nearestToken).toBe('colors.primary')
+    expect(at.fixable).toBe(true)
+
+    const [over] = detect('color: #3069F0;', schema) // ΔE ≈ 2.61 vs primary
+    expect(over.nearestToken).toBeNull()
+    expect(over.fixable).toBe(false)
+  })
+
+  it('px: fixable at Δ2px, unfixable just over and when equidistant', () => {
+    const [at] = detect('padding: 18px;', schema) // |18-16| = 2
+    expect(at.kind).toBe('raw-px')
+    expect(at.nearestToken).toBe('spacing.base')
+    expect(at.fixable).toBe(true)
+
+    const [over] = detect('padding: 19px;', schema) // Δ3
+    expect(over.fixable).toBe(false)
+
+    const [equi] = detect('padding: 6px;', schema) // Δ2 from xs(4) and sm(8)
+    expect(equi.nearestToken).toBeNull()
+    expect(equi.fixable).toBe(false)
   })
 })
