@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { readFile, writeFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { runCli, tmpProject, cleanup, seedReactTailwind } from './helpers'
 
@@ -78,14 +79,80 @@ describe('fix', () => {
     expect(await readFile(file, 'utf8')).toContain('text-primary')
   })
 
-  it('--dry-run reports without writing', async () => {
+  it('--dry-run/--plan previews the change without writing', async () => {
     const file = join(dir, 'src', 'Hero.tsx')
     const original = 'const c = "#2563EB"\n'
     await writeFile(file, original)
     const r = await runCli(['fix', '--dry-run', '--json'], dir)
     expect(r.code).toBe(0)
-    expect(JSON.parse(r.stdout).fixed).toBeGreaterThan(0)
+    const out = JSON.parse(r.stdout)
+    expect(out.plan).toBe(true)
+    expect(out.changes.some((c: { path: string }) => c.path.endsWith('src/Hero.tsx'))).toBe(true)
     expect(await readFile(file, 'utf8')).toBe(original) // untouched
+  })
+
+  it('never rewrites its own generated output (tokens.css / tailwind.config.js / components)', async () => {
+    // init already compiled these — their raw hex/px are token definitions, not drift.
+    const tokensBefore = await readFile(join(dir, 'tokens.css'), 'utf8')
+    const configBefore = await readFile(join(dir, 'tailwind.config.js'), 'utf8')
+    const buttonBefore = await readFile(join(dir, 'components', 'Button.tsx'), 'utf8')
+
+    // a real drift file the fixer SHOULD touch
+    const src = join(dir, 'src', 'Hero.tsx')
+    await writeFile(src, 'const c = "#2563EB"\n')
+
+    const r = await runCli(['fix', '--json'], dir)
+    expect(r.code).toBe(0)
+    const fixedFiles = JSON.parse(r.stdout).files.map((f: { file: string }) => f.file)
+
+    // generated files untouched and never reported as fixed
+    expect(await readFile(join(dir, 'tokens.css'), 'utf8')).toBe(tokensBefore)
+    expect(await readFile(join(dir, 'tailwind.config.js'), 'utf8')).toBe(configBefore)
+    expect(await readFile(join(dir, 'components', 'Button.tsx'), 'utf8')).toBe(buttonBefore)
+    expect(fixedFiles).not.toContain('tokens.css')
+    expect(fixedFiles).not.toContain('tailwind.config.js')
+    // the genuine drift was still fixed
+    expect(await readFile(src, 'utf8')).toContain('var(--color-primary)')
+  })
+})
+
+describe('plan (--plan / --dry-run)', () => {
+  let dir: string
+  beforeEach(async () => {
+    dir = await tmpProject()
+  })
+  afterEach(async () => {
+    await cleanup(dir)
+  })
+
+  it('init --plan previews creates and writes nothing', async () => {
+    await seedReactTailwind(dir)
+    const r = await runCli(['init', '--yes', '--plan', '--json'], dir)
+    expect(r.code).toBe(0)
+    const out = JSON.parse(r.stdout)
+    expect(out.plan).toBe(true)
+    expect(out.changes.some((c: { path: string; kind: string }) => c.path.endsWith('design-spec.schema.json') && c.kind === 'create')).toBe(true)
+    // nothing was actually written
+    expect(existsSync(join(dir, 'design-spec.schema.json'))).toBe(false)
+    expect(existsSync(join(dir, 'DESIGN.md'))).toBe(false)
+  })
+
+  it('compile --plan shows a diff and leaves output untouched', async () => {
+    await initProject(dir)
+    // make the schema differ from compiled output
+    const schemaPath = join(dir, 'design-spec.schema.json')
+    const schema = JSON.parse(await readFile(schemaPath, 'utf8'))
+    schema.name = 'Renamed System'
+    await writeFile(schemaPath, JSON.stringify(schema, null, 2) + '\n')
+    const before = await readFile(join(dir, 'DESIGN.md'), 'utf8')
+
+    const human = await runCli(['compile', '--plan'], dir)
+    expect(human.code).toBe(0)
+    expect(human.stdout).toMatch(/Plan:/)
+    expect(human.stdout).toMatch(/DESIGN\.md/)
+
+    // DESIGN.md on disk is unchanged (still the old name)
+    expect(await readFile(join(dir, 'DESIGN.md'), 'utf8')).toBe(before)
   })
 })
 

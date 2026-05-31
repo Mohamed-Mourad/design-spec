@@ -7,12 +7,13 @@
 import { readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { compileAll, atomicWrite, type DesignSystemSchema, type FileOutput } from '@design-spec/compiler'
+import { compileAll, type DesignSystemSchema, type FileOutput } from '@design-spec/compiler'
+import { stageWrite } from './plan.js'
 
 /** Compile every output for the schema and write it under `root`. Returns the filenames. */
 export async function emit(schema: DesignSystemSchema, root: string): Promise<string[]> {
   const outputs = compileAll(schema)
-  await Promise.all(outputs.map((o) => atomicWrite(join(root, o.filename), o.content)))
+  await Promise.all(outputs.map((o) => stageWrite(join(root, o.filename), o.content)))
   return outputs.map((o) => o.filename)
 }
 

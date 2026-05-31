@@ -10,6 +10,7 @@
 // be written to it here — all human/diagnostic output goes to stderr.
 
 import type { Command } from 'commander'
+import { resolve } from 'node:path'
 import { z } from 'zod'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
@@ -18,6 +19,8 @@ import { action } from '../run.js'
 import { findSchema, loadSchema } from '../project.js'
 import { NotInitializedError } from '../errors.js'
 import { splashContext } from '../branding.js'
+import { currentInvocation, connectHints, printableConfig } from '../mcpConfig.js'
+import { disablePlan } from '../plan.js'
 import * as ui from '../ui.js'
 import {
   get_component_tokens,
@@ -69,10 +72,33 @@ export function registerServe(program: Command): void {
   program
     .command('serve')
     .description('run a local MCP server (stdio) that feeds AI agents scoped token context')
-    .addHelpText('after', '\nExample (in an MCP client config):\n  command: "design-spec", args: ["serve"]')
+    .option('--print-config', 'print copy-paste setup for connecting an AI client, then exit', false)
+    .option('--cwd <dir>', 'project directory containing design-spec.schema.json (default: current dir)')
+    .addHelpText(
+      'after',
+      '\nThis is an MCP server (stdio) — connect an AI tool to it, do not type at it.\n' +
+        'Run `design-spec serve --print-config` for copy-paste setup, or\n' +
+        '`npx @modelcontextprotocol/inspector design-spec serve` to click the tools in a browser.\n' +
+        'A client spawns serve from its own directory — pass --cwd to point at your project.',
+    )
     .action(
-      action(async () => {
-        const cwd = process.cwd()
+      action(async (opts: { printConfig?: boolean; cwd?: string }) => {
+        // serve writes nothing and is long-running; plan mode (and its end-of-run
+        // diff render) doesn't apply. Opt out silently — stdout is the MCP channel.
+        disablePlan()
+        // A client (or the MCP Inspector) spawns serve from its own directory, not
+        // the project — --cwd lets it point at the schema regardless of launch dir.
+        const cwd = opts.cwd ? resolve(opts.cwd) : process.cwd()
+
+        const inv = currentInvocation(process.argv[1] ?? 'design-spec', process.execPath)
+
+        // --print-config: emit setup and exit (before the schema check, so it works
+        // even from an uninitialized dir while the user is still wiring things up).
+        if (opts.printConfig) {
+          process.stdout.write(printableConfig(inv, cwd) + '\n')
+          return
+        }
+
         const schemaPath = findSchema(cwd)
         if (!schemaPath) throw new NotInitializedError(cwd)
 
@@ -89,6 +115,8 @@ export function registerServe(program: Command): void {
             }),
             { stderr: true },
           )
+          // A human ran this in a terminal — tell them how to actually use it.
+          ui.box('Connect an AI tool', connectHints(inv, cwd), { stderr: true })
         }
 
         // Hot-reload: keep the last good schema if a save is briefly invalid.
@@ -106,7 +134,7 @@ export function registerServe(program: Command): void {
         const transport = new StdioServerTransport()
         await server.connect(transport)
         // The TTY splash already says "ready"; only log for non-TTY MCP clients.
-        if (!process.stderr.isTTY) process.stderr.write('design-spec: MCP server ready on stdio\n')
+        if (!process.stderr.isTTY) process.stderr.write('design-spec: MCP server ready on stdio (run `design-spec serve --print-config` for client setup)\n')
 
         await new Promise<void>((resolve) => {
           process.on('SIGINT', () => {

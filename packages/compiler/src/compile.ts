@@ -10,6 +10,8 @@ import { compileDesignMd } from './designMd.js'
 import { compileSkillMd } from './skillMd.js'
 import { compileTailwind } from './tailwind.js'
 import { compileVue } from './vue.js'
+import { compileReactComponents } from './components/react.js'
+import { compileVueComponents } from './components/vue.js'
 
 /** Compile all outputs for a schema, deduplicated by filename (first wins). */
 export function compileAll(schema: DesignSystemSchema): FileOutput[] {
@@ -19,8 +21,8 @@ export function compileAll(schema: DesignSystemSchema): FileOutput[] {
   ]
 
   for (const framework of schema.export.frameworks) {
-    if (framework === 'react-tailwind') outputs.push(...compileTailwind(schema))
-    else if (framework === 'vue-css') outputs.push(...compileVue(schema))
+    if (framework === 'react-tailwind') outputs.push(...compileTailwind(schema), ...compileReactComponents(schema))
+    else if (framework === 'vue-css') outputs.push(...compileVue(schema), ...compileVueComponents(schema))
     // flutter: Phase 10
   }
 

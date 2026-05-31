@@ -8,7 +8,7 @@
 import { readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { atomicWrite } from '@design-spec/compiler'
+import { stageWrite } from './plan.js'
 
 export const BLOCK_START = '# ─── DESIGN-SPEC START ───'
 export const BLOCK_END = '# ─── DESIGN-SPEC END ───'
@@ -71,7 +71,7 @@ export async function injectAgentRules(root: string): Promise<RuleInjection[]> {
     const current = existed ? await readFile(path, 'utf8') : ''
     const next = upsertBlock(current, block)
     if (next !== current) {
-      await atomicWrite(path, next)
+      await stageWrite(path, next)
       results.push({ file: rel, action: existed ? 'updated' : 'created' })
     }
   }

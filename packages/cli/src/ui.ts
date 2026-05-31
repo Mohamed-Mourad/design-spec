@@ -14,7 +14,10 @@ import boxen from 'boxen'
 import Table from 'cli-table3'
 import ora, { type Ora } from 'ora'
 import { Listr, type ListrTask } from 'listr2'
+import { structuredPatch } from 'diff'
+import { relative } from 'node:path'
 import { renderWordmark, wordmarkWidth } from './wordmark.js'
+import type { PlannedWrite } from './plan.js'
 
 export interface UiMode {
   json: boolean
@@ -26,6 +29,8 @@ export interface UiMode {
 interface UiState extends UiMode {
   /** True for an interactive terminal (animations allowed). */
   interactive: boolean
+  /** Preview mode (`--plan`): suppress celebratory output; the plan report is the result. */
+  plan: boolean
 }
 
 function detectColor(flagNoColor: boolean): boolean {
@@ -41,6 +46,7 @@ const state: UiState = {
   verbose: false,
   color: detectColor(false),
   interactive: Boolean(process.stdout.isTTY) && !process.env.CI,
+  plan: false,
 }
 
 // A colorizer that honors the resolved color mode regardless of picocolors' own
@@ -48,10 +54,11 @@ const state: UiState = {
 let c = pc.createColors(state.color)
 
 /** Configure UI from the parsed global flags. Call once, early. */
-export function configureUi(opts: Partial<UiMode> & { noColor?: boolean }): void {
+export function configureUi(opts: Partial<UiMode> & { noColor?: boolean; plan?: boolean }): void {
   if (opts.json !== undefined) state.json = opts.json
   if (opts.quiet !== undefined) state.quiet = opts.quiet
   if (opts.verbose !== undefined) state.verbose = opts.verbose
+  if (opts.plan !== undefined) state.plan = opts.plan
   state.color = detectColor(Boolean(opts.noColor))
   // JSON mode and non-interactive contexts never animate.
   state.interactive = Boolean(process.stdout.isTTY) && !process.env.CI && !state.json
@@ -95,7 +102,7 @@ export function info(msg: string): void {
 }
 
 export function success(msg: string): void {
-  if (state.quiet) return
+  if (state.quiet || state.plan) return // in plan mode the diff report is the result
   out(`${c.green(SYMBOLS.success)} ${msg}`)
 }
 
@@ -133,6 +140,7 @@ export function error(message: string, opts: { code?: string; hint?: string; cau
 /** Emit the machine-readable result. In --json mode this is the ONLY stdout. */
 export function json(value: unknown): void {
   if (!state.json) return
+  if (state.plan) return // plan mode owns the JSON output (see planReport)
   process.stdout.write(JSON.stringify(value, null, 2) + '\n')
 }
 
@@ -144,7 +152,7 @@ export function json(value: unknown): void {
  * Suppressed in json/quiet; plain text when color is off.
  */
 export function banner(word: string, subtitle?: string): void {
-  if (state.json || state.quiet) return
+  if (state.json || state.quiet || state.plan) return
   if (!state.color) {
     out(word + (subtitle ? `\n${subtitle}` : ''))
     return
@@ -172,7 +180,7 @@ export interface SplashInfo {
  * stdout is a protocol channel (serve). Suppressed in json/quiet.
  */
 export function splash(info: SplashInfo, opts: { stderr?: boolean } = {}): void {
-  if (state.json || state.quiet) return
+  if (state.json || state.quiet || state.plan) return
   const sink = opts.stderr ? err : out
 
   // Boxed headline at the top, like Stakpak's onboarding hint.
@@ -201,15 +209,19 @@ export function splash(info: SplashInfo, opts: { stderr?: boolean } = {}): void 
   sink(c.dim(info.hints))
 }
 
-/** A boxed summary. Degrades to a plain block when color/box is unavailable. */
-export function box(title: string, lines: string[]): void {
-  if (state.json || state.quiet) return
+/**
+ * A boxed summary. Degrades to a plain block when color/box is unavailable.
+ * Pass `stderr: true` for commands whose stdout is a protocol channel (serve).
+ */
+export function box(title: string, lines: string[], opts: { stderr?: boolean } = {}): void {
+  if (state.json || state.quiet || state.plan) return
+  const sink = opts.stderr ? err : out
   const body = lines.join('\n')
   if (!state.color) {
-    out(`\n${title}\n${body}\n`)
+    sink(`\n${title}\n${body}\n`)
     return
   }
-  out(
+  sink(
     boxen(body, {
       title,
       titleAlignment: 'left',
@@ -237,6 +249,7 @@ export function table(head: string[], rows: string[][]): void {
  * non-interactive. Returns the operation's result.
  */
 export async function spin<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  if (state.plan) return fn() // plan mode: do the work quietly, the report is the output
   if (state.json || !state.interactive) {
     if (!state.quiet && !state.json) info(label)
     return fn()
@@ -348,8 +361,115 @@ export async function tasks<Ctx extends object>(steps: Step<Ctx>[], ctx?: Ctx): 
   // Both listr2 renderers default to figures.tick/figures.cross (✔/✖), which are
   // emoji code points — override them with our non-emoji glyphs on every branch.
   const icon = { COMPLETED: SYMBOLS.success, FAILED: SYMBOLS.error }
-  if (state.json) return new Listr<Ctx, 'silent'>(steps, { renderer: 'silent', ctx }).run()
+  if (state.json || state.plan) return new Listr<Ctx, 'silent'>(steps, { renderer: 'silent', ctx }).run()
   if (!state.interactive)
     return new Listr<Ctx, 'simple'>(steps, { renderer: 'simple', ctx, rendererOptions: { icon } }).run()
   return new Listr<Ctx, 'default'>(steps, { renderer: 'default', ctx, rendererOptions: { icon } }).run()
+}
+
+// ── Plan (preview) report ───────────────────────────────────────────────────────
+
+type ChangeKind = 'create' | 'modify'
+
+interface FileChange {
+  path: string
+  kind: ChangeKind
+  added: number
+  removed: number
+  before: string | null
+  after: string
+}
+
+/** Classify staged writes into real changes (skips writes that match disk). */
+function toChanges(records: PlannedWrite[]): FileChange[] {
+  const changes: FileChange[] = []
+  for (const r of records) {
+    if (r.before === r.after) continue // no-op write — nothing to show
+    const patch = structuredPatch('a', 'b', r.before ?? '', r.after, '', '', { context: 0 })
+    let added = 0
+    let removed = 0
+    for (const h of patch.hunks) {
+      for (const line of h.lines) {
+        if (line.startsWith('+')) added++
+        else if (line.startsWith('-')) removed++
+      }
+    }
+    changes.push({ path: r.path, kind: r.before === null ? 'create' : 'modify', added, removed, before: r.before, after: r.after })
+  }
+  return changes
+}
+
+function rel(p: string): string {
+  const r = relative(process.cwd(), p)
+  return r === '' || r.startsWith('..') ? p : r.split('\\').join('/')
+}
+
+/**
+ * Render a `--plan` preview: each changed file as a unified diff grouped under its
+ * path, with old/new line numbers and red/green +/- lines, then a summary footer.
+ * The diff is the command's entire output in plan mode (success/box are suppressed).
+ */
+export function planReport(records: PlannedWrite[]): void {
+  if (state.quiet) return
+  const changes = toChanges(records)
+
+  if (changes.length === 0) {
+    out(c.dim('Plan: no changes — output already matches the schema.'))
+    return
+  }
+
+  out(c.bold('Plan: the following changes would be written. No files were modified.'))
+  out('')
+
+  for (const ch of changes) {
+    const tag = ch.kind === 'create' ? c.green('new file') : c.yellow('modified')
+    out(`${c.bold(rel(ch.path))}  ${c.dim('(')}${tag}${c.dim(`, +${ch.added} -${ch.removed})`)}`)
+
+    const patch = structuredPatch('a', 'b', ch.before ?? '', ch.after, '', '', { context: 3 })
+    for (const h of patch.hunks) {
+      out(c.dim(`  @@ -${h.oldStart},${h.oldLines} +${h.newStart},${h.newLines} @@`))
+      let oldLn = h.oldStart
+      let newLn = h.newStart
+      for (const line of h.lines) {
+        const body = line.slice(1)
+        if (line.startsWith('+')) {
+          out(c.green(`  ${gutter('', newLn)} + ${body}`))
+          newLn++
+        } else if (line.startsWith('-')) {
+          out(c.red(`  ${gutter(oldLn, '')} - ${body}`))
+          oldLn++
+        } else {
+          out(c.dim(`  ${gutter(oldLn, newLn)}   ${body}`))
+          oldLn++
+          newLn++
+        }
+      }
+    }
+    out('')
+  }
+
+  const created = changes.filter((c2) => c2.kind === 'create').length
+  const modified = changes.length - created
+  const parts: string[] = []
+  if (created) parts.push(`${created} to create`)
+  if (modified) parts.push(`${modified} to change`)
+  out(c.bold(`Plan: ${parts.join(', ')}.`) + c.dim(' Re-run without --dry-run to apply.'))
+}
+
+/** Right-aligned old/new line-number gutter, e.g. "  12 14". Blank cells for add/remove. */
+function gutter(oldLn: number | '', newLn: number | ''): string {
+  const o = String(oldLn).padStart(4)
+  const n = String(newLn).padStart(4)
+  return c.dim(`${o} ${n}`)
+}
+
+/** Machine-readable plan result for `--plan --json`. */
+export function planJson(records: PlannedWrite[]): void {
+  const changes = toChanges(records).map((ch) => ({
+    path: rel(ch.path),
+    kind: ch.kind,
+    added: ch.added,
+    removed: ch.removed,
+  }))
+  process.stdout.write(JSON.stringify({ ok: true, plan: true, changes }, null, 2) + '\n')
 }

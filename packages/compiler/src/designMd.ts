@@ -4,8 +4,9 @@
 // tokens) + markdown body (human-readable rationale) in the spec's section
 // order. Phase 1 working-minimal; Phase 2 hardens with golden snapshots.
 
-import type { DesignSystemSchema, TypographyToken } from './types/schema.js'
+import type { DesignSystemSchema, TypographyToken, ComponentBlueprint } from './types/schema.js'
 import { toYaml, type YamlMap } from './yaml.js'
+import { orderBreakpoints, type BreakpointLayer } from './resolveResponsive.js'
 
 function frontmatter(schema: DesignSystemSchema): string {
   const fm: YamlMap = {
@@ -84,10 +85,33 @@ function shapesBody(schema: DesignSystemSchema): string {
   return [schema.prose.shapes ?? '', '', '| Level | Radius |', '|---|---|', rows].join('\n')
 }
 
+/** A per-breakpoint table of the responsive cascade, or '' when none is declared. */
+function responsiveTable(schema: DesignSystemSchema, bp: ComponentBlueprint): string {
+  const responsive = bp.responsive as Record<string, BreakpointLayer> | undefined
+  const ordered = orderBreakpoints(schema, responsive)
+  if (ordered.length === 0) return ''
+  const rows = ordered.map(({ name, minWidth, layer }) => {
+    const overrides = Object.entries(layer.tokens ?? {})
+      .filter(([k, v]) => k !== 'responsive' && v !== undefined)
+      .map(([k, v]) => `${k}: ${String(v)}`)
+      .join('; ')
+    const visible = layer.visibleAt === false ? 'hidden' : 'visible'
+    return `| ${name} | ${minWidth ?? '—'} | ${visible} | ${layer.layout ?? '—'} | ${overrides || '—'} |`
+  })
+  return [
+    '**Responsive**',
+    '',
+    '| Breakpoint | Min-width | Visibility | Layout | Overrides |',
+    '|---|---|---|---|---|',
+    ...rows,
+  ].join('\n')
+}
+
 function componentsBody(schema: DesignSystemSchema): string {
   const blocks = Object.values(schema.componentBlueprints).map((bp) => {
     const dos = bp.dosDonts?.dos.map((d) => `- ${d}`).join('\n') ?? ''
     const donts = bp.dosDonts?.donts.map((d) => `- ${d}`).join('\n') ?? ''
+    const responsive = responsiveTable(schema, bp)
     return [
       `### ${bp.name}`,
       bp.description,
@@ -95,6 +119,8 @@ function componentsBody(schema: DesignSystemSchema): string {
       `**Variants:** ${bp.variants.join(', ') || '—'}  `,
       `**Sizes:** ${bp.sizes.join(', ') || '—'}  `,
       `**States:** ${bp.states.join(', ') || '—'}`,
+      responsive ? '' : '',
+      responsive,
       dos || donts ? '' : '',
       dos ? `**Do**\n${dos}` : '',
       donts ? `**Don't**\n${donts}` : '',

@@ -7,35 +7,25 @@
 import type { DesignSystemSchema } from './types/schema.js'
 import type { FileOutput } from './types/compiler.js'
 import { resolveValue } from './tokenResolver.js'
+import { tokensCss } from './cssVars.js'
 
 function px(v: unknown): string {
   return typeof v === 'number' ? `${v}px` : String(v)
 }
 
-function cssVars(schema: DesignSystemSchema): string {
-  const p = schema.export.cssVariablePrefix
-  const lines: string[] = []
-  for (const [name, hex] of Object.entries(schema.colors)) lines.push(`  --${p}color-${name}: ${hex};`)
-  for (const [name, v] of Object.entries(schema.spacing)) lines.push(`  --${p}spacing-${name}: ${px(v)};`)
-  for (const [name, v] of Object.entries(schema.rounded)) lines.push(`  --${p}rounded-${name}: ${px(v)};`)
-  for (const [name, s] of Object.entries(schema.shadows)) {
-    const val = Array.isArray(s.value) ? s.value.join(', ') : s.value
-    lines.push(`  --${p}shadow-${name}: ${val};`)
-  }
-  return `:root {\n${lines.join('\n')}\n}\n`
+/** `'key': 'value',` lines for one theme group, two extra indent levels. */
+function entries(pairs: Array<[string, string]>): string {
+  return pairs.map(([k, v]) => `        '${k}': '${v}',`).join('\n')
 }
 
 function themeObject(schema: DesignSystemSchema): string {
   const p = schema.export.cssVariablePrefix
-  const mapColors = Object.keys(schema.colors)
-    .map((name) => `        '${name}': 'var(--${p}color-${name})',`)
-    .join('\n')
-  const mapSpacing = Object.keys(schema.spacing)
-    .map((name) => `        '${name}': 'var(--${p}spacing-${name})',`)
-    .join('\n')
-  const mapRounded = Object.keys(schema.rounded)
-    .map((name) => `        '${name}': 'var(--${p}rounded-${name})',`)
-    .join('\n')
+  const mapColors = entries(Object.keys(schema.colors).map((n) => [n, `var(--${p}color-${n})`]))
+  const mapSpacing = entries(Object.keys(schema.spacing).map((n) => [n, `var(--${p}spacing-${n})`]))
+  const mapRounded = entries(Object.keys(schema.rounded).map((n) => [n, `var(--${p}rounded-${n})`]))
+  const mapBorderWidth = entries(Object.keys(schema.borders.width).map((n) => [n, `var(--${p}border-width-${n})`]))
+  const mapShadow = entries(Object.keys(schema.shadows).map((n) => [n, `var(--${p}shadow-${n})`]))
+  const mapScreens = entries(Object.entries(schema.breakpoints).map(([n, v]) => [n, px(v)]))
   const mapFont = Object.entries(schema.typography)
     .map(([name, t]) => {
       const fs = px(resolveValue(schema, t.fontSize))
@@ -45,6 +35,9 @@ function themeObject(schema: DesignSystemSchema): string {
 
   return [
     '    extend: {',
+    '      screens: {',
+    mapScreens,
+    '      },',
     '      colors: {',
     mapColors,
     '      },',
@@ -53,6 +46,12 @@ function themeObject(schema: DesignSystemSchema): string {
     '      },',
     '      borderRadius: {',
     mapRounded,
+    '      },',
+    '      borderWidth: {',
+    mapBorderWidth,
+    '      },',
+    '      boxShadow: {',
+    mapShadow,
     '      },',
     '      fontSize: {',
     mapFont,
@@ -80,6 +79,6 @@ export function compileTailwind(schema: DesignSystemSchema): FileOutput[] {
 
   return [
     { filename: 'tailwind.config.js', content: config, language: 'javascript' },
-    { filename: 'tokens.css', content: cssVars(schema), language: 'css' },
+    { filename: 'tokens.css', content: tokensCss(schema), language: 'css' },
   ]
 }

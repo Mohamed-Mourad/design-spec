@@ -1,0 +1,916 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden — DESIGN.md > default schema 1`] = `
+"---
+version: alpha
+name: Clean Professional
+description: A neutral, high-contrast light baseline for product UI.
+colors:
+  primary: "#2563EB"
+  secondary: "#475569"
+  neutral: "#0F172A"
+  surface: "#FFFFFF"
+  on-surface: "#0F172A"
+  muted: "#64748B"
+  border: "#E2E8F0"
+  error: "#DC2626"
+  success: "#16A34A"
+typography:
+  headline-lg:
+    fontFamily: Inter
+    fontSize: 32px
+    fontWeight: 700
+    lineHeight: 1.15
+    letterSpacing: -0.02em
+  headline-md:
+    fontFamily: Inter
+    fontSize: 24px
+    fontWeight: 600
+    lineHeight: 1.2
+  body-lg:
+    fontFamily: Inter
+    fontSize: 18px
+    fontWeight: 400
+    lineHeight: 1.6
+  body-md:
+    fontFamily: Inter
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 1.6
+  body-sm:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: 400
+    lineHeight: 1.5
+  label-md:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: 500
+    lineHeight: 1.2
+spacing:
+  base: 16px
+  xs: 4px
+  sm: 8px
+  md: 16px
+  lg: 24px
+  xl: 40px
+  2xl: 64px
+rounded:
+  none: 0
+  sm: 4px
+  md: 8px
+  lg: 12px
+  full: 9999px
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.md}"
+    paddingX: "{spacing.md}"
+    paddingY: "{spacing.sm}"
+    typography: "{typography.label-md}"
+  button-primary-hover:
+    backgroundColor: "#1D4ED8"
+  button-secondary:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.primary}"
+    borderColor: "{colors.border}"
+    borderWidth: "{borders.width.thin}"
+    rounded: "{rounded.md}"
+    paddingX: "{spacing.md}"
+    paddingY: "{spacing.sm}"
+    typography: "{typography.label-md}"
+  input-default:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.on-surface}"
+    borderColor: "{colors.border}"
+    borderWidth: "{borders.width.thin}"
+    rounded: "{rounded.md}"
+    paddingX: "{spacing.md}"
+    paddingY: "{spacing.sm}"
+    typography: "{typography.body-md}"
+---
+
+# Clean Professional
+
+## Overview
+
+Clean Professional favors clarity over decoration: generous whitespace, high-contrast neutrals, and a single confident accent for action.
+**Personality:** Professional, calm, trustworthy.
+**Audience:** Product teams shipping web applications.
+**Direction:** Clean, spacious, high-contrast neutrals with a single accent.
+**Mood:** professional, clean, modern, accessible
+
+## Colors
+
+A high-contrast neutral foundation with a single blue accent reserved for primary action and focus.
+
+- **Primary (#2563EB):** primary color token.
+- **Secondary (#475569):** secondary color token.
+- **Neutral (#0F172A):** neutral color token.
+- **Surface (#FFFFFF):** surface color token.
+- **On Surface (#0F172A):** on-surface color token.
+- **Muted (#64748B):** muted color token.
+- **Border (#E2E8F0):** border color token.
+- **Error (#DC2626):** error color token.
+- **Success (#16A34A):** success color token.
+
+## Typography
+
+Inter across the board; weight and size carry hierarchy, not color.
+
+- **Headline Lg:** Inter 32px/1.15, weight 700.
+- **Headline Md:** Inter 24px/1.2, weight 600.
+- **Body Lg:** Inter 18px/1.6, weight 400.
+- **Body Md:** Inter 16px/1.6, weight 400.
+- **Body Sm:** Inter 14px/1.5, weight 400.
+- **Label Md:** Inter 14px/1.2, weight 500.
+
+## Layout
+
+A 12-column grid on a strict 8px spacing rhythm; content caps at 1200px.
+
+A 12-column grid; content caps at 1200px.
+
+| Step | Value |
+|---|---|
+| base | 16px |
+| xs | 4px |
+| sm | 8px |
+| md | 16px |
+| lg | 24px |
+| xl | 40px |
+| 2xl | 64px |
+
+## Elevation & Depth
+
+Depth comes from subtle, tight shadows on raised surfaces rather than heavy drop shadows.
+
+| Level | box-shadow |
+|---|---|
+| sm | \`0 1px 2px 0 rgba(15, 23, 42, 0.05)\` |
+| md | \`0 4px 6px -1px rgba(15, 23, 42, 0.1)\` |
+| lg | \`0 10px 15px -3px rgba(15, 23, 42, 0.1)\` |
+
+## Shapes
+
+Soft 8px corners on interactive elements; pills only for badges and avatars.
+
+| Level | Radius |
+|---|---|
+| none | 0 |
+| sm | 4px |
+| md | 8px |
+| lg | 12px |
+| full | 9999px |
+
+## Components
+
+### Button
+A clickable action trigger. Primary drives the single most important action per view.
+**Variants:** primary, secondary  
+**Sizes:** sm, md, lg  
+**States:** default, hover, focus, disabled, loading
+**Do**
+- Use one primary button per view.
+- Show a spinner in the loading state.
+**Don't**
+- Don't use inline hex — reference color tokens.
+
+### Input
+A single-line text field with label, helper text, and error states.
+**Variants:** default  
+**Sizes:** md  
+**States:** default, focus, disabled, error
+
+## Do's and Don'ts
+
+- Do reserve the primary color for the single most important action per screen.
+- Do maintain WCAG AA contrast (4.5:1 for body text).
+- Don't mix more than two font weights in one view.
+- Don't hard-code hex values — reference tokens.
+"
+`;
+
+exports[`golden — DESIGN.md > renders per-component responsive tables 1`] = `
+"---
+version: alpha
+name: Responsive Fixture
+description: A neutral, high-contrast light baseline for product UI.
+colors:
+  primary: "#2563EB"
+  secondary: "#475569"
+  neutral: "#0F172A"
+  surface: "#FFFFFF"
+  on-surface: "#0F172A"
+  muted: "#64748B"
+  border: "#E2E8F0"
+  error: "#DC2626"
+  success: "#16A34A"
+typography:
+  headline-lg:
+    fontFamily: Inter
+    fontSize: 32px
+    fontWeight: 700
+    lineHeight: 1.15
+    letterSpacing: -0.02em
+  headline-md:
+    fontFamily: Inter
+    fontSize: 24px
+    fontWeight: 600
+    lineHeight: 1.2
+  body-lg:
+    fontFamily: Inter
+    fontSize: 18px
+    fontWeight: 400
+    lineHeight: 1.6
+  body-md:
+    fontFamily: Inter
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 1.6
+  body-sm:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: 400
+    lineHeight: 1.5
+  label-md:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: 500
+    lineHeight: 1.2
+spacing:
+  base: 16px
+  xs: 4px
+  sm: 8px
+  md: 16px
+  lg: 24px
+  xl: 40px
+  2xl: 64px
+rounded:
+  none: 0
+  sm: 4px
+  md: 8px
+  lg: 12px
+  full: 9999px
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.md}"
+    paddingX: "{spacing.md}"
+    paddingY: "{spacing.sm}"
+    typography: "{typography.label-md}"
+  button-primary-hover:
+    backgroundColor: "#1D4ED8"
+  button-secondary:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.primary}"
+    borderColor: "{colors.border}"
+    borderWidth: "{borders.width.thin}"
+    rounded: "{rounded.md}"
+    paddingX: "{spacing.md}"
+    paddingY: "{spacing.sm}"
+    typography: "{typography.label-md}"
+  input-default:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.on-surface}"
+    borderColor: "{colors.border}"
+    borderWidth: "{borders.width.thin}"
+    rounded: "{rounded.md}"
+    paddingX: "{spacing.md}"
+    paddingY: "{spacing.sm}"
+    typography: "{typography.body-md}"
+---
+
+# Responsive Fixture
+
+## Overview
+
+Clean Professional favors clarity over decoration: generous whitespace, high-contrast neutrals, and a single confident accent for action.
+**Personality:** Professional, calm, trustworthy.
+**Audience:** Product teams shipping web applications.
+**Direction:** Clean, spacious, high-contrast neutrals with a single accent.
+**Mood:** professional, clean, modern, accessible
+
+## Colors
+
+A high-contrast neutral foundation with a single blue accent reserved for primary action and focus.
+
+- **Primary (#2563EB):** primary color token.
+- **Secondary (#475569):** secondary color token.
+- **Neutral (#0F172A):** neutral color token.
+- **Surface (#FFFFFF):** surface color token.
+- **On Surface (#0F172A):** on-surface color token.
+- **Muted (#64748B):** muted color token.
+- **Border (#E2E8F0):** border color token.
+- **Error (#DC2626):** error color token.
+- **Success (#16A34A):** success color token.
+
+## Typography
+
+Inter across the board; weight and size carry hierarchy, not color.
+
+- **Headline Lg:** Inter 32px/1.15, weight 700.
+- **Headline Md:** Inter 24px/1.2, weight 600.
+- **Body Lg:** Inter 18px/1.6, weight 400.
+- **Body Md:** Inter 16px/1.6, weight 400.
+- **Body Sm:** Inter 14px/1.5, weight 400.
+- **Label Md:** Inter 14px/1.2, weight 500.
+
+## Layout
+
+A 12-column grid on a strict 8px spacing rhythm; content caps at 1200px.
+
+A 12-column grid; content caps at 1200px.
+
+| Step | Value |
+|---|---|
+| base | 16px |
+| xs | 4px |
+| sm | 8px |
+| md | 16px |
+| lg | 24px |
+| xl | 40px |
+| 2xl | 64px |
+
+## Elevation & Depth
+
+Depth comes from subtle, tight shadows on raised surfaces rather than heavy drop shadows.
+
+| Level | box-shadow |
+|---|---|
+| sm | \`0 1px 2px 0 rgba(15, 23, 42, 0.05)\` |
+| md | \`0 4px 6px -1px rgba(15, 23, 42, 0.1)\` |
+| lg | \`0 10px 15px -3px rgba(15, 23, 42, 0.1)\` |
+
+## Shapes
+
+Soft 8px corners on interactive elements; pills only for badges and avatars.
+
+| Level | Radius |
+|---|---|
+| none | 0 |
+| sm | 4px |
+| md | 8px |
+| lg | 12px |
+| full | 9999px |
+
+## Components
+
+### Button
+A clickable action trigger. Primary drives the single most important action per view.
+**Variants:** primary, secondary  
+**Sizes:** sm, md, lg  
+**States:** default, hover, focus, disabled, loading
+**Responsive**
+
+| Breakpoint | Min-width | Visibility | Layout | Overrides |
+|---|---|---|---|---|
+| tablet | 768px | visible | comfortable padding | paddingX: {spacing.lg} |
+| desktop | 1024px | visible | wider hit target | paddingX: {spacing.xl}; paddingY: {spacing.md} |
+**Do**
+- Use one primary button per view.
+- Show a spinner in the loading state.
+**Don't**
+- Don't use inline hex — reference color tokens.
+
+### Input
+A single-line text field with label, helper text, and error states.
+**Variants:** default  
+**Sizes:** md  
+**States:** default, focus, disabled, error
+
+## Do's and Don'ts
+
+- Do reserve the primary color for the single most important action per screen.
+- Do maintain WCAG AA contrast (4.5:1 for body text).
+- Don't mix more than two font weights in one view.
+- Don't hard-code hex values — reference tokens.
+"
+`;
+
+exports[`golden — React components > default schema 1`] = `
+[
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export type ButtonVariant = 'primary' | 'secondary'
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant
+  variant?: 'primary' | 'secondary'
+  size?: 'sm' | 'md' | 'lg'
+  disabled?: boolean
+  loading?: boolean
+}
+
+const base = 'bg-primary text-surface text-label-md rounded-md px-md py-sm'
+
+const variants: Record<ButtonVariant, string> = {
+  primary: '',
+  secondary: 'bg-surface text-primary border-border border-thin',
+}
+
+export function Button({ variant = 'primary', children, className, ...props }: ButtonProps) {
+  const classes = [base, variants[variant], className].filter(Boolean).join(' ')
+  return <button className={classes} {...props}>{children}</button>
+}
+",
+    "filename": "components/Button.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string
+  placeholder?: string
+  disabled?: boolean
+  error?: string
+}
+
+const base = 'bg-surface text-on-surface text-body-md border-border border-thin rounded-md px-md py-sm'
+
+export function Input({ className, ...props }: InputProps) {
+  const classes = [base, className].filter(Boolean).join(' ')
+  return <input className={classes} {...props} />
+}
+",
+    "filename": "components/Input.tsx",
+    "language": "tsx",
+  },
+]
+`;
+
+exports[`golden — React components > emits mobile-first responsive prefixes 1`] = `
+"// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export type ButtonVariant = 'primary' | 'secondary'
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant
+  variant?: 'primary' | 'secondary'
+  size?: 'sm' | 'md' | 'lg'
+  disabled?: boolean
+  loading?: boolean
+}
+
+const base = 'bg-primary text-surface text-label-md rounded-md px-md py-sm tablet:px-lg desktop:px-xl desktop:py-md'
+
+const variants: Record<ButtonVariant, string> = {
+  primary: '',
+  secondary: 'bg-surface text-primary border-border border-thin',
+}
+
+export function Button({ variant = 'primary', children, className, ...props }: ButtonProps) {
+  const classes = [base, variants[variant], className].filter(Boolean).join(' ')
+  return <button className={classes} {...props}>{children}</button>
+}
+"
+`;
+
+exports[`golden — SKILL.md > default schema 1`] = `
+"# Clean Professional — Design System Skill
+
+This file tells an AI agent how to build UI that conforms to this design system.
+The normative source of truth is \`design-spec.schema.json\`; \`DESIGN.md\` carries the human rationale.
+
+## Golden rule
+
+Always reference design tokens. Never hard-code raw values (hex, px, \`Color(0xFF…)\`).
+Raw values are *drift* and are auto-rewritten to the nearest token by \`design-spec fix\` and the CI Drift-Janitor.
+
+## Getting context efficiently
+
+Run \`design-spec serve\` to expose this schema over MCP. Request only the slice you need:
+- \`get_component_tokens("Button")\` — tokens for one component.
+- \`get_layout_system()\` — grid, spacing, container, breakpoints.
+- \`get_semantic_colors()\` — semantic color roles (not the raw palette).
+
+## Frameworks
+
+### React + Tailwind
+
+- Reference tokens via Tailwind utilities, never inline hex. e.g. \`className="text-primary rounded-md"\`.
+- Token names map 1:1 to \`tailwind.config.js\` theme keys generated from the schema.
+- Never write \`text-[#...]\` arbitrary values — that is drift and will be auto-fixed.
+
+## Components
+
+#### Button
+A clickable action trigger. Primary drives the single most important action per view.
+- Anatomy: root › label › icon › spinner
+- Variants: primary, secondary · Sizes: sm, md, lg · States: default, hover, focus, disabled, loading
+- Props:
+  - \`variant\`: enum(primary|secondary)
+  - \`size\`: enum(sm|md|lg)
+  - \`disabled\`: boolean
+  - \`loading\`: boolean
+  - \`children\`: slot — Button label content.
+
+#### Input
+A single-line text field with label, helper text, and error states.
+- Anatomy: root › label › field › helper
+- Variants: default · Sizes: md · States: default, focus, disabled, error
+- Props:
+  - \`label\`: string
+  - \`placeholder\`: string
+  - \`disabled\`: boolean
+  - \`error\`: string — Error message; switches the field to its error state.
+"
+`;
+
+exports[`golden — Tailwind > tailwind.config.js + tokens.css 1`] = `
+[
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+/** @type {import("tailwindcss").Config} */
+export default {
+  prefix: '',
+  content: ['./src/**/*.{js,ts,jsx,tsx,vue,html}'],
+  theme: {
+    extend: {
+      screens: {
+        'tablet': '768px',
+        'desktop': '1024px',
+        'wide': '1280px',
+      },
+      colors: {
+        'primary': 'var(--color-primary)',
+        'secondary': 'var(--color-secondary)',
+        'neutral': 'var(--color-neutral)',
+        'surface': 'var(--color-surface)',
+        'on-surface': 'var(--color-on-surface)',
+        'muted': 'var(--color-muted)',
+        'border': 'var(--color-border)',
+        'error': 'var(--color-error)',
+        'success': 'var(--color-success)',
+      },
+      spacing: {
+        'base': 'var(--spacing-base)',
+        'xs': 'var(--spacing-xs)',
+        'sm': 'var(--spacing-sm)',
+        'md': 'var(--spacing-md)',
+        'lg': 'var(--spacing-lg)',
+        'xl': 'var(--spacing-xl)',
+        '2xl': 'var(--spacing-2xl)',
+      },
+      borderRadius: {
+        'none': 'var(--rounded-none)',
+        'sm': 'var(--rounded-sm)',
+        'md': 'var(--rounded-md)',
+        'lg': 'var(--rounded-lg)',
+        'full': 'var(--rounded-full)',
+      },
+      borderWidth: {
+        'thin': 'var(--border-width-thin)',
+        'thick': 'var(--border-width-thick)',
+      },
+      boxShadow: {
+        'sm': 'var(--shadow-sm)',
+        'md': 'var(--shadow-md)',
+        'lg': 'var(--shadow-lg)',
+      },
+      fontSize: {
+        'headline-lg': ['32px', { lineHeight: '1.15', fontWeight: '700' }],
+        'headline-md': ['24px', { lineHeight: '1.2', fontWeight: '600' }],
+        'body-lg': ['18px', { lineHeight: '1.6', fontWeight: '400' }],
+        'body-md': ['16px', { lineHeight: '1.6', fontWeight: '400' }],
+        'body-sm': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+        'label-md': ['14px', { lineHeight: '1.2', fontWeight: '500' }],
+      },
+    },
+  },
+  plugins: [],
+}
+",
+    "filename": "tailwind.config.js",
+    "language": "javascript",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+:root {
+  --color-primary: #2563EB;
+  --color-secondary: #475569;
+  --color-neutral: #0F172A;
+  --color-surface: #FFFFFF;
+  --color-on-surface: #0F172A;
+  --color-muted: #64748B;
+  --color-border: #E2E8F0;
+  --color-error: #DC2626;
+  --color-success: #16A34A;
+  --spacing-base: 16px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 40px;
+  --spacing-2xl: 64px;
+  --rounded-none: 0px;
+  --rounded-sm: 4px;
+  --rounded-md: 8px;
+  --rounded-lg: 12px;
+  --rounded-full: 9999px;
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1);
+  --border-width-thin: 1px;
+  --border-width-thick: 2px;
+  --border-color-default: #E2E8F0;
+  --border-color-strong: #0F172A;
+  --font-headline-lg-family: Inter;
+  --font-headline-lg-size: 32px;
+  --font-headline-lg-weight: 700;
+  --font-headline-lg-line-height: 1.15;
+  --font-headline-md-family: Inter;
+  --font-headline-md-size: 24px;
+  --font-headline-md-weight: 600;
+  --font-headline-md-line-height: 1.2;
+  --font-body-lg-family: Inter;
+  --font-body-lg-size: 18px;
+  --font-body-lg-weight: 400;
+  --font-body-lg-line-height: 1.6;
+  --font-body-md-family: Inter;
+  --font-body-md-size: 16px;
+  --font-body-md-weight: 400;
+  --font-body-md-line-height: 1.6;
+  --font-body-sm-family: Inter;
+  --font-body-sm-size: 14px;
+  --font-body-sm-weight: 400;
+  --font-body-sm-line-height: 1.5;
+  --font-label-md-family: Inter;
+  --font-label-md-size: 14px;
+  --font-label-md-weight: 500;
+  --font-label-md-line-height: 1.2;
+  --opacity-disabled: 0.4;
+  --opacity-muted: 0.6;
+  --opacity-full: 1;
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+}
+",
+    "filename": "tokens.css",
+    "language": "css",
+  },
+]
+`;
+
+exports[`golden — Vue components > default schema 1`] = `
+[
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  variant?: 'primary' | 'secondary'
+  variant?: 'primary' | 'secondary'
+  size?: 'sm' | 'md' | 'lg'
+  disabled?: boolean
+  loading?: boolean
+}>()
+</script>
+
+<template>
+  <button class="button" :class="variant ? \`button--\${variant}\` : ''">
+    <slot />
+  </button>
+</template>
+
+<style scoped>
+.button {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+  font-family: var(--font-label-md-family);
+  font-size: var(--font-label-md-size);
+  font-weight: var(--font-label-md-weight);
+  line-height: var(--font-label-md-line-height);
+  border-radius: var(--rounded-md);
+  padding-left: var(--spacing-md);
+  padding-right: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+}
+
+.button--secondary {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  border-color: var(--color-border);
+  border-width: var(--border-width-thin);
+}
+</style>
+",
+    "filename": "components/Button.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  label?: string
+  placeholder?: string
+  disabled?: boolean
+  error?: string
+}>()
+</script>
+
+<template>
+  <input class="input" />
+</template>
+
+<style scoped>
+.input {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-body-md-family);
+  font-size: var(--font-body-md-size);
+  font-weight: var(--font-body-md-weight);
+  line-height: var(--font-body-md-line-height);
+  border-color: var(--color-border);
+  border-width: var(--border-width-thin);
+  border-radius: var(--rounded-md);
+  padding-left: var(--spacing-md);
+  padding-right: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+}
+</style>
+",
+    "filename": "components/Input.vue",
+    "language": "vue",
+  },
+]
+`;
+
+exports[`golden — Vue components > emits mobile-first @media blocks 1`] = `
+"<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  variant?: 'primary' | 'secondary'
+  variant?: 'primary' | 'secondary'
+  size?: 'sm' | 'md' | 'lg'
+  disabled?: boolean
+  loading?: boolean
+}>()
+</script>
+
+<template>
+  <button class="button" :class="variant ? \`button--\${variant}\` : ''">
+    <slot />
+  </button>
+</template>
+
+<style scoped>
+.button {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+  font-family: var(--font-label-md-family);
+  font-size: var(--font-label-md-size);
+  font-weight: var(--font-label-md-weight);
+  line-height: var(--font-label-md-line-height);
+  border-radius: var(--rounded-md);
+  padding-left: var(--spacing-md);
+  padding-right: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+}
+
+.button--secondary {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  border-color: var(--color-border);
+  border-width: var(--border-width-thin);
+}
+
+@media (min-width: 768px) {
+  .button {
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+  }
+}
+
+@media (min-width: 1024px) {
+  .button {
+    padding-left: var(--spacing-xl);
+    padding-right: var(--spacing-xl);
+    padding-top: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+  }
+}
+</style>
+"
+`;
+
+exports[`golden — Vue tokens.css > default schema 1`] = `
+[
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+:root {
+  --color-primary: #2563EB;
+  --color-secondary: #475569;
+  --color-neutral: #0F172A;
+  --color-surface: #FFFFFF;
+  --color-on-surface: #0F172A;
+  --color-muted: #64748B;
+  --color-border: #E2E8F0;
+  --color-error: #DC2626;
+  --color-success: #16A34A;
+  --spacing-base: 16px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 40px;
+  --spacing-2xl: 64px;
+  --rounded-none: 0px;
+  --rounded-sm: 4px;
+  --rounded-md: 8px;
+  --rounded-lg: 12px;
+  --rounded-full: 9999px;
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1);
+  --border-width-thin: 1px;
+  --border-width-thick: 2px;
+  --border-color-default: #E2E8F0;
+  --border-color-strong: #0F172A;
+  --font-headline-lg-family: Inter;
+  --font-headline-lg-size: 32px;
+  --font-headline-lg-weight: 700;
+  --font-headline-lg-line-height: 1.15;
+  --font-headline-md-family: Inter;
+  --font-headline-md-size: 24px;
+  --font-headline-md-weight: 600;
+  --font-headline-md-line-height: 1.2;
+  --font-body-lg-family: Inter;
+  --font-body-lg-size: 18px;
+  --font-body-lg-weight: 400;
+  --font-body-lg-line-height: 1.6;
+  --font-body-md-family: Inter;
+  --font-body-md-size: 16px;
+  --font-body-md-weight: 400;
+  --font-body-md-line-height: 1.6;
+  --font-body-sm-family: Inter;
+  --font-body-sm-size: 14px;
+  --font-body-sm-weight: 400;
+  --font-body-sm-line-height: 1.5;
+  --font-label-md-family: Inter;
+  --font-label-md-size: 14px;
+  --font-label-md-weight: 500;
+  --font-label-md-line-height: 1.2;
+  --opacity-disabled: 0.4;
+  --opacity-muted: 0.6;
+  --opacity-full: 1;
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+}
+",
+    "filename": "tokens.css",
+    "language": "css",
+  },
+]
+`;
+
+exports[`golden — compileAll > default (react-tailwind) file set 1`] = `
+[
+  "DESIGN.md",
+  "SKILL.md",
+  "tailwind.config.js",
+  "tokens.css",
+  "components/Button.tsx",
+  "components/Input.tsx",
+]
+`;
+
+exports[`golden — compileAll > vue-css file set 1`] = `
+[
+  "DESIGN.md",
+  "SKILL.md",
+  "tokens.css",
+  "components/Button.vue",
+  "components/Input.vue",
+]
+`;

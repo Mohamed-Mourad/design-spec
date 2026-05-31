@@ -1,6 +1,6 @@
 {
   "name": "@design-spec/compiler",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Pure, side-effect-free schema->code token compilers + detect/fix + MCP semantic routing. Shared by the web app, CLI, CI Drift-Janitor, and (as a published artifact) the closed-source Figma plugin.",
   "license": "MIT",
   "type": "module",
@@ -26,6 +26,8 @@
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "fast-check": "^4.8.0",
     "typescript": "^5.8.3",
     "vitest": "^3.0.0"
   }
