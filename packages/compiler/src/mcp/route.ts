@@ -25,27 +25,79 @@ export interface ComponentTokensSlice {
   states: string[]
   /** Resolved token values per variant (`base` + each variant). */
   tokens: Record<string, Record<string, unknown>>
+  /** Present only on a non-exact (fuzzy) match — tells the agent this was a guess. */
+  note?: string
+}
+
+/** Levenshtein edit distance — small, pure, for closest-name matching. */
+function editDistance(a: string, b: string): number {
+  const m = a.length
+  const n = b.length
+  if (m === 0) return n
+  if (n === 0) return m
+  let prev = Array.from({ length: n + 1 }, (_, i) => i)
+  let curr = new Array<number>(n + 1)
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost)
+    }
+    ;[prev, curr] = [curr, prev]
+  }
+  return prev[n]
 }
 
 /**
- * Tokens for ONE component. Returns null if the component is unknown. Leaks
- * nothing about other components or unrelated token groups — only this
- * component's blueprint tokens, resolved to concrete values.
+ * Resolve a requested component name to a blueprint key. Exact match wins; then
+ * case-insensitive ("button" → "Button"); then the closest-spelled name within a
+ * tolerance (typos). Returns the key plus whether it was an exact/insensitive hit.
+ */
+function resolveComponentKey(
+  keys: string[],
+  name: string,
+): { key: string; fuzzy: boolean } | null {
+  if (keys.includes(name)) return { key: name, fuzzy: false }
+  const lower = name.toLowerCase()
+  const ci = keys.find((k) => k.toLowerCase() === lower)
+  if (ci) return { key: ci, fuzzy: false } // case-insensitive counts as a real match
+
+  // Closest-spelled name (typo tolerance), deterministic on ties.
+  let best: { key: string; d: number } | null = null
+  for (const k of keys) {
+    const d = editDistance(k.toLowerCase(), lower)
+    if (best === null || d < best.d || (d === best.d && k < best.key)) best = { key: k, d }
+  }
+  if (!best) return null
+  const tolerance = Math.max(2, Math.ceil(best.key.length / 2))
+  return best.d <= tolerance ? { key: best.key, fuzzy: true } : null
+}
+
+/**
+ * Tokens for ONE component. Match is case-insensitive; an unrecognized name falls
+ * back to the closest-spelled component with a `note` flagging it as a guess.
+ * Returns null only when nothing is close. Leaks nothing about other components or
+ * unrelated token groups — only the matched component's blueprint tokens, resolved.
  */
 export function get_component_tokens(schema: DesignSystemSchema, name: string): ComponentTokensSlice | null {
-  const bp = schema.componentBlueprints[name]
-  if (!bp) return null
+  const match = resolveComponentKey(Object.keys(schema.componentBlueprints), name)
+  if (!match) return null
+  const bp = schema.componentBlueprints[match.key]
   const tokens: Record<string, Record<string, unknown>> = {}
   for (const [variant, group] of Object.entries(bp.tokens)) {
     tokens[variant] = resolveGroup(schema, group as ComponentTokenGroup)
   }
-  return {
+  const slice: ComponentTokensSlice = {
     component: bp.name,
     description: bp.description,
     variants: bp.variants,
     states: bp.states,
     tokens,
   }
+  if (match.fuzzy) {
+    slice.note = `No component named "${name}". This is the closest match ("${bp.name}") and may not be what you intended — verify the component name.`
+  }
+  return slice
 }
 
 export interface LayoutSystemSlice {

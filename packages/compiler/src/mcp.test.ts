@@ -29,8 +29,34 @@ describe('get_component_tokens — slice isolation', () => {
     expect(JSON.stringify(slice)).not.toMatch(/"\{[^}]+\}"/)
   })
 
-  it('returns null for an unknown component', () => {
+  it('matches case-insensitively with no caveat (button → Button)', () => {
+    for (const q of ['button', 'BUTTON', 'Button']) {
+      const slice = get_component_tokens(schema, q)!
+      expect(slice.component).toBe('Button')
+      expect(slice.note).toBeUndefined()
+    }
+  })
+
+  it('falls back to the closest-spelled component and flags it as inexact', () => {
+    const slice = get_component_tokens(schema, 'buton')! // typo
+    expect(slice.component).toBe('Button')
+    expect(slice.note).toBeDefined()
+    expect(slice.note).toContain('buton')
+    expect(slice.note).toContain('Button')
+  })
+
+  it('still resolves real tokens on a fuzzy match', () => {
+    expect(get_component_tokens(schema, 'input')!.component).toBe('Input')
+  })
+
+  it('returns null when nothing is close', () => {
     expect(get_component_tokens(schema, 'Nope')).toBeNull()
+    expect(get_component_tokens(schema, 'xyzzy-widget')).toBeNull()
+  })
+
+  it('a fuzzy note names only the requested and matched component, nothing else', () => {
+    const slice = get_component_tokens(schema, 'inpyt')! // → Input
+    expect(slice.note).not.toContain('Button')
   })
 })
 
