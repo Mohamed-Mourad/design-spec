@@ -1,0 +1,730 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://designspec.dev/design-spec.schema.json",
+  "title": "DesignSystemSchema",
+  "description": "The authoritative contract for a design-spec.schema.json document. Mirrors packages/compiler/src/types/schema.ts — the single source of truth. See the evolving-schema-contract skill before changing either; the two must stay in lockstep.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "name",
+    "overview",
+    "colors",
+    "typography",
+    "spacing",
+    "rounded",
+    "shadows",
+    "borders",
+    "transitions",
+    "breakpoints",
+    "zIndex",
+    "opacity",
+    "icons",
+    "layout",
+    "components",
+    "componentBlueprints",
+    "prose",
+    "darkMode",
+    "export"
+  ],
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "overview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "brandPersonality",
+        "targetAudience",
+        "aestheticDirection",
+        "moodKeywords"
+      ],
+      "properties": {
+        "brandPersonality": {
+          "type": "string"
+        },
+        "targetAudience": {
+          "type": "string"
+        },
+        "aestheticDirection": {
+          "type": "string"
+        },
+        "moodKeywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "colors": {
+      "type": "object",
+      "minProperties": 1,
+      "required": [
+        "primary"
+      ],
+      "additionalProperties": {
+        "$ref": "#/$defs/color"
+      }
+    },
+    "typography": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/typography"
+      }
+    },
+    "spacing": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/dimensionOrNumber"
+      }
+    },
+    "rounded": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/dimensionOrNumber"
+      }
+    },
+    "shadows": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/shadowToken"
+      }
+    },
+    "borders": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "color"
+      ],
+      "properties": {
+        "width": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/dimension"
+          }
+        },
+        "color": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/colorOrRef"
+          }
+        }
+      }
+    },
+    "transitions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "duration",
+        "easing",
+        "reducedMotion"
+      ],
+      "properties": {
+        "duration": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "easing": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "reducedMotion": {
+          "type": "boolean"
+        }
+      }
+    },
+    "breakpoints": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/dimension"
+      }
+    },
+    "zIndex": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "opacity": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "icons": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "library",
+        "size"
+      ],
+      "properties": {
+        "library": {
+          "type": "string"
+        },
+        "size": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/dimension"
+          }
+        }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grid",
+        "container"
+      ],
+      "properties": {
+        "grid": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "columns",
+            "gutter",
+            "margin"
+          ],
+          "properties": {
+            "columns": {
+              "type": "number"
+            },
+            "gutter": {
+              "$ref": "#/$defs/dimensionOrRef"
+            },
+            "margin": {
+              "$ref": "#/$defs/dimensionOrRef"
+            }
+          }
+        },
+        "container": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maxWidth",
+            "paddingX"
+          ],
+          "properties": {
+            "maxWidth": {
+              "$ref": "#/$defs/dimension"
+            },
+            "paddingX": {
+              "$ref": "#/$defs/dimensionOrRef"
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/componentTokenGroup"
+      }
+    },
+    "componentBlueprints": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/componentBlueprint"
+      }
+    },
+    "prose": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "overview": {
+          "type": "string"
+        },
+        "colors": {
+          "type": "string"
+        },
+        "typography": {
+          "type": "string"
+        },
+        "layout": {
+          "type": "string"
+        },
+        "elevation": {
+          "type": "string"
+        },
+        "shapes": {
+          "type": "string"
+        },
+        "dosDonts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "darkMode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "colors"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "colors": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/color"
+          }
+        }
+      }
+    },
+    "export": {
+      "$ref": "#/$defs/exportConfig"
+    },
+    "presentation": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "color": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+    },
+    "tokenRef": {
+      "type": "string",
+      "pattern": "^\\{[^}]+\\}$"
+    },
+    "dimension": {
+      "type": "string",
+      "pattern": "^-?(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)(px|rem|em)$"
+    },
+    "dimensionOrNumber": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/dimension"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "dimensionOrRef": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/dimension"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "$ref": "#/$defs/tokenRef"
+        }
+      ]
+    },
+    "colorOrRef": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/color"
+        },
+        {
+          "$ref": "#/$defs/tokenRef"
+        }
+      ]
+    },
+    "typography": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fontFamily",
+        "fontSize",
+        "fontWeight",
+        "lineHeight"
+      ],
+      "properties": {
+        "fontFamily": {
+          "type": "string"
+        },
+        "fontSize": {
+          "$ref": "#/$defs/dimension"
+        },
+        "fontWeight": {
+          "type": "number"
+        },
+        "lineHeight": {
+          "$ref": "#/$defs/dimensionOrNumber"
+        },
+        "letterSpacing": {
+          "$ref": "#/$defs/dimension"
+        },
+        "fontFeature": {
+          "type": "string"
+        },
+        "fontVariation": {
+          "type": "string"
+        },
+        "textTransform": {
+          "enum": [
+            "none",
+            "uppercase",
+            "lowercase",
+            "capitalize"
+          ]
+        }
+      }
+    },
+    "shadowToken": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "inset": {
+          "type": "boolean"
+        }
+      }
+    },
+    "componentTokenGroup": {
+      "type": "object",
+      "description": "Unknown props are accepted (per spec.md), so additionalProperties is permitted.",
+      "additionalProperties": true,
+      "properties": {
+        "backgroundColor": {
+          "$ref": "#/$defs/colorOrRef"
+        },
+        "textColor": {
+          "$ref": "#/$defs/colorOrRef"
+        },
+        "typography": {
+          "$ref": "#/$defs/tokenRef"
+        },
+        "rounded": {
+          "$ref": "#/$defs/dimensionOrRef"
+        },
+        "padding": {
+          "$ref": "#/$defs/dimensionOrRef"
+        },
+        "paddingX": {
+          "$ref": "#/$defs/dimensionOrRef"
+        },
+        "paddingY": {
+          "$ref": "#/$defs/dimensionOrRef"
+        },
+        "borderColor": {
+          "$ref": "#/$defs/colorOrRef"
+        },
+        "borderWidth": {
+          "$ref": "#/$defs/dimensionOrRef"
+        },
+        "shadow": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/tokenRef"
+            }
+          ]
+        },
+        "size": {
+          "$ref": "#/$defs/dimension"
+        },
+        "height": {
+          "$ref": "#/$defs/dimension"
+        },
+        "width": {
+          "$ref": "#/$defs/dimension"
+        },
+        "responsive": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/componentTokenGroup"
+          }
+        }
+      }
+    },
+    "propDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "string",
+            "boolean",
+            "number",
+            "enum",
+            "slot"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "default": {},
+        "required": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "componentExample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "props"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "props": {
+          "type": "object"
+        },
+        "code": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "react": {
+              "type": "string"
+            },
+            "vue": {
+              "type": "string"
+            },
+            "flutter": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "responsiveBreakpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tokens": {
+          "$ref": "#/$defs/componentTokenGroup"
+        },
+        "layout": {
+          "type": "string"
+        },
+        "visibleAt": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "componentBlueprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "description",
+        "category",
+        "variants",
+        "sizes",
+        "states",
+        "anatomy",
+        "props",
+        "tokens",
+        "examples"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "action",
+            "form",
+            "feedback",
+            "navigation",
+            "layout",
+            "data"
+          ]
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sizes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "anatomy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "props": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/propDefinition"
+          }
+        },
+        "tokens": {
+          "type": "object",
+          "required": [
+            "base"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/componentTokenGroup"
+          },
+          "properties": {
+            "base": {
+              "$ref": "#/$defs/componentTokenGroup"
+            }
+          }
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/componentExample"
+          }
+        },
+        "dosDonts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dos",
+            "donts"
+          ],
+          "properties": {
+            "dos": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "donts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responsive": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/responsiveBreakpoint"
+          }
+        }
+      }
+    },
+    "exportConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frameworks",
+        "webNamingConvention",
+        "cssVariablePrefix",
+        "tailwindClassPrefix",
+        "flutterNaming",
+        "fontLoading",
+        "fontSource"
+      ],
+      "properties": {
+        "frameworks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "react-tailwind",
+              "vue-css",
+              "flutter"
+            ]
+          }
+        },
+        "webNamingConvention": {
+          "enum": [
+            "kebab-case",
+            "camelCase",
+            "snake_case",
+            "SCREAMING_SNAKE"
+          ]
+        },
+        "cssVariablePrefix": {
+          "type": "string"
+        },
+        "tailwindClassPrefix": {
+          "type": "string"
+        },
+        "flutterNaming": {
+          "enum": [
+            "prefixed-class",
+            "snake_const",
+            "raw"
+          ]
+        },
+        "fontLoading": {
+          "enum": [
+            "auto",
+            "manual"
+          ]
+        },
+        "fontSource": {
+          "enum": [
+            "google",
+            "bunny",
+            "custom"
+          ]
+        },
+        "fontSourceUrl": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

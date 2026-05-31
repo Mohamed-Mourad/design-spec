@@ -14,6 +14,9 @@ export type { FileOutput } from './types/compiler.js'
 // Defaults
 export { defaultSchema, defaultExportConfig } from './defaultSchema.js'
 
+// Authoritative JSON Schema (single source; repo-root design-spec.schema.json is generated from it)
+export { designSpecJsonSchema } from './jsonSchema.js'
+
 // Token resolution
 export { resolveValue, isTokenRef, refPath, getPath } from './tokenResolver.js'
 
@@ -22,7 +25,24 @@ export { compileDesignMd } from './designMd.js'
 export { compileSkillMd } from './skillMd.js'
 export { compileTailwind } from './tailwind.js'
 export { compileVue } from './vue.js'
+export { compileReactComponents } from './components/react.js'
+export { compileVueComponents } from './components/vue.js'
 export { compileAll } from './compile.js'
+
+// Responsive cascade resolution + validation
+export {
+  resolveResponsive,
+  validateResponsiveCascade,
+  mergeTokens,
+  orderBreakpoints,
+} from './resolveResponsive.js'
+export type {
+  ResolvedResponsive,
+  ResolvedBreakpoint,
+  BreakpointLayer,
+  ResponsiveCascadeIssue,
+  ResponsiveIssueKind,
+} from './resolveResponsive.js'
 
 // Drift detect + auto-fix
 export { detect, nearestColorToken } from './detect.js'
