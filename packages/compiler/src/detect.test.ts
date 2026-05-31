@@ -99,17 +99,18 @@ describe('detect — strict fixable flag at the heuristic boundaries', () => {
     expect(over.fixable).toBe(false)
   })
 
-  it('px: fixable at Δ2px, unfixable just over and when equidistant', () => {
-    const [at] = detect('padding: 18px;', schema) // |18-16| = 2
+  it('px: fixable within the gap-relative radius, unfixable at a midpoint', () => {
+    const [at] = detect('padding: 19px;', schema) // Δ3 ≤ 0.4×(24-16)
     expect(at.kind).toBe('raw-px')
     expect(at.nearestToken).toBe('spacing.base')
     expect(at.fixable).toBe(true)
 
-    const [over] = detect('padding: 19px;', schema) // Δ3
+    const [over] = detect('padding: 20px;', schema) // midpoint 16↔24
+    expect(over.nearestToken).toBeNull()
     expect(over.fixable).toBe(false)
 
-    const [equi] = detect('padding: 6px;', schema) // Δ2 from xs(4) and sm(8)
-    expect(equi.nearestToken).toBeNull()
-    expect(equi.fixable).toBe(false)
+    const [mid] = detect('padding: 6px;', schema) // midpoint 4↔8
+    expect(mid.nearestToken).toBeNull()
+    expect(mid.fixable).toBe(false)
   })
 })

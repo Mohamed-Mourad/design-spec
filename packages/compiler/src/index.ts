@@ -59,7 +59,7 @@ export {
   parseHex,
 } from './colorMatch.js'
 export type { Lab, Rgb } from './colorMatch.js'
-export { SCALE_PX_THRESHOLD, nearestScaleToken } from './scaleMatch.js'
+export { SCALE_GAP_FRACTION, SCALE_SNAP_CAP_PX, nearestScaleToken } from './scaleMatch.js'
 
 // MCP semantic routing resolvers
 export {

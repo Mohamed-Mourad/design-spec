@@ -103,9 +103,9 @@ describe('fix — heuristic boundary goldens', () => {
     expect(roundtrip('color: #3069F0;')).toBe('color: #3069F0;') // ΔE 2.61 → untouched
   })
 
-  it('snaps a near px at Δ2px, bypasses over 2px and equidistant', () => {
-    expect(roundtrip('padding: 18px;')).toBe('padding: var(--spacing-base);') // Δ2 → snap
-    expect(roundtrip('padding: 19px;')).toBe('padding: 19px;') // Δ3 → untouched
-    expect(roundtrip('margin: 6px;')).toBe('margin: 6px;') // equidistant 4/8 → untouched
+  it('snaps a near px within the gap-relative radius, bypasses the midpoint', () => {
+    expect(roundtrip('padding: 19px;')).toBe('padding: var(--spacing-base);') // Δ3 ≤ radius → snap
+    expect(roundtrip('padding: 20px;')).toBe('padding: 20px;') // midpoint 16↔24 → untouched
+    expect(roundtrip('margin: 6px;')).toBe('margin: 6px;') // midpoint 4↔8 → untouched
   })
 })
