@@ -7,7 +7,8 @@
 import { readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { atomicWrite, type DesignSystemSchema } from '@design-spec/compiler'
+import { type DesignSystemSchema } from '@design-spec/compiler'
+import { stageWrite } from './plan.js'
 import { InvalidSchemaError, NotInitializedError } from './errors.js'
 import { validateSchema } from './validate.js'
 
@@ -67,7 +68,7 @@ export function serializeSchema(schema: DesignSystemSchema): string {
   return JSON.stringify(schema, null, 2) + '\n'
 }
 
-/** Atomically write the schema to disk. */
+/** Write the schema to disk (atomic), or stage it in plan mode. */
 export async function saveSchema(path: string, schema: DesignSystemSchema): Promise<void> {
-  await atomicWrite(path, serializeSchema(schema))
+  await stageWrite(path, serializeSchema(schema))
 }

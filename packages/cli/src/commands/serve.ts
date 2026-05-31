@@ -20,6 +20,7 @@ import { findSchema, loadSchema } from '../project.js'
 import { NotInitializedError } from '../errors.js'
 import { splashContext } from '../branding.js'
 import { currentInvocation, connectHints, printableConfig } from '../mcpConfig.js'
+import { disablePlan } from '../plan.js'
 import * as ui from '../ui.js'
 import {
   get_component_tokens,
@@ -82,6 +83,9 @@ export function registerServe(program: Command): void {
     )
     .action(
       action(async (opts: { printConfig?: boolean; cwd?: string }) => {
+        // serve writes nothing and is long-running; plan mode (and its end-of-run
+        // diff render) doesn't apply. Opt out silently — stdout is the MCP channel.
+        disablePlan()
         // A client (or the MCP Inspector) spawns serve from its own directory, not
         // the project — --cwd lets it point at the schema regardless of launch dir.
         const cwd = opts.cwd ? resolve(opts.cwd) : process.cwd()

@@ -11,7 +11,8 @@ import { glob } from 'node:fs/promises'
 import { join, extname } from 'node:path'
 import { action } from '../run.js'
 import { loadSchema } from '../project.js'
-import { compileAll, detect, fix, atomicWrite, type Drift } from '@design-spec/compiler'
+import { stageWrite, isPlanMode } from '../plan.js'
+import { compileAll, detect, fix, type Drift } from '@design-spec/compiler'
 import * as ui from '../ui.js'
 
 const SOURCE_GLOB = '**/*.{ts,tsx,js,jsx,vue,css,scss,dart}'
@@ -21,13 +22,12 @@ export function registerFix(program: Command): void {
   program
     .command('fix')
     .description('rewrite raw values (hex, px, arbitrary classes) to the nearest design token')
-    .option('--dry-run', 'list what would change without writing', false)
-    .addHelpText('after', '\nExamples:\n  $ design-spec fix\n  $ design-spec fix --dry-run')
+    .addHelpText('after', '\nExamples:\n  $ design-spec fix\n  $ design-spec fix --plan   # preview the rewrites as a diff')
     .action(
-      action(async (opts: { dryRun?: boolean }) => {
+      action(async () => {
         const cwd = process.cwd()
         const { schema, root } = await loadSchema(cwd)
-        const dryRun = Boolean(opts.dryRun)
+        const planning = isPlanMode()
 
         // Never rewrite our own generated output — its raw hex/px ARE the token
         // definitions (e.g. `--color-primary: #2563EB`), not drift. Rewriting them
@@ -52,15 +52,15 @@ export function registerFix(program: Command): void {
           const target = extname(rel) === '.dart' ? 'flutter' : 'web'
           const patched = fix(source, fixable, schema, { target })
           if (patched !== source) {
-            if (!dryRun) await atomicWrite(path, patched)
+            await stageWrite(path, patched) // staged (not written) in plan mode
             changed.push({ file: rel, fixes: fixable.length })
             totalFixes += fixable.length
           }
         }
 
+        // In plan mode the diff report (rendered by run.ts) is the output.
         ui.json({
           ok: true,
-          dryRun,
           fixed: totalFixes,
           files: changed,
           unfixable: unfixable.map((d) => ({ file: d.file, line: d.line, found: d.found })),
@@ -69,8 +69,8 @@ export function registerFix(program: Command): void {
         if (totalFixes === 0) {
           ui.success('No fixable drift found.')
         } else {
-          for (const c of changed) ui.info(`${dryRun ? 'would fix' : 'fixed'} ${c.fixes} in ${c.file}`)
-          ui.success(`${dryRun ? 'Would rewrite' : 'Rewrote'} ${totalFixes} raw value(s) across ${changed.length} file(s).`)
+          for (const c of changed) ui.info(`${planning ? 'would fix' : 'fixed'} ${c.fixes} in ${c.file}`)
+          ui.success(`Rewrote ${totalFixes} raw value(s) across ${changed.length} file(s).`)
         }
         if (unfixable.length > 0) ui.warn(`${unfixable.length} value(s) had no matching token — left untouched.`)
       }),

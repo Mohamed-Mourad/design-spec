@@ -14,6 +14,7 @@ import { action } from '../run.js'
 import { findSchema, loadSchema } from '../project.js'
 import { NotInitializedError } from '../errors.js'
 import { emit } from '../emit.js'
+import { isPlanMode, disablePlan } from '../plan.js'
 import { splashContext } from '../branding.js'
 import * as ui from '../ui.js'
 
@@ -91,6 +92,12 @@ export function registerWatch(program: Command): void {
     .addHelpText('after', '\nExample:\n  $ design-spec watch')
     .action(
       action(async () => {
+        // watch is a continuous writer with no terminal state to diff — a one-shot
+        // preview makes no sense, so opt out of plan mode and run normally.
+        if (isPlanMode()) {
+          ui.warn('--plan is not supported for watch (it writes continuously); running normally.')
+          disablePlan()
+        }
         // Validate + initial compile up front so a bad project fails fast.
         const cwd = process.cwd()
         const { schema, root } = await loadSchema(cwd)

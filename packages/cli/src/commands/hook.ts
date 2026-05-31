@@ -19,7 +19,7 @@ import { action } from '../run.js'
 import { loadSchema, findProjectRoot } from '../project.js'
 import { NotInitializedError, CliError, ExitCode } from '../errors.js'
 import { emit, checkStale } from '../emit.js'
-import { atomicWrite } from '@design-spec/compiler'
+import { stageWrite } from '../plan.js'
 import { upsertBlock, BLOCK_START } from '../agentRules.js'
 import * as ui from '../ui.js'
 
@@ -61,8 +61,8 @@ async function installHook(cwd: string): Promise<{ path: string; action: 'create
     // Existing developer hook — append our managed block, never clobber it.
     next = upsertBlock(current, HOOK_INVOCATION)
   }
-  await atomicWrite(hookPath, next)
-  await chmod(hookPath, 0o755).catch(() => {}) // best-effort on Windows
+  await stageWrite(hookPath, next)
+  await chmod(hookPath, 0o755).catch(() => {}) // best-effort on Windows (no-op when staged)
   return { path: hookPath, action: existed ? 'updated' : 'created' }
 }
 
