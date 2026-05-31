@@ -51,7 +51,9 @@ describe('get_component_tokens — slice isolation', () => {
 
   it('returns null when nothing is close', () => {
     expect(get_component_tokens(schema, 'Nope')).toBeNull()
-    expect(get_component_tokens(schema, 'xyzzy-widget')).toBeNull()
+    expect(get_component_tokens(schema, 'xyzzy-widget')).toBeNull() // no shared first letter
+    expect(get_component_tokens(schema, 'bowl')).toBeNull() // shares "b" but too far from "Button"
+    expect(get_component_tokens(schema, '')).toBeNull()
   })
 
   it('a fuzzy note names only the requested and matched component, nothing else', () => {

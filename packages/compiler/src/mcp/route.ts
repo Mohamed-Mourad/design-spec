@@ -62,9 +62,15 @@ function resolveComponentKey(
   const ci = keys.find((k) => k.toLowerCase() === lower)
   if (ci) return { key: ci, fuzzy: false } // case-insensitive counts as a real match
 
-  // Closest-spelled name (typo tolerance), deterministic on ties.
+  // Closest-spelled name (typo/abbreviation tolerance), deterministic on ties.
+  // Two guards compose to reject no-signal input: only consider candidates that
+  // share the query's FIRST letter (typos/abbrevs rarely change it; garbage like
+  // "xyz" usually does), then require the edit distance to be within tolerance
+  // (kills same-first-letter-but-unrelated words like "bowl" → "button").
+  if (lower.length === 0) return null
   let best: { key: string; d: number } | null = null
   for (const k of keys) {
+    if (k.toLowerCase()[0] !== lower[0]) continue
     const d = editDistance(k.toLowerCase(), lower)
     if (best === null || d < best.d || (d === best.d && k < best.key)) best = { key: k, d }
   }
