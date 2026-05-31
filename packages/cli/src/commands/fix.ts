@@ -11,7 +11,7 @@ import { glob } from 'node:fs/promises'
 import { join, extname } from 'node:path'
 import { action } from '../run.js'
 import { loadSchema } from '../project.js'
-import { detect, fix, atomicWrite, type Drift } from '@design-spec/compiler'
+import { compileAll, detect, fix, atomicWrite, type Drift } from '@design-spec/compiler'
 import * as ui from '../ui.js'
 
 const SOURCE_GLOB = '**/*.{ts,tsx,js,jsx,vue,css,scss,dart}'
@@ -29,12 +29,17 @@ export function registerFix(program: Command): void {
         const { schema, root } = await loadSchema(cwd)
         const dryRun = Boolean(opts.dryRun)
 
+        // Never rewrite our own generated output — its raw hex/px ARE the token
+        // definitions (e.g. `--color-primary: #2563EB`), not drift. Rewriting them
+        // would produce self-referential garbage (`--color-primary: var(--color-primary)`).
+        const generated = new Set(compileAll(schema).map((o) => o.filename.replace(/\\/g, '/')))
+
         const changed: Array<{ file: string; fixes: number }> = []
         const unfixable: Drift[] = []
         let totalFixes = 0
 
         for await (const rel of glob(SOURCE_GLOB, { cwd: root })) {
-          if (IGNORE.test(rel)) continue
+          if (IGNORE.test(rel) || generated.has(rel.replace(/\\/g, '/'))) continue
           const path = join(root, rel)
           const source = await readFile(path, 'utf8')
           const drifts = detect(source, schema, rel)

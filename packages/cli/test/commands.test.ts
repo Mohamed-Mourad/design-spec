@@ -87,6 +87,30 @@ describe('fix', () => {
     expect(JSON.parse(r.stdout).fixed).toBeGreaterThan(0)
     expect(await readFile(file, 'utf8')).toBe(original) // untouched
   })
+
+  it('never rewrites its own generated output (tokens.css / tailwind.config.js / components)', async () => {
+    // init already compiled these — their raw hex/px are token definitions, not drift.
+    const tokensBefore = await readFile(join(dir, 'tokens.css'), 'utf8')
+    const configBefore = await readFile(join(dir, 'tailwind.config.js'), 'utf8')
+    const buttonBefore = await readFile(join(dir, 'components', 'Button.tsx'), 'utf8')
+
+    // a real drift file the fixer SHOULD touch
+    const src = join(dir, 'src', 'Hero.tsx')
+    await writeFile(src, 'const c = "#2563EB"\n')
+
+    const r = await runCli(['fix', '--json'], dir)
+    expect(r.code).toBe(0)
+    const fixedFiles = JSON.parse(r.stdout).files.map((f: { file: string }) => f.file)
+
+    // generated files untouched and never reported as fixed
+    expect(await readFile(join(dir, 'tokens.css'), 'utf8')).toBe(tokensBefore)
+    expect(await readFile(join(dir, 'tailwind.config.js'), 'utf8')).toBe(configBefore)
+    expect(await readFile(join(dir, 'components', 'Button.tsx'), 'utf8')).toBe(buttonBefore)
+    expect(fixedFiles).not.toContain('tokens.css')
+    expect(fixedFiles).not.toContain('tailwind.config.js')
+    // the genuine drift was still fixed
+    expect(await readFile(src, 'utf8')).toContain('var(--color-primary)')
+  })
 })
 
 describe('config', () => {
