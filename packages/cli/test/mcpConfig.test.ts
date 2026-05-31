@@ -18,6 +18,13 @@ describe('currentInvocation', () => {
     expect(inv.command).toBe('/usr/bin/node')
     expect(inv.args).toEqual(['/work/design-spec/packages/cli/dist/index.js', 'serve'])
   })
+
+  it('normalizes Windows backslashes to forward slashes (survives the MCP Inspector)', () => {
+    const inv = currentInvocation('D:\\Work\\design-spec\\packages\\cli\\dist\\index.js', 'C:\\Program Files\\nodejs\\node.exe')
+    expect(inv.command).toBe('C:/Program Files/nodejs/node.exe')
+    expect(inv.args[0]).toBe('D:/Work/design-spec/packages/cli/dist/index.js')
+    expect(inv.args[0]).not.toContain('\\')
+  })
 })
 
 describe('config rendering', () => {
@@ -32,11 +39,11 @@ describe('config rendering', () => {
     })
   })
 
-  it('shell-quotes command tokens that contain spaces', () => {
+  it('shell-quotes command tokens that contain spaces (paths normalized to forward slashes)', () => {
     const spaced = currentInvocation('C:\\Program Files\\app\\index.js', 'C:\\Program Files\\nodejs\\node.exe')
     const line = inspectorCommand(spaced)
-    expect(line).toContain('"C:\\Program Files\\nodejs\\node.exe"')
-    expect(line).toContain('"C:\\Program Files\\app\\index.js"')
+    expect(line).toContain('"C:/Program Files/nodejs/node.exe"')
+    expect(line).toContain('"C:/Program Files/app/index.js"')
   })
 
   it('builds a claude mcp add one-liner', () => {

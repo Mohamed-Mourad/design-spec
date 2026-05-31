@@ -23,7 +23,11 @@ export interface Invocation {
 export function currentInvocation(scriptPath: string, nodePath: string): Invocation {
   const published = /[\\/]node_modules[\\/]/.test(scriptPath) || scriptPath.endsWith('design-spec')
   if (published) return { command: 'design-spec', args: ['serve'], label: 'design-spec serve' }
-  return { command: nodePath, args: [scriptPath, 'serve'], label: `node ${scriptPath} serve` }
+  // Forward slashes: Windows node accepts them, and (unlike `\`) the MCP Inspector
+  // doesn't strip them when it parses the spawn args, so the snippet runs as pasted.
+  const node = nodePath.replace(/\\/g, '/')
+  const script = scriptPath.replace(/\\/g, '/')
+  return { command: node, args: [script, 'serve'], label: `node ${script} serve` }
 }
 
 /** JSON config block (the `mcpServers` entry) shared by Claude Desktop / Cursor / Windsurf. */
@@ -54,11 +58,22 @@ export function inspectorCommand(inv: Invocation): string {
   return `npx @modelcontextprotocol/inspector ${commandLine(inv)}`
 }
 
+/** True when running an unlinked local build (command is `node <path>`, not the shim). */
+function isLocal(inv: Invocation): boolean {
+  return inv.command !== 'design-spec'
+}
+
 /** Short, friendly lines for the TTY splash — points at the two easiest paths. */
 export function connectHints(inv: Invocation): string[] {
-  return [
-    'This is an MCP server — connect an AI tool to it, don\'t type here.',
-    '',
+  const lines = ['This is an MCP server — connect an AI tool to it, don\'t type here.', '']
+  if (isLocal(inv)) {
+    lines.push(
+      'Tip: for the simplest setup, install the command once:',
+      '  npm link   (run in design-spec/packages/cli)   →   then use `design-spec serve`',
+      '',
+    )
+  }
+  lines.push(
     'Fastest test (opens a UI in your browser, no setup):',
     `  ${inspectorCommand(inv)}`,
     '',
@@ -67,7 +82,8 @@ export function connectHints(inv: Invocation): string[] {
     '',
     'Claude Desktop / Cursor / Windsurf: paste the JSON config from',
     '  design-spec serve --print-config',
-  ]
+  )
+  return lines
 }
 
 /** Full copy-paste setup printed by `serve --print-config` (goes to stdout). */
@@ -78,6 +94,15 @@ export function printableConfig(inv: Invocation, cwd: string): string {
     '',
     `Detected invocation: ${inv.label}`,
     `Project (cwd):       ${cwd}`,
+    ...(isLocal(inv)
+      ? [
+          '',
+          'Tip: running an unpublished local build. For the simplest, most reliable',
+          'setup (especially on Windows), install the command once:',
+          '  npm link        # run in design-spec/packages/cli',
+          'then use `design-spec serve` everywhere below instead of the node path.',
+        ]
+      : []),
     '',
     '────────────────────────────────────────────────────────',
     'Quick test — no client needed (opens a browser UI):',
