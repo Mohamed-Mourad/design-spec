@@ -46,6 +46,11 @@ describe('config rendering', () => {
     expect(line).toContain('"C:/Program Files/app/index.js"')
   })
 
+  it('appends --cwd so the server finds the project from any launch dir', () => {
+    expect(inspectorCommand(inv, '/proj')).toContain('serve --cwd /proj')
+    expect(claudeCodeAddCommand(inv, 'D:\\proj')).toContain('serve --cwd D:/proj')
+  })
+
   it('builds a claude mcp add one-liner', () => {
     expect(claudeCodeAddCommand(inv)).toBe('claude mcp add design-spec -- /usr/bin/node /work/cli/dist/index.js serve')
   })

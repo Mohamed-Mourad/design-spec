@@ -44,18 +44,31 @@ function shellQuote(token: string): string {
   return /[\s"]/.test(token) ? `"${token.replace(/"/g, '\\"')}"` : token
 }
 
-function commandLine(inv: Invocation): string {
-  return [inv.command, ...inv.args].map(shellQuote).join(' ')
+/** Forward-slash a path so Windows paths survive the MCP Inspector's arg parsing. */
+function fwd(p: string): string {
+  return p.replace(/\\/g, '/')
+}
+
+/**
+ * The full spawn command line. `cwd` is appended as `--cwd` because the Inspector
+ * and `claude mcp add` launch serve from their OWN directory, not the project —
+ * without it serve can't find design-spec.schema.json. (The JSON config sets the
+ * client's `cwd` field instead, so it omits this.)
+ */
+function commandLine(inv: Invocation, cwd?: string): string {
+  const parts = [inv.command, ...inv.args]
+  if (cwd) parts.push('--cwd', fwd(cwd))
+  return parts.map(shellQuote).join(' ')
 }
 
 /** The `claude mcp add` one-liner (Claude Code CLI). */
-export function claudeCodeAddCommand(inv: Invocation): string {
-  return `claude mcp add design-spec -- ${commandLine(inv)}`
+export function claudeCodeAddCommand(inv: Invocation, cwd?: string): string {
+  return `claude mcp add design-spec -- ${commandLine(inv, cwd)}`
 }
 
 /** The MCP Inspector command — the fastest zero-client way to click the tools. */
-export function inspectorCommand(inv: Invocation): string {
-  return `npx @modelcontextprotocol/inspector ${commandLine(inv)}`
+export function inspectorCommand(inv: Invocation, cwd?: string): string {
+  return `npx @modelcontextprotocol/inspector ${commandLine(inv, cwd)}`
 }
 
 /** True when running an unlinked local build (command is `node <path>`, not the shim). */
@@ -64,7 +77,7 @@ function isLocal(inv: Invocation): boolean {
 }
 
 /** Short, friendly lines for the TTY splash — points at the two easiest paths. */
-export function connectHints(inv: Invocation): string[] {
+export function connectHints(inv: Invocation, cwd: string): string[] {
   const lines = ['This is an MCP server — connect an AI tool to it, don\'t type here.', '']
   if (isLocal(inv)) {
     lines.push(
@@ -75,10 +88,10 @@ export function connectHints(inv: Invocation): string[] {
   }
   lines.push(
     'Fastest test (opens a UI in your browser, no setup):',
-    `  ${inspectorCommand(inv)}`,
+    `  ${inspectorCommand(inv, cwd)}`,
     '',
     'Connect Claude Code:',
-    `  ${claudeCodeAddCommand(inv)}`,
+    `  ${claudeCodeAddCommand(inv, cwd)}`,
     '',
     'Claude Desktop / Cursor / Windsurf: paste the JSON config from',
     '  design-spec serve --print-config',
@@ -107,15 +120,15 @@ export function printableConfig(inv: Invocation, cwd: string): string {
     '────────────────────────────────────────────────────────',
     'Quick test — no client needed (opens a browser UI):',
     '',
-    `  ${inspectorCommand(inv)}`,
+    `  ${inspectorCommand(inv, cwd)}`,
     '',
     'In the Inspector: Connect → Tools → get_component_tokens',
     '  with input {"component":"Button"}.',
     '',
     '────────────────────────────────────────────────────────',
-    'Claude Code (CLI) — one command, run in this folder:',
+    'Claude Code (CLI) — one command, runnable from anywhere:',
     '',
-    `  ${claudeCodeAddCommand(inv)}`,
+    `  ${claudeCodeAddCommand(inv, cwd)}`,
     '',
     '────────────────────────────────────────────────────────',
     'Claude Desktop — add to claude_desktop_config.json',
