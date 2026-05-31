@@ -201,15 +201,19 @@ export function splash(info: SplashInfo, opts: { stderr?: boolean } = {}): void 
   sink(c.dim(info.hints))
 }
 
-/** A boxed summary. Degrades to a plain block when color/box is unavailable. */
-export function box(title: string, lines: string[]): void {
+/**
+ * A boxed summary. Degrades to a plain block when color/box is unavailable.
+ * Pass `stderr: true` for commands whose stdout is a protocol channel (serve).
+ */
+export function box(title: string, lines: string[], opts: { stderr?: boolean } = {}): void {
   if (state.json || state.quiet) return
+  const sink = opts.stderr ? err : out
   const body = lines.join('\n')
   if (!state.color) {
-    out(`\n${title}\n${body}\n`)
+    sink(`\n${title}\n${body}\n`)
     return
   }
-  out(
+  sink(
     boxen(body, {
       title,
       titleAlignment: 'left',

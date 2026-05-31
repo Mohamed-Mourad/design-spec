@@ -18,6 +18,7 @@ import { action } from '../run.js'
 import { findSchema, loadSchema } from '../project.js'
 import { NotInitializedError } from '../errors.js'
 import { splashContext } from '../branding.js'
+import { currentInvocation, connectHints, printableConfig } from '../mcpConfig.js'
 import * as ui from '../ui.js'
 import {
   get_component_tokens,
@@ -69,12 +70,27 @@ export function registerServe(program: Command): void {
   program
     .command('serve')
     .description('run a local MCP server (stdio) that feeds AI agents scoped token context')
-    .addHelpText('after', '\nExample (in an MCP client config):\n  command: "design-spec", args: ["serve"]')
+    .option('--print-config', 'print copy-paste setup for connecting an AI client, then exit', false)
+    .addHelpText(
+      'after',
+      '\nThis is an MCP server (stdio) — connect an AI tool to it, do not type at it.\n' +
+        'Run `design-spec serve --print-config` for copy-paste setup, or\n' +
+        '`npx @modelcontextprotocol/inspector design-spec serve` to click the tools in a browser.',
+    )
     .action(
-      action(async () => {
+      action(async (opts: { printConfig?: boolean }) => {
         const cwd = process.cwd()
         const schemaPath = findSchema(cwd)
         if (!schemaPath) throw new NotInitializedError(cwd)
+
+        const inv = currentInvocation(process.argv[1] ?? 'design-spec', process.execPath)
+
+        // --print-config: emit setup and exit. The user explicitly asked for the
+        // config text, so it goes to stdout (this run is not a protocol channel).
+        if (opts.printConfig) {
+          process.stdout.write(printableConfig(inv, cwd) + '\n')
+          return
+        }
 
         let current = (await loadSchema(cwd)).schema
 
@@ -89,6 +105,8 @@ export function registerServe(program: Command): void {
             }),
             { stderr: true },
           )
+          // A human ran this in a terminal — tell them how to actually use it.
+          ui.box('Connect an AI tool', connectHints(inv), { stderr: true })
         }
 
         // Hot-reload: keep the last good schema if a save is briefly invalid.
@@ -106,7 +124,7 @@ export function registerServe(program: Command): void {
         const transport = new StdioServerTransport()
         await server.connect(transport)
         // The TTY splash already says "ready"; only log for non-TTY MCP clients.
-        if (!process.stderr.isTTY) process.stderr.write('design-spec: MCP server ready on stdio\n')
+        if (!process.stderr.isTTY) process.stderr.write('design-spec: MCP server ready on stdio (run `design-spec serve --print-config` for client setup)\n')
 
         await new Promise<void>((resolve) => {
           process.on('SIGINT', () => {
