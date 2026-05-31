@@ -1,0 +1,25 @@
+{
+  "name": "@design-spec/janitor",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The hosted CI Drift-Janitor GitHub Action. Checks out a PR branch, runs the shared @design-spec/compiler detect/fix engine, auto-commits token-ref fixes back onto the branch, posts a 🧹 summary comment, and ALWAYS exits 0 — remediation, never obstruction.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@design-spec/compiler": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.0"
+  }
+}
