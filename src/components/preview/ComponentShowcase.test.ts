@@ -60,6 +60,19 @@ describe('ComponentShowcase — responsive preview', () => {
     expect(item.find('svg').exists()).toBe(true)
   })
 
+  it('applies alert icon alignment + vertical separator from config', () => {
+    const store = useDesignSystemStore()
+    store.setPath(['componentBlueprints', 'Alert', 'tokens', 'icon'], { size: '24px', align: 'center' })
+    store.setPath(['componentBlueprints', 'Alert', 'tokens', 'iconSep'], { borderColor: '{colors.status-info}', borderWidth: '2px' })
+
+    const wrapper = mount(ComponentShowcase)
+    const el = wrapper.get('[data-testid="preview-Alert"]')
+    expect(el.classes()).toContain('showcase__alert--center')
+    const vsep = el.find('.showcase__vsep')
+    expect(vsep.exists()).toBe(true)
+    expect(vsep.attributes('style')).toContain('var(--color-status-info)')
+  })
+
   it('clicking a component selects it for editing', async () => {
     const store = useDesignSystemStore()
     const wrapper = mount(ComponentShowcase)

@@ -176,6 +176,8 @@ export const tier1Blueprints: Record<string, ComponentBlueprint> = {
       success: { backgroundColor: '{colors.status-success-surface}', borderColor: '{colors.status-success}' },
       warning: { backgroundColor: '{colors.status-warning-surface}', borderColor: '{colors.status-warning}' },
       error: { backgroundColor: '{colors.status-error-surface}', borderColor: '{colors.status-error}' },
+      // Icon config: size + vertical alignment (title | center | above).
+      icon: { size: '16px', align: 'title' },
     },
     examples: [
       { label: 'Info (title + message)', props: { variant: 'info', iconPlacement: 'leading', content: 'title-message' } },

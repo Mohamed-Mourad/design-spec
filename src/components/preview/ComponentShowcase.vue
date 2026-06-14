@@ -12,10 +12,18 @@ const { schema, viewportWidth, selectedComponent } = storeToRefs(store)
 
 // Alert: icon + title/message driven by the blueprint's prop defaults.
 const alertBp = computed(() => schema.value.componentBlueprints.Alert)
-const alertCfg = computed(() => ({
-  placement: (alertBp.value?.props.iconPlacement?.default as string) ?? 'leading',
-  content: (alertBp.value?.props.content?.default as string) ?? 'title-message',
-}))
+const alertCfg = computed(() => {
+  const icon = (alertBp.value?.tokens.icon ?? {}) as Record<string, unknown>
+  return {
+    placement: (alertBp.value?.props.iconPlacement?.default as string) ?? 'leading',
+    content: (alertBp.value?.props.content?.default as string) ?? 'title-message',
+    align: (icon.align as string) ?? 'title',
+    size: parseInt(String(icon.size ?? '')) || 16,
+  }
+})
+function vsepStyle(): CSSProperties {
+  return { borderLeft: `${groupVal('Alert', 'iconSep', 'borderWidth', '1px')} solid ${groupVal('Alert', 'iconSep', 'borderColor', 'currentColor')}` }
+}
 const ALERT_ICONS: Record<string, Component> = { info: Info, success: CircleCheck, warning: TriangleAlert, error: CircleAlert }
 const ALERT_TITLES: Record<string, string> = { info: 'Information', success: 'Success', warning: 'Warning', error: 'Error' }
 const alertIcon = (v: string) => ALERT_ICONS[v] ?? Info
@@ -163,8 +171,22 @@ function itemIconSize(): number {
             </div>
 
             <!-- Alert: icon + title/message, optional separator, actions, close -->
-            <div v-else-if="c.name === 'Alert'" class="showcase__alert" :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`" :style="styleFor(c.name, vr)">
-              <component :is="alertIcon(vr.variant)" v-if="alertCfg.placement === 'leading'" :size="16" :style="{ color: vr.style.borderColor }" aria-hidden="true" />
+            <div
+              v-else-if="c.name === 'Alert'"
+              class="showcase__alert"
+              :class="{ 'showcase__alert--center': alertCfg.align === 'center', 'showcase__alert--above': alertCfg.align === 'above' }"
+              :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`"
+              :style="styleFor(c.name, vr)"
+            >
+              <component
+                :is="alertIcon(vr.variant)"
+                v-if="alertCfg.placement === 'leading' || (alertCfg.align === 'above' && alertCfg.placement !== 'none')"
+                :size="alertCfg.size"
+                :style="{ color: vr.style.borderColor }"
+                aria-hidden="true"
+              />
+              <span v-if="alertCfg.placement === 'leading' && alertCfg.align !== 'above' && hasGroup('Alert', 'iconSep')" class="showcase__vsep" :style="vsepStyle()" />
+
               <div class="showcase__alert-body">
                 <strong v-if="alertCfg.content === 'title-message'">{{ alertTitle(vr.variant) }}</strong>
                 <hr v-if="hasGroup('Alert', 'separator')" class="showcase__sep" :style="sepStyle('Alert')" />
@@ -174,7 +196,15 @@ function itemIconSize(): number {
                   <button class="showcase__btn" :style="actionBtnStyle('Alert', 'confirm')">{{ actionLabel('Alert', 'confirmLabel', 'Confirm') }}</button>
                 </div>
               </div>
-              <component :is="alertIcon(vr.variant)" v-if="alertCfg.placement === 'trailing'" :size="16" :style="{ color: vr.style.borderColor }" aria-hidden="true" />
+
+              <span v-if="alertCfg.placement === 'trailing' && alertCfg.align !== 'above' && hasGroup('Alert', 'iconSep')" class="showcase__vsep" :style="vsepStyle()" />
+              <component
+                :is="alertIcon(vr.variant)"
+                v-if="alertCfg.placement === 'trailing' && alertCfg.align !== 'above'"
+                :size="alertCfg.size"
+                :style="{ color: vr.style.borderColor }"
+                aria-hidden="true"
+              />
               <button v-if="isDismissible('Alert')" class="showcase__x" :style="closeStyle('Alert')" aria-label="Close"><X :size="closeSize('Alert')" /></button>
             </div>
 
@@ -319,6 +349,17 @@ function itemIconSize(): number {
   align-items: flex-start;
   gap: var(--spacing-sm);
   min-width: 240px;
+}
+.showcase__alert--center {
+  align-items: center;
+}
+.showcase__alert--above {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.showcase__vsep {
+  align-self: stretch;
+  min-height: 100%;
 }
 .showcase__alert-body {
   display: flex;

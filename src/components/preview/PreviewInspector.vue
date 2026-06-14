@@ -94,6 +94,20 @@ function actionLabel(which: 'cancelLabel' | 'confirmLabel'): string {
 function actionColor(which: string, fallback: string): string {
   return (groupTokens('actions')[which] as string) ?? fallback
 }
+
+// ── Alert icon controls ──
+const isAlert = computed(() => name.value === 'Alert')
+const iconPlacement = computed(() => (bp.value?.props.iconPlacement?.default as string) ?? 'leading')
+const iconAlign = computed(() => (groupTokens('icon').align as string) ?? 'title')
+const iconSize = computed(() => (groupTokens('icon').size as string) ?? '16px')
+const showVSep = computed(() => iconAlign.value !== 'above' && iconPlacement.value !== 'none')
+function setPlacement(v: string) {
+  store.setPath(p('props', 'iconPlacement'), { type: 'enum', values: ['leading', 'trailing', 'none'], default: v })
+}
+function toggleVSep(on: boolean) {
+  if (on) store.setPath(p('tokens', 'iconSep'), { borderColor: '{colors.surface-border}', borderWidth: '1px' })
+  else store.removePath(p('tokens', 'iconSep'))
+}
 </script>
 
 <template>
@@ -109,6 +123,39 @@ function actionColor(which: string, fallback: string): string {
     <section>
       <h4 class="insp__h">Tokens</h4>
       <TokenGroupEditor :tokens="baseTokens" @update="setBase" @remove="removeBase" />
+    </section>
+
+    <section v-if="isAlert">
+      <h4 class="insp__h">Icon</h4>
+      <label class="insp__field">
+        <span>Placement</span>
+        <select :value="iconPlacement" @change="setPlacement(($event.target as HTMLSelectElement).value)">
+          <option value="leading">leading</option>
+          <option value="trailing">trailing</option>
+          <option value="none">none</option>
+        </select>
+      </label>
+      <label class="insp__field">
+        <span>Vertical align</span>
+        <select :value="iconAlign" @change="setGroupProp('icon', 'align', ($event.target as HTMLSelectElement).value)">
+          <option value="title">aligned with title</option>
+          <option value="center">centered in component</option>
+          <option value="above">above title</option>
+        </select>
+      </label>
+      <label class="insp__field">
+        <span>Size</span>
+        <input :value="iconSize" @change="setGroupProp('icon', 'size', ($event.target as HTMLInputElement).value)" />
+      </label>
+      <template v-if="showVSep">
+        <label class="insp__sugg">
+          <input type="checkbox" :checked="isOn('iconSep')" @change="toggleVSep(($event.target as HTMLInputElement).checked)" />
+          <span class="insp__sugg-label">Vertical separator</span>
+        </label>
+        <div v-if="isOn('iconSep')" class="insp__sub">
+          <TokenGroupEditor :tokens="groupTokens('iconSep')" @update="(prop, v) => setGroupProp('iconSep', prop, v)" @remove="(prop) => removeGroupProp('iconSep', prop)" />
+        </div>
+      </template>
     </section>
 
     <section>
@@ -236,7 +283,8 @@ function actionColor(which: string, fallback: string): string {
   letter-spacing: 0.06em;
   color: var(--color-on-surface-subtle);
 }
-.insp__field input {
+.insp__field input,
+.insp__field select {
   font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-on-surface);
