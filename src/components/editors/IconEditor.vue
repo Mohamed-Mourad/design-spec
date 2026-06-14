@@ -3,7 +3,7 @@ import DimensionEditor from '@/components/editors/DimensionEditor.vue'
 
 defineProps<{
   library: string
-  sizes: Record<string, string>
+  sizes: Record<string, string | number>
 }>()
 const emit = defineEmits<{
   updateLibrary: [value: string]

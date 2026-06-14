@@ -41,9 +41,7 @@ const REF_GROUPS: Record<string, string[]> = {
   shadow: ['shadows'],
 }
 
-const overridden = computed(() =>
-  STYLE_PROPS.filter((p) => p !== 'responsive' && props.tokens[p] !== undefined),
-)
+const overridden = computed(() => STYLE_PROPS.filter((p) => props.tokens[p] !== undefined))
 const inheritedOnly = computed(() =>
   props.inherited
     ? STYLE_PROPS.filter((p) => props.tokens[p] === undefined && props.inherited![p] !== undefined)
