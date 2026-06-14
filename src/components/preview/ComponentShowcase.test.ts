@@ -48,7 +48,13 @@ describe('ComponentShowcase — responsive preview', () => {
     const store = useDesignSystemStore()
     store.setPath(['componentBlueprints', 'Alert', 'tokens', 'separator'], { borderColor: '{colors.status-info}', borderWidth: '2px' })
     store.setPath(['componentBlueprints', 'Alert', 'tokens', 'close'], { textColor: '{colors.status-error}', size: '20px' })
-    store.setPath(['componentBlueprints', 'Alert', 'tokens', 'actions'], { cancelLabel: 'No', confirmLabel: 'Yes', rounded: '{rounded.full}' })
+    store.setPath(['componentBlueprints', 'Alert', 'tokens', 'actions'], {
+      cancelLabel: 'No',
+      confirmLabel: 'Yes',
+      rounded: '{rounded.full}',
+      cancelBg: '{colors.status-warning}',
+      confirmBg: '{colors.status-success}',
+    })
 
     const wrapper = mount(ComponentShowcase)
     const el = wrapper.get('[data-testid="preview-Alert"]')
@@ -60,6 +66,10 @@ describe('ComponentShowcase — responsive preview', () => {
     // action labels are editable
     expect(el.text()).toContain('No')
     expect(el.text()).toContain('Yes')
+    // each action button has its own color
+    const btns = el.findAll('.showcase__btn')
+    expect(btns[0].attributes('style')).toContain('var(--color-status-warning)') // cancel
+    expect(btns[1].attributes('style')).toContain('var(--color-status-success)') // confirm
   })
 
   it('Alert variants differ by status border color and render an icon + title', () => {

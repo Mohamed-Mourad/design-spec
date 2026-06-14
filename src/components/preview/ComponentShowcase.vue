@@ -44,8 +44,14 @@ function actionLabel(n: string, which: 'cancelLabel' | 'confirmLabel', fallback:
   const g = bpOf(n)?.tokens.actions as Record<string, unknown> | undefined
   return (g?.[which] as string) || fallback
 }
-function actionStyle(n: string): CSSProperties {
-  return { borderRadius: groupVal(n, 'actions', 'rounded', 'var(--rounded-md)') }
+function actionBtnStyle(n: string, role: 'cancel' | 'confirm'): CSSProperties {
+  const confirm = role === 'confirm'
+  return {
+    background: groupVal(n, 'actions', confirm ? 'confirmBg' : 'cancelBg', confirm ? 'var(--color-primary)' : 'var(--color-surface-raised)'),
+    color: groupVal(n, 'actions', confirm ? 'confirmText' : 'cancelText', confirm ? 'var(--color-on-primary)' : 'var(--color-on-surface)'),
+    borderRadius: groupVal(n, 'actions', 'rounded', 'var(--rounded-md)'),
+    borderColor: 'transparent',
+  }
 }
 
 interface VariantRender {
@@ -128,8 +134,8 @@ function sampleText(name: string, variant: string): string {
               <hr v-if="hasGroup('Card', 'separator')" class="showcase__sep" :style="sepStyle('Card')" />
               <p class="showcase__card-body">Grouped content lives here.</p>
               <div v-if="hasGroup('Card', 'actions')" class="showcase__actions">
-                <button class="showcase__btn showcase__btn--ghost" :style="actionStyle('Card')">{{ actionLabel('Card', 'cancelLabel', 'Cancel') }}</button>
-                <button class="showcase__btn showcase__btn--primary" :style="actionStyle('Card')">{{ actionLabel('Card', 'confirmLabel', 'Confirm') }}</button>
+                <button class="showcase__btn" :style="actionBtnStyle('Card', 'cancel')">{{ actionLabel('Card', 'cancelLabel', 'Cancel') }}</button>
+                <button class="showcase__btn" :style="actionBtnStyle('Card', 'confirm')">{{ actionLabel('Card', 'confirmLabel', 'Confirm') }}</button>
               </div>
             </div>
 
@@ -141,8 +147,8 @@ function sampleText(name: string, variant: string): string {
                 <hr v-if="hasGroup('Alert', 'separator')" class="showcase__sep" :style="sepStyle('Alert')" />
                 <span>Something needs your attention.</span>
                 <div v-if="hasGroup('Alert', 'actions')" class="showcase__actions">
-                  <button class="showcase__btn showcase__btn--ghost" :style="actionStyle('Alert')">{{ actionLabel('Alert', 'cancelLabel', 'Cancel') }}</button>
-                  <button class="showcase__btn showcase__btn--primary" :style="actionStyle('Alert')">{{ actionLabel('Alert', 'confirmLabel', 'Confirm') }}</button>
+                  <button class="showcase__btn" :style="actionBtnStyle('Alert', 'cancel')">{{ actionLabel('Alert', 'cancelLabel', 'Cancel') }}</button>
+                  <button class="showcase__btn" :style="actionBtnStyle('Alert', 'confirm')">{{ actionLabel('Alert', 'confirmLabel', 'Confirm') }}</button>
                 </div>
               </div>
               <component :is="alertIcon(vr.variant)" v-if="alertCfg.placement === 'trailing'" :size="16" :style="{ color: vr.style.borderColor }" aria-hidden="true" />
@@ -284,19 +290,9 @@ function sampleText(name: string, variant: string): string {
 .showcase__btn {
   font-family: var(--font-sans);
   font-size: 12px;
-  border-radius: var(--radius-sm);
   padding: 4px 10px;
-  border: 1px solid var(--color-surface-border);
+  border: 1px solid transparent;
   cursor: pointer;
-}
-.showcase__btn--primary {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  border-color: var(--color-primary);
-}
-.showcase__btn--ghost {
-  background: transparent;
-  color: inherit;
 }
 .showcase__checkbox-row {
   display: flex;

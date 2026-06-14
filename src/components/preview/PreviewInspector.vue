@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { X } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import TokenGroupEditor from '@/components/editors/TokenGroupEditor.vue'
+import ColorTokenEditor from '@/components/editors/ColorTokenEditor.vue'
 
 const store = useDesignSystemStore()
 const { schema, selectedComponent } = storeToRefs(store)
@@ -51,7 +52,21 @@ const suggestionDefs = computed<Suggestion[]>(() => {
       default: { textColor: '{colors.on-surface-muted}', size: '16px' },
       onToggle: (on: boolean) => store.setPath(p('props', 'dismissible'), { type: 'boolean', default: on }),
     },
-    { key: 'actions', label: 'Action buttons', hint: 'Cancel / Confirm', available: isContainer, default: { cancelLabel: 'Cancel', confirmLabel: 'Confirm', rounded: '{rounded.md}' } },
+    {
+      key: 'actions',
+      label: 'Action buttons',
+      hint: 'Cancel / Confirm',
+      available: isContainer,
+      default: {
+        cancelLabel: 'Cancel',
+        confirmLabel: 'Confirm',
+        rounded: '{rounded.md}',
+        confirmBg: '{colors.primary}',
+        confirmText: '{colors.on-primary}',
+        cancelBg: '{colors.surface-raised}',
+        cancelText: '{colors.on-surface}',
+      },
+    },
   ].filter((s) => s.available)
 })
 
@@ -74,6 +89,9 @@ function removeGroupProp(key: string, prop: string) {
 }
 function actionLabel(which: 'cancelLabel' | 'confirmLabel'): string {
   return (groupTokens('actions')[which] as string) ?? ''
+}
+function actionColor(which: string, fallback: string): string {
+  return (groupTokens('actions')[which] as string) ?? fallback
 }
 </script>
 
@@ -107,10 +125,14 @@ function actionLabel(which: 'cancelLabel' | 'confirmLabel'): string {
               <span>Cancel label</span>
               <input :value="actionLabel('cancelLabel')" @change="setGroupProp('actions', 'cancelLabel', ($event.target as HTMLInputElement).value)" />
             </label>
+            <ColorTokenEditor token-key="cancel bg" :value="actionColor('cancelBg', '{colors.surface-raised}')" @update="(_, v) => setGroupProp('actions', 'cancelBg', v)" @remove="() => removeGroupProp('actions', 'cancelBg')" />
+            <ColorTokenEditor token-key="cancel text" :value="actionColor('cancelText', '{colors.on-surface}')" @update="(_, v) => setGroupProp('actions', 'cancelText', v)" @remove="() => removeGroupProp('actions', 'cancelText')" />
             <label class="insp__field">
               <span>Confirm label</span>
               <input :value="actionLabel('confirmLabel')" @change="setGroupProp('actions', 'confirmLabel', ($event.target as HTMLInputElement).value)" />
             </label>
+            <ColorTokenEditor token-key="confirm bg" :value="actionColor('confirmBg', '{colors.primary}')" @update="(_, v) => setGroupProp('actions', 'confirmBg', v)" @remove="() => removeGroupProp('actions', 'confirmBg')" />
+            <ColorTokenEditor token-key="confirm text" :value="actionColor('confirmText', '{colors.on-primary}')" @update="(_, v) => setGroupProp('actions', 'confirmText', v)" @remove="() => removeGroupProp('actions', 'confirmText')" />
           </template>
           <TokenGroupEditor
             :tokens="groupTokens(s.key)"
