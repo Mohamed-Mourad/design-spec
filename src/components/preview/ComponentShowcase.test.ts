@@ -35,6 +35,19 @@ describe('ComponentShowcase — responsive preview', () => {
     void store
   })
 
+  it('ships the new default components and renders sidebar levels', () => {
+    const store = useDesignSystemStore()
+    for (const n of ['Dropdown', 'Radio', 'Navbar', 'Sidebar']) {
+      expect(store.schema.componentBlueprints[n]).toBeTruthy()
+    }
+    const wrapper = mount(ComponentShowcase)
+    // one-level (first variant) + multilevel both render; multilevel nests sub-items.
+    expect(wrapper.find('[data-testid="preview-Sidebar"]').exists()).toBe(true)
+    const multi = wrapper.get('[data-testid="preview-Sidebar-multilevel"]')
+    expect(multi.text()).toContain('Profile')
+    expect(wrapper.find('[data-testid="preview-Radio"]').text()).toContain('Option A')
+  })
+
   it('clicking a component selects it for editing', async () => {
     const store = useDesignSystemStore()
     const wrapper = mount(ComponentShowcase)

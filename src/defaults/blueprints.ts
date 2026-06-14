@@ -233,4 +233,112 @@ export const tier1Blueprints: Record<string, ComponentBlueprint> = {
     },
     examples: [{ label: 'Top', props: { placement: 'top', label: 'Copy to clipboard' } }],
   },
+
+  Dropdown: {
+    name: 'Dropdown',
+    description: 'Select trigger that opens a list of options.',
+    category: 'form',
+    variants: ['default'],
+    sizes: ['sm', 'md', 'lg'],
+    states: ['default', 'open', 'disabled'],
+    anatomy: ['trigger', 'value', 'icon', 'menu', 'option'],
+    props: {
+      placeholder: { type: 'string', default: 'Select option' },
+      searchable: { type: 'boolean', default: false },
+      disabled: { type: 'boolean', default: false },
+    },
+    tokens: {
+      base: {
+        backgroundColor: '{colors.surface-sunken}',
+        textColor: '{colors.on-surface}',
+        borderColor: '{colors.surface-border}',
+        borderWidth: '1px',
+        rounded: '{rounded.md}',
+        paddingX: '{spacing.sm}',
+        paddingY: '{spacing.sm}',
+        typography: '{typography.body-md}',
+      },
+    },
+    examples: [{ label: 'Default', props: { placeholder: 'Choose a framework' } }],
+  },
+
+  Radio: {
+    name: 'Radio',
+    description: 'Single-choice control within a group.',
+    category: 'form',
+    variants: ['default'],
+    sizes: ['md'],
+    states: ['unchecked', 'checked', 'disabled'],
+    anatomy: ['root', 'control', 'dot', 'label'],
+    props: {
+      checked: { type: 'boolean', default: false },
+      label: { type: 'string' },
+      name: { type: 'string', description: 'Group name' },
+    },
+    tokens: {
+      base: {
+        backgroundColor: '{colors.surface-sunken}',
+        borderColor: '{colors.surface-border}',
+        borderWidth: '1px',
+        rounded: '{rounded.full}',
+        size: '18px',
+      },
+      checked: { backgroundColor: '{colors.primary}', borderColor: '{colors.primary}' },
+    },
+    examples: [{ label: 'Selected', props: { checked: true, label: 'Option A' } }],
+  },
+
+  Navbar: {
+    name: 'Navbar',
+    description: 'Top navigation bar with brand, links, and actions.',
+    category: 'navigation',
+    variants: ['default'],
+    sizes: [],
+    states: ['default'],
+    anatomy: ['root', 'brand', 'links', 'actions'],
+    props: {
+      sticky: { type: 'boolean', default: true },
+    },
+    tokens: {
+      base: {
+        backgroundColor: '{colors.surface-default}',
+        textColor: '{colors.on-surface}',
+        borderColor: '{colors.surface-border}',
+        borderWidth: '1px',
+        paddingX: '{spacing.lg}',
+        paddingY: '{spacing.sm}',
+        shadow: '{shadows.sm}',
+      },
+    },
+    examples: [{ label: 'Default', props: { sticky: true } }],
+  },
+
+  Sidebar: {
+    name: 'Sidebar',
+    description: 'Vertical navigation. One-level (flat) or multilevel (nested groups).',
+    category: 'navigation',
+    variants: ['one-level', 'multilevel'],
+    sizes: [],
+    states: ['default'],
+    anatomy: ['root', 'item', 'group', 'sub-item'],
+    props: {
+      collapsed: { type: 'boolean', default: false },
+    },
+    tokens: {
+      base: {
+        backgroundColor: '{colors.surface-default}',
+        textColor: '{colors.on-surface}',
+        borderColor: '{colors.surface-border}',
+        borderWidth: '1px',
+        paddingX: '{spacing.sm}',
+        paddingY: '{spacing.sm}',
+        rounded: '{rounded.md}',
+        width: '220px',
+      },
+    },
+    examples: [
+      { label: 'One level', props: {} },
+      { label: 'Multilevel', props: {} },
+    ],
+  },
 }

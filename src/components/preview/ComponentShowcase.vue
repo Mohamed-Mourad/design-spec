@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { Info, CircleCheck, TriangleAlert, CircleAlert, X } from '@lucide/vue'
+import { Info, CircleCheck, TriangleAlert, CircleAlert, X, ChevronDown } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import type { ComponentBlueprint } from '@/types/schema'
 import { resolveComponentStyle, refToVar } from '@/utils/previewStyle'
@@ -91,6 +91,12 @@ function styleFor(name: string, vr: VariantRender): CSSProperties {
 function sampleText(name: string, variant: string): string {
   return variant === 'default' ? name : variant
 }
+
+// Resolve a named state group (e.g. 'checked') for inline use.
+function stateStyle(n: string, group: string): CSSProperties {
+  const bp = bpOf(n)
+  return bp ? resolveComponentStyle(schema.value, bp, viewportWidth.value, undefined, [group]).style : {}
+}
 </script>
 
 <template>
@@ -161,6 +167,41 @@ function sampleText(name: string, variant: string): string {
             </label>
 
             <span v-else-if="c.name === 'Tooltip'" :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`" :style="styleFor(c.name, vr)">{{ sampleText(c.name, vr.variant) }}</span>
+
+            <!-- Dropdown -->
+            <div v-else-if="c.name === 'Dropdown'" class="showcase__dropdown" :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`" :style="styleFor(c.name, vr)">
+              <span>Select option</span>
+              <ChevronDown :size="14" aria-hidden="true" />
+            </div>
+
+            <!-- Radio group (selected + unselected) -->
+            <div v-else-if="c.name === 'Radio'" class="showcase__radio-group" :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`">
+              <label class="showcase__radio-row">
+                <span class="showcase__radio" :style="stateStyle('Radio', 'checked')"><span class="showcase__radio-dot" /></span>Option A
+              </label>
+              <label class="showcase__radio-row">
+                <span class="showcase__radio" :style="styleFor(c.name, vr)" />Option B
+              </label>
+            </div>
+
+            <!-- Navbar (top) -->
+            <div v-else-if="c.name === 'Navbar'" class="showcase__navbar" :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`" :style="styleFor(c.name, vr)">
+              <strong>Logo</strong>
+              <nav class="showcase__nav-links"><span>Home</span><span>Docs</span><span>Pricing</span></nav>
+              <button class="showcase__btn" :style="{ background: 'var(--color-primary)', color: 'var(--color-on-primary)', borderRadius: 'var(--rounded-md)' }">Sign in</button>
+            </div>
+
+            <!-- Sidebar: one-level vs multilevel -->
+            <div v-else-if="c.name === 'Sidebar'" class="showcase__sidebar" :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`" :style="styleFor(c.name, vr)">
+              <div class="showcase__side-item">Dashboard</div>
+              <div class="showcase__side-item">Projects</div>
+              <template v-if="vr.variant === 'multilevel'">
+                <div class="showcase__side-group">Settings <ChevronDown :size="12" aria-hidden="true" /></div>
+                <div class="showcase__side-sub">Profile</div>
+                <div class="showcase__side-sub">Billing</div>
+              </template>
+              <div v-else class="showcase__side-item">Settings</div>
+            </div>
 
             <div v-else :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`" :style="styleFor(c.name, vr)">{{ sampleText(c.name, vr.variant) }}</div>
           </template>
@@ -301,6 +342,73 @@ function sampleText(name: string, variant: string): string {
 }
 .showcase__checkbox {
   display: inline-block;
+}
+.showcase__dropdown {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  min-width: 180px;
+}
+.showcase__radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.showcase__radio-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 13px;
+}
+.showcase__radio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.showcase__radio-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--color-on-primary);
+}
+.showcase__navbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  min-width: 320px;
+}
+.showcase__nav-links {
+  display: flex;
+  gap: var(--spacing-md);
+  flex: 1;
+  font-size: 13px;
+  opacity: 0.85;
+}
+.showcase__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.showcase__side-item,
+.showcase__side-group,
+.showcase__side-sub {
+  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+}
+.showcase__side-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+.showcase__side-sub {
+  padding-left: var(--spacing-lg);
+  opacity: 0.8;
 }
 .showcase__hidden {
   font-family: var(--font-sans);
