@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { Pipette } from '@lucide/vue'
-import { hexToRgba, rgbaToHex, rgbToHsv, hsvToRgb, isHexColor, normalizeHex } from '@/utils/colorUtils'
+import { hexToRgba, rgbaToHex, rgbToHsv, hsvToRgb, isHexColor, normalizeHex, parseCssColor } from '@/utils/colorUtils'
 
 // Figma-style color picker: saturation/value pad, hue + alpha sliders, hex
 // field, and an eyedropper where the browser supports it. Emits an #rrggbb(aa)
@@ -91,14 +91,47 @@ function commitHex() {
 }
 
 const hasEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window
+
+function setHex(hex: string) {
+  syncFromModel(hex)
+  emit('update:modelValue', currentHex.value)
+}
+
 async function pickFromScreen() {
   try {
     // @ts-expect-error — EyeDropper isn't in the DOM lib yet.
     const result = await new window.EyeDropper().open()
-    if (result?.sRGBHex) syncFromModel(result.sRGBHex)
+    if (result?.sRGBHex) setHex(result.sRGBHex)
   } catch {
     // user cancelled
   }
+}
+
+// Cross-browser fallback: click any element; sample its effective background.
+function pickFromDom() {
+  document.body.style.cursor = 'crosshair'
+  const handler = (e: MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    document.removeEventListener('click', handler, true)
+    document.body.style.cursor = ''
+    let el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+    while (el) {
+      const rgba = parseCssColor(getComputedStyle(el).backgroundColor)
+      if (rgba && rgba.a > 0) {
+        setHex(rgbaToHex(rgba))
+        return
+      }
+      el = el.parentElement
+    }
+  }
+  // Defer so the click that triggered this doesn't immediately fire the handler.
+  setTimeout(() => document.addEventListener('click', handler, true), 0)
+}
+
+function pickColor() {
+  if (hasEyeDropper) void pickFromScreen()
+  else pickFromDom()
 }
 </script>
 
@@ -132,10 +165,9 @@ async function pickFromScreen() {
       <input v-model="hexField" class="cp__hex" spellcheck="false" aria-label="Hex value" @blur="commitHex" @keydown.enter="commitHex" />
       <button
         class="cp__eyedropper"
-        :disabled="!hasEyeDropper"
-        aria-label="Pick a color from the screen"
-        :title="hasEyeDropper ? 'Pick a color from the screen' : 'Eyedropper not supported in this browser'"
-        @click="pickFromScreen"
+        aria-label="Pick a color"
+        :title="hasEyeDropper ? 'Pick a color from anywhere on screen' : 'Pick a color from the preview'"
+        @click="pickColor"
       >
         <Pipette :size="14" aria-hidden="true" />
       </button>

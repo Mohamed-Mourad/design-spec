@@ -67,6 +67,15 @@ export function rgbaToHex({ r, g, b, a }: RGBA): string {
   return a >= 1 ? base : `${base}${h2(a * 255)}`
 }
 
+/** Parse a CSS `rgb(...)` / `rgba(...)` string (as getComputedStyle returns) to RGBA. */
+export function parseCssColor(str: string): RGBA | null {
+  const m = /^rgba?\(([^)]+)\)$/i.exec(str.trim())
+  if (!m) return null
+  const parts = m[1].split(/[,/]/).map((s) => parseFloat(s.trim()))
+  if (parts.length < 3 || parts.some((n, i) => i < 3 && Number.isNaN(n))) return null
+  return { r: parts[0], g: parts[1], b: parts[2], a: Number.isNaN(parts[3]) ? 1 : parts[3] ?? 1 }
+}
+
 export function rgbToHsv({ r, g, b }: RGBA): HSV {
   const rn = r / 255
   const gn = g / 255
