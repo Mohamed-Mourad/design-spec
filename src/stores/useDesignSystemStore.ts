@@ -168,6 +168,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   function updateFrameworks(frameworks: Framework[]) {
     logAction('updateFrameworks', [frameworks])
     schema.value.export.frameworks = frameworks
+    snapshot()
   }
 
   function loadPreset(preset: DesignSystemSchema) {

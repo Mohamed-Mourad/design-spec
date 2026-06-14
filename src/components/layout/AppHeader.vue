@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
+import FrameworkSelector from '@/components/layout/FrameworkSelector.vue'
 
 const store = useDesignSystemStore()
 const { schema, canUndo, canRedo } = storeToRefs(store)
@@ -44,6 +45,7 @@ function commitName(e: Event) {
     </div>
 
     <div class="header__actions">
+      <FrameworkSelector />
       <button
         class="header__icon-btn"
         :disabled="!canUndo"
