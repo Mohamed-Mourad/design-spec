@@ -171,7 +171,7 @@ const activeOverrides = computed(() => Object.keys(bp.value?.responsive ?? {}))
         Base applies until the breakpoint. Add an override to grow padding, hide, or restyle at a viewport.
       </p>
       <div class="be__add">
-        <select v-model="selectedBp" aria-label="Breakpoint">
+        <select v-model="selectedBp" aria-label="Breakpoint" data-testid="responsive-bp-select">
           <option value="">choose breakpoint…</option>
           <option v-for="name in breakpointNames" :key="name" :value="name">
             {{ name }} ({{ schema.breakpoints[name] }})
