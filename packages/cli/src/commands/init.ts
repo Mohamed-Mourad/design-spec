@@ -73,7 +73,7 @@ export function registerInit(program: Command): void {
     .description('detect your framework, synthesize design-spec.schema.json, and compile outputs')
     .option('-y, --yes', 'non-interactive; accept all defaults', false)
     .option('--force', 'overwrite an existing design-spec.schema.json', false)
-    .option('--frameworks <list>', 'comma-separated: react-tailwind,vue-css,flutter')
+    .option('--frameworks <list>', 'comma-separated: react-tailwind,react-css,vue-tailwind,vue-css,flutter')
     .option('--naming <convention>', 'token naming convention')
     .option('--prefix <prefix>', 'CSS variable prefix')
     .option('--font-loading <mode>', 'auto | manual')

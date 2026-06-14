@@ -95,7 +95,7 @@ describe('fix', () => {
     // init already compiled these — their raw hex/px are token definitions, not drift.
     const tokensBefore = await readFile(join(dir, 'tokens.css'), 'utf8')
     const configBefore = await readFile(join(dir, 'tailwind.config.js'), 'utf8')
-    const buttonBefore = await readFile(join(dir, 'components', 'Button.tsx'), 'utf8')
+    const buttonBefore = await readFile(join(dir, 'components', 'react-tailwind', 'Button.tsx'), 'utf8')
 
     // a real drift file the fixer SHOULD touch
     const src = join(dir, 'src', 'Hero.tsx')
@@ -108,7 +108,7 @@ describe('fix', () => {
     // generated files untouched and never reported as fixed
     expect(await readFile(join(dir, 'tokens.css'), 'utf8')).toBe(tokensBefore)
     expect(await readFile(join(dir, 'tailwind.config.js'), 'utf8')).toBe(configBefore)
-    expect(await readFile(join(dir, 'components', 'Button.tsx'), 'utf8')).toBe(buttonBefore)
+    expect(await readFile(join(dir, 'components', 'react-tailwind', 'Button.tsx'), 'utf8')).toBe(buttonBefore)
     expect(fixedFiles).not.toContain('tokens.css')
     expect(fixedFiles).not.toContain('tailwind.config.js')
     // the genuine drift was still fixed

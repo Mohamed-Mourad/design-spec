@@ -5,7 +5,7 @@
 // source-of-truth contract; see the `evolving-schema-contract` skill before
 // changing any shape.
 
-export const COMPILER_VERSION = '0.1.0' as const
+export const COMPILER_VERSION = '0.2.0' as const
 
 // Contract types (single origin)
 export * from './types/schema.js'
