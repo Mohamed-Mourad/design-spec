@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
+import { defaultSchema } from '@/defaults/schema'
 
 describe('useDesignSystemStore — compiler wiring', () => {
   it('emits real DESIGN.md/SKILL.md, not placeholders', () => {
@@ -30,6 +31,21 @@ describe('useDesignSystemStore — compiler wiring', () => {
     expect(store.skillMd).toContain('Responsive (mobile-first')
     expect(store.skillMd).toContain('(md)')
     expect(store.skillMd).toContain('{spacing.lg}')
+  })
+
+  it('fills new default components into an older stored schema, keeping edits', () => {
+    // Simulate a schema saved before Sidebar existed, with a customized color.
+    const stored = structuredClone(defaultSchema) as unknown as {
+      colors: Record<string, string>
+      componentBlueprints: Record<string, unknown>
+    }
+    stored.colors.primary = '#abcdef'
+    delete stored.componentBlueprints.Sidebar
+    localStorage.setItem('dsa-schema-v1', JSON.stringify(stored))
+
+    const store = useDesignSystemStore()
+    expect(store.schema.componentBlueprints.Sidebar).toBeTruthy() // filled from defaults
+    expect(store.schema.colors.primary).toBe('#abcdef') // user edit preserved
   })
 
   it('batches mutations into a single undo step', () => {

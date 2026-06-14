@@ -15,10 +15,35 @@ export interface ActionEntry {
   args: unknown[]
 }
 
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+/**
+ * Fill keys present in defaultSchema but missing from a stored schema (e.g. new
+ * default components or tokens added since the schema was saved), without ever
+ * overwriting the user's existing values. Two levels deep — enough for token
+ * groups and componentBlueprints.
+ */
+function fillMissingDefaults(stored: Record<string, unknown>): DesignSystemSchema {
+  const defaults = defaultSchema as unknown as Record<string, unknown>
+  for (const [key, dv] of Object.entries(defaults)) {
+    if (stored[key] === undefined) {
+      stored[key] = structuredClone(dv)
+    } else if (isPlainObject(dv) && isPlainObject(stored[key])) {
+      const sub = stored[key] as Record<string, unknown>
+      for (const [k2, v2] of Object.entries(dv)) {
+        if (sub[k2] === undefined) sub[k2] = structuredClone(v2)
+      }
+    }
+  }
+  return stored as unknown as DesignSystemSchema
+}
+
 function loadFromStorage(): DesignSystemSchema {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as DesignSystemSchema
+    if (raw) return fillMissingDefaults(JSON.parse(raw) as Record<string, unknown>)
   } catch {
     // ignore corrupt storage
   }
