@@ -10,6 +10,7 @@ import MotionTab from '@/components/editors/tabs/MotionTab.vue'
 import StructureTab from '@/components/editors/tabs/StructureTab.vue'
 import BreakpointsTab from '@/components/editors/tabs/BreakpointsTab.vue'
 import ComponentsTab from '@/components/editors/tabs/ComponentsTab.vue'
+import ProseTab from '@/components/editors/tabs/ProseTab.vue'
 
 const store = useDesignSystemStore()
 const { activeEditorTab } = storeToRefs(store)
@@ -23,6 +24,7 @@ const tabs = [
   { id: 'structure', label: 'Structure' },
   { id: 'breakpoints', label: 'Breakpoints' },
   { id: 'components', label: 'Components' },
+  { id: 'prose', label: 'Prose' },
 ]
 
 const tabComponents: Record<string, Component> = {
@@ -34,6 +36,7 @@ const tabComponents: Record<string, Component> = {
   structure: StructureTab,
   breakpoints: BreakpointsTab,
   components: ComponentsTab,
+  prose: ProseTab,
 }
 
 const activeComponent = computed(() => tabComponents[activeEditorTab.value] ?? ColorsTab)
