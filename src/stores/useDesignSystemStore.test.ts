@@ -84,6 +84,28 @@ describe('useDesignSystemStore — compiler wiring', () => {
     expect(store.schema.colors.primary).toBe('#222222')
   })
 
+  it('duplicates a workspace with its schema and a unique name', () => {
+    const store = useDesignSystemStore()
+    store.renameWorkspace(store.activeWorkspaceId, 'Brand')
+    store.setPath(['colors', 'primary'], '#abcdef')
+
+    const dupId = store.duplicateWorkspace(store.activeWorkspaceId)!
+    expect(store.activeWorkspaceId).toBe(dupId)
+    expect(store.workspaces.find((w) => w.id === dupId)?.name).toBe('Brand copy')
+    expect(store.schema.colors.primary).toBe('#abcdef') // schema cloned
+  })
+
+  it('disambiguates duplicate names with a counter', () => {
+    const store = useDesignSystemStore()
+    store.renameWorkspace(store.activeWorkspaceId, 'Theme')
+    const a = store.createWorkspace('Theme')
+    const b = store.createWorkspace('Theme')
+    const names = store.workspaces.map((w) => w.name)
+    expect(names).toContain('Theme')
+    expect(store.workspaces.find((w) => w.id === a)?.name).toBe('Theme 2')
+    expect(store.workspaces.find((w) => w.id === b)?.name).toBe('Theme 3')
+  })
+
   it('renames and deletes workspaces', () => {
     const store = useDesignSystemStore()
     const id = store.createWorkspace('Temp')

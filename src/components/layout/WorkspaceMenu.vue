@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ChevronDown, Plus, Pencil, Trash2, Check, RotateCcw } from '@lucide/vue'
+import { ChevronDown, Plus, Pencil, Trash2, Check, RotateCcw, Copy } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 
 const store = useDesignSystemStore()
@@ -62,6 +62,7 @@ function resetActive() {
             <button class="wm__name" @click="store.switchWorkspace(w.id); close()">
               {{ w.name }}<span v-if="w.id === activeWorkspaceId" class="wm__dot" />
             </button>
+            <button class="wm__icon" aria-label="Duplicate" title="Duplicate" @click="store.duplicateWorkspace(w.id); close()"><Copy :size="12" /></button>
             <button class="wm__icon" aria-label="Rename" title="Rename" @click="startRename(w.id, w.name)"><Pencil :size="12" /></button>
             <button class="wm__icon wm__icon--danger" aria-label="Delete" title="Delete" @click="remove(w.id, w.name)"><Trash2 :size="12" /></button>
           </template>

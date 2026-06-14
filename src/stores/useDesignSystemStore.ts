@@ -218,18 +218,41 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     resetHistory()
   }
 
+  /** Ensure a name is unique among workspaces; on collision append " 2", " 3"… */
+  function uniqueName(base: string, excludeId?: string): string {
+    const taken = new Set(workspaces.value.filter((w) => w.id !== excludeId).map((w) => w.name))
+    if (!taken.has(base)) return base
+    let i = 2
+    while (taken.has(`${base} ${i}`)) i++
+    return `${base} ${i}`
+  }
+
   function createWorkspace(name?: string): string {
     const id = newId()
-    workspaces.value = [...workspaces.value, { id, name: name?.trim() || 'New workspace' }]
+    workspaces.value = [...workspaces.value, { id, name: uniqueName(name?.trim() || 'New workspace') }]
     localStorage.setItem(wsSchemaKey(id), JSON.stringify(defaultSchema))
     switchWorkspace(id)
     return id
   }
 
+  /** Clone a workspace (its schema) into a new one and switch to it. */
+  function duplicateWorkspace(id: string): string | undefined {
+    const src = workspaces.value.find((w) => w.id === id)
+    if (!src) return
+    persistActive() // capture in-memory edits if duplicating the active one
+    const copySchema = loadSchemaFor(id)
+    const newWsId = newId()
+    workspaces.value = [...workspaces.value, { id: newWsId, name: uniqueName(`${src.name} copy`) }]
+    localStorage.setItem(wsSchemaKey(newWsId), JSON.stringify(copySchema))
+    switchWorkspace(newWsId)
+    return newWsId
+  }
+
   function renameWorkspace(id: string, name: string) {
     const n = name.trim()
     if (!n) return
-    workspaces.value = workspaces.value.map((w) => (w.id === id ? { ...w, name: n } : w))
+    const unique = uniqueName(n, id)
+    workspaces.value = workspaces.value.map((w) => (w.id === id ? { ...w, name: unique } : w))
   }
 
   function deleteWorkspace(id: string) {
@@ -365,6 +388,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     activeWorkspaceName,
     switchWorkspace,
     createWorkspace,
+    duplicateWorkspace,
     renameWorkspace,
     deleteWorkspace,
     resetWorkspace,
