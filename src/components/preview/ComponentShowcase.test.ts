@@ -35,6 +35,27 @@ describe('ComponentShowcase — responsive preview', () => {
     void store
   })
 
+  it('clicking a component selects it for editing', async () => {
+    const store = useDesignSystemStore()
+    const wrapper = mount(ComponentShowcase)
+    const alertGroup = wrapper.findAll('.showcase__group').find((g) => g.text().startsWith('Alert'))!
+    await alertGroup.trigger('click')
+    expect(store.selectedComponent).toBe('Alert')
+    expect(store.activeEditorTab).toBe('components')
+  })
+
+  it('renders separator + close suggestions when enabled on the blueprint', () => {
+    const store = useDesignSystemStore()
+    const alert = store.schema.componentBlueprints.Alert
+    store.setPath(['componentBlueprints', 'Alert', 'anatomy'], [...alert.anatomy, 'separator'])
+    store.setPath(['componentBlueprints', 'Alert', 'props', 'dismissible'], { type: 'boolean', default: true })
+
+    const wrapper = mount(ComponentShowcase)
+    const el = wrapper.get('[data-testid="preview-Alert"]')
+    expect(el.find('hr').exists()).toBe(true)
+    expect(el.find('[aria-label="Close"]').exists()).toBe(true)
+  })
+
   it('Alert variants differ by status border color and render an icon + title', () => {
     const store = useDesignSystemStore()
     const wrapper = mount(ComponentShowcase)

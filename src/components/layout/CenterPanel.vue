@@ -4,9 +4,10 @@ import { storeToRefs } from 'pinia'
 import { Smartphone, Tablet, Monitor, Maximize, Moon, Sun } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import ComponentShowcase from '@/components/preview/ComponentShowcase.vue'
+import PreviewInspector from '@/components/preview/PreviewInspector.vue'
 
 const store = useDesignSystemStore()
-const { schema, activeViewport, viewportWidth, previewDark } = storeToRefs(store)
+const { schema, activeViewport, viewportWidth, previewDark, selectedComponent } = storeToRefs(store)
 
 const viewports = [
   { id: 'mobile', icon: Smartphone, label: '375' },
@@ -74,15 +75,32 @@ const frameStyle = computed(() => ({
         <ComponentShowcase />
       </div>
     </div>
+
+    <div v-if="selectedComponent" class="center-panel__inspector">
+      <PreviewInspector />
+    </div>
   </main>
 </template>
 
 <style scoped>
 .center-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   background-color: var(--color-surface-page);
   overflow: hidden;
+}
+.center-panel__inspector {
+  position: absolute;
+  top: 52px;
+  right: var(--spacing-md);
+  bottom: var(--spacing-md);
+  z-index: var(--z-raised);
+  display: flex;
+  pointer-events: none;
+}
+.center-panel__inspector > * {
+  pointer-events: auto;
 }
 .center-panel__header {
   display: flex;

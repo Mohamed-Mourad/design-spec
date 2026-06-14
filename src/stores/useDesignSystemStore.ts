@@ -29,6 +29,12 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   // ── Core state ──
   const schema = ref<DesignSystemSchema>(loadFromStorage())
   const activeEditorTab = ref<string>('colors')
+  // The component selected for editing (from the preview or the Components tab).
+  const selectedComponent = ref<string | null>(null)
+  function selectComponent(name: string | null) {
+    selectedComponent.value = name
+    if (name) activeEditorTab.value = 'components'
+  }
   const activePreviewFile = ref<string>('DESIGN.md')
   const activeViewport = ref<'mobile' | 'tablet' | 'desktop' | 'fit'>('desktop')
   // Pixel width each viewport constrains the preview to (fit = fluid).
@@ -222,6 +228,8 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   return {
     schema,
     activeEditorTab,
+    selectedComponent,
+    selectComponent,
     activePreviewFile,
     activeViewport,
     viewportWidth,

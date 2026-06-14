@@ -96,24 +96,22 @@ export function resolveComponentStyle(
   bp: ComponentBlueprint,
   width: number,
   variant?: string,
+  extraGroups: string[] = [],
 ): { style: CSSProperties; hidden: boolean } {
   const style: CSSProperties = {}
-  const base = bp.tokens.base ?? {}
-  for (const [prop, value] of Object.entries(base)) {
-    if (prop === 'responsive') continue
-    applyProp(schema, prop, value, style)
-  }
-
-  // Variant overrides (e.g. secondary, destructive) layer over base.
-  if (variant) {
-    const group = bp.tokens[variant] as Record<string, unknown> | undefined
-    if (group) {
-      for (const [prop, value] of Object.entries(group)) {
-        if (prop === 'responsive') continue
-        applyProp(schema, prop, value, style)
-      }
+  const applyGroup = (group: Record<string, unknown> | undefined) => {
+    if (!group) return
+    for (const [prop, value] of Object.entries(group)) {
+      if (prop === 'responsive') continue
+      applyProp(schema, prop, value, style)
     }
   }
+
+  applyGroup(bp.tokens.base as Record<string, unknown> | undefined)
+  // Variant overrides (e.g. secondary, destructive) layer over base.
+  if (variant) applyGroup(bp.tokens[variant] as Record<string, unknown> | undefined)
+  // Extra state groups (e.g. hover) layer last.
+  for (const g of extraGroups) applyGroup(bp.tokens[g] as Record<string, unknown> | undefined)
 
   let hidden = false
   const ordered = orderBreakpoints(schema, bp.responsive)

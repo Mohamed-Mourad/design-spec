@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import BlueprintEditor from '@/components/editors/BlueprintEditor.vue'
 
 const store = useDesignSystemStore()
-const { schema } = storeToRefs(store)
+const { schema, selectedComponent } = storeToRefs(store)
 
 const names = computed(() => Object.keys(schema.value.componentBlueprints))
-const selected = ref(names.value[0] ?? '')
+// Selection is shared with the live-preview inspector via the store.
+const selected = computed({
+  get: () => (selectedComponent.value && names.value.includes(selectedComponent.value) ? selectedComponent.value : names.value[0] ?? ''),
+  set: (v: string) => store.selectComponent(v),
+})
 
 watch(names, (n) => {
-  if (!n.includes(selected.value)) selected.value = n[0] ?? ''
+  if (selectedComponent.value && !n.includes(selectedComponent.value)) store.selectComponent(n[0] ?? null)
 })
 </script>
 
