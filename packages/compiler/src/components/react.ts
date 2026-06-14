@@ -53,13 +53,13 @@ function propLines(props: Record<string, PropDefinition>): string[] {
     })
 }
 
-interface ElementShape {
+export interface ElementShape {
   tag: string
   attrs: string
   void: boolean
 }
 
-function elementFor(bp: ComponentBlueprint): ElementShape {
+export function elementFor(bp: ComponentBlueprint): ElementShape {
   switch (bp.category) {
     case 'action':
       return { tag: 'button', attrs: 'React.ButtonHTMLAttributes<HTMLButtonElement>', void: false }
@@ -70,13 +70,29 @@ function elementFor(bp: ComponentBlueprint): ElementShape {
   }
 }
 
+/** Prop interface lines for a blueprint (children excluded — it's the slot). */
+export { propLines }
+
+/** Tailwind class parts for a blueprint — reused by the Vue+Tailwind emitter. */
+export function tailwindClasses(
+  schema: DesignSystemSchema,
+  bp: ComponentBlueprint,
+): { base: string[]; variants: Record<string, string[]> } {
+  const base = [...classList(bp.tokens.base as Record<string, unknown>), ...responsiveClasses(schema, bp)]
+  const variants: Record<string, string[]> = {}
+  if (bp.variants.length > 1) {
+    for (const v of bp.variants) variants[v] = classList((bp.tokens[v] as Record<string, unknown> | undefined) ?? {})
+  }
+  return { base, variants }
+}
+
 function compileOne(schema: DesignSystemSchema, bp: ComponentBlueprint): FileOutput {
   const Name = pascal(bp.name)
   const el = elementFor(bp)
   const multiVariant = bp.variants.length > 1
   const hasChildren = !el.void && 'children' in bp.props
 
-  const base = [...classList(bp.tokens.base as Record<string, unknown>), ...responsiveClasses(schema, bp)]
+  const { base } = tailwindClasses(schema, bp)
 
   const lines: string[] = [...HEADER, '', "import React from 'react'", '']
 
@@ -121,7 +137,7 @@ function compileOne(schema: DesignSystemSchema, bp: ComponentBlueprint): FileOut
   }
   lines.push('}', '')
 
-  return { filename: `components/${Name}.tsx`, content: lines.join('\n'), language: 'tsx' }
+  return { filename: `components/react-tailwind/${Name}.tsx`, content: lines.join('\n'), language: 'tsx' }
 }
 
 /** Compile every blueprint to a React + Tailwind component file. */

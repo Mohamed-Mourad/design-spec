@@ -37,6 +37,22 @@ function frameworkSection(framework: string, schema: DesignSystemSchema): string
         '- Token names map 1:1 to `tailwind.config.js` theme keys generated from the schema.',
         '- Never write `text-[#...]` arbitrary values — that is drift and will be auto-fixed.',
       ].join('\n')
+    case 'react-css':
+      return [
+        '### React + CSS custom properties',
+        '',
+        `- Components reference semantic classes styled in their \`.css\` via \`var(--${cssPrefix}color-primary)\`.`,
+        '- Variables are emitted to `tokens.css` from the schema; import it once at the app root.',
+        '- Never hard-code hex — reference the variable in the component CSS.',
+      ].join('\n')
+    case 'vue-tailwind':
+      return [
+        '### Vue + Tailwind',
+        '',
+        `- Reference tokens via Tailwind utilities in the template, never inline hex. e.g. \`class="${prefix}text-primary ${prefix}rounded-md"\`.`,
+        '- Token names map 1:1 to `tailwind.config.js` theme keys generated from the schema.',
+        '- Never write `text-[#...]` arbitrary values — that is drift and will be auto-fixed.',
+      ].join('\n')
     case 'vue-css':
       return [
         '### Vue + CSS custom properties',

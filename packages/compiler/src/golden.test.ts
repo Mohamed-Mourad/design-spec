@@ -12,6 +12,8 @@ import { compileTailwind } from './tailwind.js'
 import { compileVue } from './vue.js'
 import { compileReactComponents } from './components/react.js'
 import { compileVueComponents } from './components/vue.js'
+import { compileReactCssComponents } from './components/reactCss.js'
+import { compileVueTailwindComponents } from './components/vueTailwind.js'
 import { compileAll } from './compile.js'
 import { responsiveSchema } from './fixtures/responsive.fixture.js'
 
@@ -63,7 +65,7 @@ describe('golden — React components', () => {
     expect(compileReactComponents(defaultSchema)).toMatchSnapshot()
   })
   it('emits mobile-first responsive prefixes', () => {
-    const button = compileReactComponents(responsiveSchema).find((f) => f.filename === 'components/Button.tsx')!
+    const button = compileReactComponents(responsiveSchema).find((f) => f.filename === 'components/react-tailwind/Button.tsx')!
     expect(button.content).toContain('tablet:px-lg')
     expect(button.content).toContain('desktop:px-xl')
     expect(button.content.indexOf('tablet:px-lg')).toBeLessThan(button.content.indexOf('desktop:px-xl'))
@@ -76,7 +78,7 @@ describe('golden — Vue components', () => {
     expect(compileVueComponents(defaultSchema)).toMatchSnapshot()
   })
   it('emits mobile-first @media blocks', () => {
-    const button = compileVueComponents(responsiveSchema).find((f) => f.filename === 'components/Button.vue')!
+    const button = compileVueComponents(responsiveSchema).find((f) => f.filename === 'components/vue-css/Button.vue')!
     expect(button.content).toContain('@media (min-width: 768px)')
     expect(button.content.indexOf('min-width: 768px')).toBeLessThan(button.content.indexOf('min-width: 1024px'))
     expect(button.content).toMatchSnapshot()
@@ -90,6 +92,53 @@ describe('golden — compileAll', () => {
   it('vue-css file set', () => {
     const vueSchema = { ...defaultSchema, export: { ...defaultSchema.export, frameworks: ['vue-css' as const] } }
     expect(compileAll(vueSchema).map((f) => f.filename)).toMatchSnapshot()
+  })
+  it('multi-stack: every stack namespaces its components, shared files dedup', () => {
+    const all = {
+      ...defaultSchema,
+      export: {
+        ...defaultSchema.export,
+        frameworks: ['react-tailwind', 'react-css', 'vue-tailwind', 'vue-css'] as const,
+      },
+    }
+    const names = compileAll(all).map((f) => f.filename)
+    // No filename collisions across stacks.
+    expect(new Set(names).size).toBe(names.length)
+    // Shared artifacts appear exactly once.
+    expect(names.filter((n) => n === 'tokens.css')).toHaveLength(1)
+    expect(names.filter((n) => n === 'tailwind.config.js')).toHaveLength(1)
+    // Each stack contributes its own namespaced Button.
+    expect(names).toContain('components/react-tailwind/Button.tsx')
+    expect(names).toContain('components/react-css/Button.tsx')
+    expect(names).toContain('components/react-css/Button.css')
+    expect(names).toContain('components/vue-tailwind/Button.vue')
+    expect(names).toContain('components/vue-css/Button.vue')
+    expect(names).toMatchSnapshot()
+  })
+})
+
+describe('golden — React+CSS components', () => {
+  it('default schema (.tsx + .css)', () => {
+    expect(compileReactCssComponents(defaultSchema)).toMatchSnapshot()
+  })
+  it('css resolves to var(--token) and tsx references the semantic class', () => {
+    const css = compileReactCssComponents(defaultSchema).find((f) => f.filename === 'components/react-css/Button.css')!
+    const tsx = compileReactCssComponents(defaultSchema).find((f) => f.filename === 'components/react-css/Button.tsx')!
+    expect(css.content).toContain('var(--color-primary)')
+    expect(css.content).not.toMatch(/#[0-9a-fA-F]{6}/) // no raw hex
+    expect(tsx.content).toContain("import './Button.css'")
+    expect(tsx.content).toContain("'button'")
+  })
+})
+
+describe('golden — Vue+Tailwind components', () => {
+  it('default schema', () => {
+    expect(compileVueTailwindComponents(defaultSchema)).toMatchSnapshot()
+  })
+  it('uses utility classes, no scoped style', () => {
+    const button = compileVueTailwindComponents(defaultSchema).find((f) => f.filename === 'components/vue-tailwind/Button.vue')!
+    expect(button.content).toContain('bg-primary')
+    expect(button.content).not.toContain('<style')
   })
 })
 

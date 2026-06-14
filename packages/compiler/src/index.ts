@@ -27,6 +27,8 @@ export { compileTailwind } from './tailwind.js'
 export { compileVue } from './vue.js'
 export { compileReactComponents } from './components/react.js'
 export { compileVueComponents } from './components/vue.js'
+export { compileReactCssComponents } from './components/reactCss.js'
+export { compileVueTailwindComponents } from './components/vueTailwind.js'
 export { compileAll } from './compile.js'
 
 // Responsive cascade resolution + validation

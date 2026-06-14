@@ -106,7 +106,7 @@ describe('responsive — visibility, notes, unknown breakpoints', () => {
         Button: { ...defaultSchema.componentBlueprints.Button, responsive: { mystery: { tokens: { paddingX: '{spacing.lg}' } } } },
       },
     }
-    const vue = compileVueComponents(schema).find((f) => f.filename === 'components/Button.vue')!
+    const vue = compileVueComponents(schema).find((f) => f.filename === 'components/vue-css/Button.vue')!
     expect(vue.content).not.toContain('@media')
   })
 })
