@@ -27,10 +27,15 @@ const hueColor = computed(() => {
   return rgbaToHex({ r: c.r, g: c.g, b: c.b, a: 1 })
 })
 
+// Set true while we write h/s/v/a from an external value, so the [h,s,v,a]
+// watch doesn't echo that back out as a user edit.
+let internalSync = false
+
 function syncFromModel(hex: string) {
   if (!isHexColor(hex)) return
   const rgba = hexToRgba(hex)
   const hsv = rgbToHsv(rgba)
+  internalSync = true
   // Preserve hue when the color is greyscale (s/v collapse hue to 0).
   if (hsv.s !== 0) h.value = hsv.h
   s.value = hsv.s
@@ -45,7 +50,13 @@ watch(
     if (nv !== currentHex.value) syncFromModel(nv)
   },
 )
-watch([h, s, v, a], () => emit('update:modelValue', currentHex.value))
+watch([h, s, v, a], () => {
+  if (internalSync) {
+    internalSync = false
+    return
+  }
+  emit('update:modelValue', currentHex.value)
+})
 
 function startDrag(e: PointerEvent, el: HTMLElement | null, onMove: (xf: number, yf: number) => void) {
   if (!el) return

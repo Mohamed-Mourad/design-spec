@@ -59,7 +59,12 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   const canUndo = computed(() => historyIndex.value > 0)
   const canRedo = computed(() => historyIndex.value < historyStack.value.length - 1)
 
-  function snapshot() {
+  // History batching: while a batch is open (e.g. dragging the color picker),
+  // mutations apply live but don't push undo steps; one step is pushed on close.
+  const batchDepth = ref(0)
+  let batchDirty = false
+
+  function pushSnapshot() {
     const snap = JSON.stringify(schema.value)
     historyStack.value = historyStack.value.slice(0, historyIndex.value + 1)
     historyStack.value.push(snap)
@@ -67,6 +72,30 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
       historyStack.value.shift()
     } else {
       historyIndex.value++
+    }
+  }
+
+  function snapshot() {
+    if (batchDepth.value > 0) {
+      batchDirty = true
+      return
+    }
+    pushSnapshot()
+  }
+
+  /** Open a history batch — subsequent mutations coalesce into one undo step. */
+  function beginBatch() {
+    if (batchDepth.value === 0) batchDirty = false
+    batchDepth.value++
+  }
+
+  /** Close a history batch; pushes a single snapshot if anything changed. */
+  function endBatch() {
+    if (batchDepth.value === 0) return
+    batchDepth.value--
+    if (batchDepth.value === 0 && batchDirty) {
+      batchDirty = false
+      pushSnapshot()
     }
   }
 
@@ -210,6 +239,8 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     removeToken,
     setPath,
     removePath,
+    beginBatch,
+    endBatch,
     updateMeta,
     updateFrameworks,
     loadPreset,

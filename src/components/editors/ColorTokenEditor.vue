@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import { isValidColorValue, isHexColor, normalizeHex, isTokenReference } from '@/utils/colorUtils'
 import ColorPicker from '@/components/editors/ColorPicker.vue'
@@ -36,11 +36,40 @@ const resolved = computed(() => {
 })
 const pickerSeed = computed(() => (isHexColor(resolved.value) ? resolved.value : '#000000'))
 
-// Picker popover.
+// ── Picker popover (teleported to body so it overlays the preview) ──
 const open = ref(false)
-const pickEl = ref<HTMLElement | null>(null)
+const swatchEl = ref<HTMLElement | null>(null)
+const popoverEl = ref<HTMLElement | null>(null)
+const POP_W = 238
+const POP_H = 300
+const popStyle = ref<Record<string, string>>({})
+
+function reposition() {
+  const el = swatchEl.value
+  if (!el) return
+  const r = el.getBoundingClientRect()
+  const left = Math.min(Math.max(8, r.left), window.innerWidth - POP_W - 8)
+  const below = r.bottom + 4
+  const top = below + POP_H > window.innerHeight ? Math.max(8, r.top - POP_H - 4) : below
+  popStyle.value = { left: `${left}px`, top: `${top}px` }
+}
+
+watch(open, (isOpen) => {
+  if (isOpen) {
+    store.beginBatch() // coalesce the whole picker session into one undo step
+    nextTick(reposition)
+    window.addEventListener('scroll', reposition, true)
+    window.addEventListener('resize', reposition)
+  } else {
+    store.endBatch()
+    window.removeEventListener('scroll', reposition, true)
+    window.removeEventListener('resize', reposition)
+  }
+})
+
 function onDocClick(e: MouseEvent) {
-  if (open.value && pickEl.value && !pickEl.value.contains(e.target as Node)) open.value = false
+  const t = e.target as Node
+  if (open.value && !swatchEl.value?.contains(t) && !popoverEl.value?.contains(t)) open.value = false
 }
 function onKey(e: KeyboardEvent) {
   if (e.key === 'Escape') open.value = false
@@ -52,6 +81,9 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', onDocClick)
   document.removeEventListener('keydown', onKey)
+  window.removeEventListener('scroll', reposition, true)
+  window.removeEventListener('resize', reposition)
+  if (open.value) store.endBatch()
 })
 
 function onPick(hex: string) {
@@ -73,19 +105,15 @@ function commit() {
   <div class="row">
     <span class="row__key" :title="tokenKey">{{ tokenKey }}</span>
 
-    <div ref="pickEl" class="row__pick">
-      <button
-        class="row__swatch"
-        :style="{ background: resolved }"
-        :title="resolved"
-        :aria-label="`Edit ${tokenKey} color`"
-        :aria-expanded="open"
-        @click="open = !open"
-      />
-      <div v-if="open" class="row__popover">
-        <ColorPicker :model-value="pickerSeed" @update:model-value="onPick" />
-      </div>
-    </div>
+    <button
+      ref="swatchEl"
+      class="row__swatch"
+      :style="{ background: resolved }"
+      :title="resolved"
+      :aria-label="`Edit ${tokenKey} color`"
+      :aria-expanded="open"
+      @click="open = !open"
+    />
 
     <input
       v-model="draft"
@@ -96,6 +124,12 @@ function commit() {
       @keydown.enter="commit"
     />
     <button class="row__remove" :aria-label="`Remove ${tokenKey}`" @click="emit('remove', tokenKey)">×</button>
+
+    <Teleport to="body">
+      <div v-if="open" ref="popoverEl" class="row__popover" :style="popStyle">
+        <ColorPicker :model-value="pickerSeed" @update:model-value="onPick" />
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -115,9 +149,6 @@ function commit() {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.row__pick {
-  position: relative;
-}
 .row__swatch {
   width: 24px;
   height: 22px;
@@ -125,12 +156,6 @@ function commit() {
   border: 1px solid var(--color-surface-border);
   cursor: pointer;
   padding: 0;
-}
-.row__popover {
-  position: absolute;
-  z-index: var(--z-dropdown);
-  top: calc(100% + 4px);
-  left: 0;
 }
 .row__hex {
   font-family: var(--font-mono);
@@ -154,5 +179,13 @@ function commit() {
 }
 .row__remove:hover {
   color: var(--color-status-error);
+}
+</style>
+
+<style>
+/* Teleported to body — not scoped. */
+.row__popover {
+  position: fixed;
+  z-index: var(--z-modal);
 }
 </style>

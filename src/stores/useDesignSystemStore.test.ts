@@ -32,6 +32,28 @@ describe('useDesignSystemStore — compiler wiring', () => {
     expect(store.skillMd).toContain('{spacing.lg}')
   })
 
+  it('batches mutations into a single undo step', () => {
+    const store = useDesignSystemStore()
+    const before = store.schema.colors.primary
+    store.beginBatch()
+    store.setPath(['colors', 'primary'], '#111111')
+    store.setPath(['colors', 'primary'], '#222222')
+    store.setPath(['colors', 'primary'], '#333333')
+    store.endBatch()
+    expect(store.schema.colors.primary).toBe('#333333')
+    store.undo()
+    expect(store.schema.colors.primary).toBe(before) // one undo reverts the whole session
+  })
+
+  it('an empty batch adds no undo step', () => {
+    const store = useDesignSystemStore()
+    store.setPath(['colors', 'primary'], '#abcabc')
+    store.beginBatch()
+    store.endBatch() // no changes
+    store.undo()
+    expect(store.schema.colors.primary).not.toBe('#abcabc') // undo reverts the real edit, not a no-op
+  })
+
   it('undo restores the pre-edit schema', () => {
     const store = useDesignSystemStore()
     store.setPath(['colors', 'primary'], '#123456')
