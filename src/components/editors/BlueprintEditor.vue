@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import type { ComponentBlueprint, PropDefinition } from '@/types/schema'
 import TokenGroupEditor from '@/components/editors/TokenGroupEditor.vue'
+import { matchStatus, statusVariantTokens } from '@/utils/statusMatch'
 
 const props = defineProps<{ name: string }>()
 
@@ -26,6 +27,13 @@ function addToList(field: (typeof listFields)[number], value: string) {
   const arr = bp.value[field]
   if (arr.includes(v)) return
   store.setPath(base(field), [...arr, v])
+  // Naming a variant after a status (or a synonym) auto-applies its tokens.
+  if (field === 'variants') {
+    const status = matchStatus(v)
+    if (status && !bp.value.tokens[v]) {
+      store.setPath(['componentBlueprints', props.name, 'tokens', v], statusVariantTokens(status))
+    }
+  }
 }
 function removeFromList(field: (typeof listFields)[number], value: string) {
   if (!bp.value) return

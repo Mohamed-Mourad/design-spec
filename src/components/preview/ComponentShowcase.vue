@@ -5,6 +5,7 @@ import { Info, CircleCheck, TriangleAlert, CircleAlert, X, ChevronDown, LayoutDa
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import type { ComponentBlueprint } from '@/types/schema'
 import { resolveComponentStyle, refToVar } from '@/utils/previewStyle'
+import { matchStatus } from '@/utils/statusMatch'
 import type { CSSProperties, Component } from 'vue'
 
 const store = useDesignSystemStore()
@@ -26,8 +27,8 @@ function vsepStyle(): CSSProperties {
 }
 const ALERT_ICONS: Record<string, Component> = { info: Info, success: CircleCheck, warning: TriangleAlert, error: CircleAlert }
 const ALERT_TITLES: Record<string, string> = { info: 'Information', success: 'Success', warning: 'Warning', error: 'Error' }
-const alertIcon = (v: string) => ALERT_ICONS[v] ?? Info
-const alertTitle = (v: string) => ALERT_TITLES[v] ?? v
+const alertIcon = (v: string) => ALERT_ICONS[matchStatus(v) ?? 'info'] ?? Info
+const alertTitle = (v: string) => ALERT_TITLES[matchStatus(v) ?? ''] ?? v
 
 // Blueprint capability helpers — suggestions are token groups on the blueprint.
 const bpOf = (n: string) => schema.value.componentBlueprints[n]
