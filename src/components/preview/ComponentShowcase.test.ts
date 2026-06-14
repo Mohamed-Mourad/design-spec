@@ -43,6 +43,9 @@ describe('ComponentShowcase — responsive preview', () => {
     const error = wrapper.get('[data-testid="preview-Alert-error"]')
     expect(info.attributes('style')).toContain('var(--color-status-info)')
     expect(error.attributes('style')).toContain('var(--color-status-error)')
+    // each status also gets its own tinted background.
+    expect(info.attributes('style')).toContain('var(--color-status-info-surface)')
+    expect(error.attributes('style')).toContain('var(--color-status-error-surface)')
 
     // leading icon (svg) + a title (default content = title-message).
     expect(info.find('svg').exists()).toBe(true)

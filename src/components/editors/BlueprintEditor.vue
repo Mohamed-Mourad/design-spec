@@ -60,9 +60,9 @@ function setBaseToken(prop: string, value: unknown) {
 function removeBaseToken(prop: string) {
   store.removePath(['componentBlueprints', props.name, 'tokens', 'base', prop])
 }
-const variantTokenGroups = computed(() =>
-  bp.value ? Object.keys(bp.value.tokens).filter((k) => k !== 'base') : [],
-)
+// Every declared variant is editable, even before it has a token group — an
+// empty group renders as fully inherited from base, with override affordances.
+const variantTokenGroups = computed(() => bp.value?.variants ?? [])
 function setVariantToken(variant: string, prop: string, value: unknown) {
   store.setPath(['componentBlueprints', props.name, 'tokens', variant, prop], value)
 }
@@ -148,7 +148,7 @@ const activeOverrides = computed(() => Object.keys(bp.value?.responsive ?? {}))
       <template v-for="variant in variantTokenGroups" :key="variant">
         <h4 class="be__list-head">{{ variant }} <span class="be__muted">(inherits base)</span></h4>
         <TokenGroupEditor
-          :tokens="(bp.tokens[variant] as Record<string, unknown>)"
+          :tokens="((bp.tokens[variant] ?? {}) as Record<string, unknown>)"
           :inherited="baseTokens"
           @update="(p, v) => setVariantToken(variant, p, v)"
           @remove="(p) => removeVariantToken(variant, p)"

@@ -38,6 +38,12 @@ export const defaultSchema: DesignSystemSchema = {
     'status-success': '#10B981',
     'status-info': '#3B82F6',
 
+    // Soft status backgrounds — tinted surfaces for alerts/badges.
+    'status-error-surface': '#FEF2F2',
+    'status-warning-surface': '#FFFBEB',
+    'status-success-surface': '#ECFDF5',
+    'status-info-surface': '#EFF6FF',
+
     'interactive-focus-ring': '#3B6EF5',
   },
 
@@ -362,6 +368,11 @@ export const defaultSchema: DesignSystemSchema = {
       'on-surface': '#E6E9EF',
       'on-surface-muted': '#9AA3B2',
       'on-surface-subtle': '#5C6370',
+      // Darker, desaturated status tints that read on a dark surface.
+      'status-error-surface': '#2A1719',
+      'status-warning-surface': '#2A2113',
+      'status-success-surface': '#15251D',
+      'status-info-surface': '#16263A',
     },
   },
 
