@@ -34,4 +34,19 @@ describe('ComponentShowcase — responsive preview', () => {
     )
     void store
   })
+
+  it('Alert variants differ by status border color and render an icon + title', () => {
+    const store = useDesignSystemStore()
+    const wrapper = mount(ComponentShowcase)
+
+    const info = wrapper.get('[data-testid="preview-Alert"]') // first variant = info
+    const error = wrapper.get('[data-testid="preview-Alert-error"]')
+    expect(info.attributes('style')).toContain('var(--color-status-info)')
+    expect(error.attributes('style')).toContain('var(--color-status-error)')
+
+    // leading icon (svg) + a title (default content = title-message).
+    expect(info.find('svg').exists()).toBe(true)
+    expect(info.find('strong').text()).toBe('Information')
+    void store
+  })
 })

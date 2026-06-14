@@ -1,13 +1,35 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { Info, CircleCheck, TriangleAlert, CircleAlert } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import type { ComponentBlueprint } from '@/types/schema'
 import { resolveComponentStyle } from '@/utils/previewStyle'
-import type { CSSProperties } from 'vue'
+import type { CSSProperties, Component } from 'vue'
 
 const store = useDesignSystemStore()
 const { schema, viewportWidth } = storeToRefs(store)
+
+// Alert: icon + title/message driven by the blueprint's prop defaults.
+const alertBp = computed(() => schema.value.componentBlueprints.Alert)
+const alertCfg = computed(() => ({
+  placement: (alertBp.value?.props.iconPlacement?.default as string) ?? 'leading',
+  content: (alertBp.value?.props.content?.default as string) ?? 'title-message',
+}))
+const ALERT_ICONS: Record<string, Component> = {
+  info: Info,
+  success: CircleCheck,
+  warning: TriangleAlert,
+  error: CircleAlert,
+}
+const ALERT_TITLES: Record<string, string> = {
+  info: 'Information',
+  success: 'Success',
+  warning: 'Warning',
+  error: 'Error',
+}
+const alertIcon = (v: string) => ALERT_ICONS[v] ?? Info
+const alertTitle = (v: string) => ALERT_TITLES[v] ?? v
 
 interface VariantRender {
   variant: string
@@ -86,10 +108,28 @@ function sampleText(name: string, variant: string): string {
 
             <div
               v-else-if="c.name === 'Alert'"
+              class="showcase__alert"
               :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`"
               :style="vr.style"
             >
-              Heads up — this is an alert.
+              <component
+                :is="alertIcon(vr.variant)"
+                v-if="alertCfg.placement === 'leading'"
+                :size="16"
+                :style="{ color: vr.style.borderColor }"
+                aria-hidden="true"
+              />
+              <div class="showcase__alert-body">
+                <strong v-if="alertCfg.content === 'title-message'">{{ alertTitle(vr.variant) }}</strong>
+                <span>Something needs your attention.</span>
+              </div>
+              <component
+                :is="alertIcon(vr.variant)"
+                v-if="alertCfg.placement === 'trailing'"
+                :size="16"
+                :style="{ color: vr.style.borderColor }"
+                aria-hidden="true"
+              />
             </div>
 
             <label
@@ -165,6 +205,22 @@ function sampleText(name: string, variant: string): string {
   margin: var(--spacing-xs) 0 0;
   font-size: 13px;
   opacity: 0.8;
+}
+.showcase__alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  min-width: 240px;
+}
+.showcase__alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.showcase__alert-body span {
+  font-size: 13px;
+  opacity: 0.85;
 }
 .showcase__checkbox-row {
   display: flex;

@@ -140,7 +140,7 @@ export const tier1Blueprints: Record<string, ComponentBlueprint> = {
 
   Alert: {
     name: 'Alert',
-    description: 'Inline contextual feedback banner.',
+    description: 'Inline contextual feedback banner. Color, border, and icon follow the status.',
     category: 'feedback',
     variants: ['info', 'success', 'warning', 'error'],
     sizes: [],
@@ -148,6 +148,18 @@ export const tier1Blueprints: Record<string, ComponentBlueprint> = {
     anatomy: ['root', 'icon', 'title', 'description', 'close'],
     props: {
       variant: { type: 'enum', values: ['info', 'success', 'warning', 'error'], default: 'info' },
+      iconPlacement: {
+        type: 'enum',
+        values: ['leading', 'trailing', 'none'],
+        default: 'leading',
+        description: 'Where the status icon sits',
+      },
+      content: {
+        type: 'enum',
+        values: ['title-message', 'message'],
+        default: 'title-message',
+        description: 'Title + message, or message only',
+      },
       dismissible: { type: 'boolean', default: false },
     },
     tokens: {
@@ -160,8 +172,15 @@ export const tier1Blueprints: Record<string, ComponentBlueprint> = {
         padding: '{spacing.md}',
         typography: '{typography.body-md}',
       },
+      info: { borderColor: '{colors.status-info}' },
+      success: { borderColor: '{colors.status-success}' },
+      warning: { borderColor: '{colors.status-warning}' },
+      error: { borderColor: '{colors.status-error}' },
     },
-    examples: [{ label: 'Info', props: { variant: 'info' } }],
+    examples: [
+      { label: 'Info (title + message)', props: { variant: 'info', iconPlacement: 'leading', content: 'title-message' } },
+      { label: 'Error (message only)', props: { variant: 'error', content: 'message' } },
+    ],
   },
 
   Checkbox: {
