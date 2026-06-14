@@ -4,7 +4,7 @@ import { storeToRefs } from 'pinia'
 import { Info, CircleCheck, TriangleAlert, CircleAlert, X } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import type { ComponentBlueprint } from '@/types/schema'
-import { resolveComponentStyle } from '@/utils/previewStyle'
+import { resolveComponentStyle, refToVar } from '@/utils/previewStyle'
 import type { CSSProperties, Component } from 'vue'
 
 const store = useDesignSystemStore()
@@ -21,11 +21,32 @@ const ALERT_TITLES: Record<string, string> = { info: 'Information', success: 'Su
 const alertIcon = (v: string) => ALERT_ICONS[v] ?? Info
 const alertTitle = (v: string) => ALERT_TITLES[v] ?? v
 
-// Blueprint capability helpers (driven by suggestions in the inspector).
+// Blueprint capability helpers — suggestions are token groups on the blueprint.
 const bpOf = (n: string) => schema.value.componentBlueprints[n]
-const anatomyHas = (n: string, k: string) => bpOf(n)?.anatomy.includes(k) ?? false
-const isDismissible = (n: string) => bpOf(n)?.props.dismissible?.default === true || anatomyHas(n, 'close')
-const hasHover = (n: string) => !!bpOf(n)?.tokens.hover
+const hasGroup = (n: string, k: string) => !!bpOf(n)?.tokens[k]
+const hasHover = (n: string) => hasGroup(n, 'hover')
+const isDismissible = (n: string) => hasGroup(n, 'close')
+function groupVal(n: string, k: string, prop: string, fallback: string): string {
+  const g = bpOf(n)?.tokens[k] as Record<string, unknown> | undefined
+  return g && g[prop] != null ? refToVar(g[prop]) : fallback
+}
+function sepStyle(n: string): CSSProperties {
+  return { borderTop: `${groupVal(n, 'separator', 'borderWidth', '1px')} solid ${groupVal(n, 'separator', 'borderColor', 'currentColor')}` }
+}
+function closeStyle(n: string): CSSProperties {
+  return { color: groupVal(n, 'close', 'textColor', 'currentColor') }
+}
+function closeSize(n: string): number {
+  const g = bpOf(n)?.tokens.close as Record<string, unknown> | undefined
+  return parseInt(String(g?.size ?? '')) || 16
+}
+function actionLabel(n: string, which: 'cancelLabel' | 'confirmLabel', fallback: string): string {
+  const g = bpOf(n)?.tokens.actions as Record<string, unknown> | undefined
+  return (g?.[which] as string) || fallback
+}
+function actionStyle(n: string): CSSProperties {
+  return { borderRadius: groupVal(n, 'actions', 'rounded', 'var(--rounded-md)') }
+}
 
 interface VariantRender {
   variant: string
@@ -102,13 +123,13 @@ function sampleText(name: string, variant: string): string {
             <div v-else-if="c.name === 'Card'" class="showcase__card" :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`" :style="styleFor(c.name, vr)">
               <div class="showcase__card-head">
                 <strong>Card title</strong>
-                <button v-if="isDismissible('Card')" class="showcase__x" aria-label="Close"><X :size="14" /></button>
+                <button v-if="isDismissible('Card')" class="showcase__x" :style="closeStyle('Card')" aria-label="Close"><X :size="closeSize('Card')" /></button>
               </div>
-              <hr v-if="anatomyHas('Card', 'separator')" class="showcase__sep" />
+              <hr v-if="hasGroup('Card', 'separator')" class="showcase__sep" :style="sepStyle('Card')" />
               <p class="showcase__card-body">Grouped content lives here.</p>
-              <div v-if="anatomyHas('Card', 'actions')" class="showcase__actions">
-                <button class="showcase__btn showcase__btn--ghost">Cancel</button>
-                <button class="showcase__btn showcase__btn--primary">Confirm</button>
+              <div v-if="hasGroup('Card', 'actions')" class="showcase__actions">
+                <button class="showcase__btn showcase__btn--ghost" :style="actionStyle('Card')">{{ actionLabel('Card', 'cancelLabel', 'Cancel') }}</button>
+                <button class="showcase__btn showcase__btn--primary" :style="actionStyle('Card')">{{ actionLabel('Card', 'confirmLabel', 'Confirm') }}</button>
               </div>
             </div>
 
@@ -117,15 +138,15 @@ function sampleText(name: string, variant: string): string {
               <component :is="alertIcon(vr.variant)" v-if="alertCfg.placement === 'leading'" :size="16" :style="{ color: vr.style.borderColor }" aria-hidden="true" />
               <div class="showcase__alert-body">
                 <strong v-if="alertCfg.content === 'title-message'">{{ alertTitle(vr.variant) }}</strong>
-                <hr v-if="anatomyHas('Alert', 'separator')" class="showcase__sep" />
+                <hr v-if="hasGroup('Alert', 'separator')" class="showcase__sep" :style="sepStyle('Alert')" />
                 <span>Something needs your attention.</span>
-                <div v-if="anatomyHas('Alert', 'actions')" class="showcase__actions">
-                  <button class="showcase__btn showcase__btn--ghost">Dismiss</button>
-                  <button class="showcase__btn showcase__btn--primary">View</button>
+                <div v-if="hasGroup('Alert', 'actions')" class="showcase__actions">
+                  <button class="showcase__btn showcase__btn--ghost" :style="actionStyle('Alert')">{{ actionLabel('Alert', 'cancelLabel', 'Cancel') }}</button>
+                  <button class="showcase__btn showcase__btn--primary" :style="actionStyle('Alert')">{{ actionLabel('Alert', 'confirmLabel', 'Confirm') }}</button>
                 </div>
               </div>
               <component :is="alertIcon(vr.variant)" v-if="alertCfg.placement === 'trailing'" :size="16" :style="{ color: vr.style.borderColor }" aria-hidden="true" />
-              <button v-if="isDismissible('Alert')" class="showcase__x" aria-label="Close"><X :size="14" /></button>
+              <button v-if="isDismissible('Alert')" class="showcase__x" :style="closeStyle('Alert')" aria-label="Close"><X :size="closeSize('Alert')" /></button>
             </div>
 
             <label v-else-if="c.name === 'Checkbox'" class="showcase__checkbox-row" :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`">

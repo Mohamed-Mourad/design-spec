@@ -44,16 +44,22 @@ describe('ComponentShowcase — responsive preview', () => {
     expect(store.activeEditorTab).toBe('components')
   })
 
-  it('renders separator + close suggestions when enabled on the blueprint', () => {
+  it('renders + styles separator, close, and action suggestions from token groups', () => {
     const store = useDesignSystemStore()
-    const alert = store.schema.componentBlueprints.Alert
-    store.setPath(['componentBlueprints', 'Alert', 'anatomy'], [...alert.anatomy, 'separator'])
-    store.setPath(['componentBlueprints', 'Alert', 'props', 'dismissible'], { type: 'boolean', default: true })
+    store.setPath(['componentBlueprints', 'Alert', 'tokens', 'separator'], { borderColor: '{colors.status-info}', borderWidth: '2px' })
+    store.setPath(['componentBlueprints', 'Alert', 'tokens', 'close'], { textColor: '{colors.status-error}', size: '20px' })
+    store.setPath(['componentBlueprints', 'Alert', 'tokens', 'actions'], { cancelLabel: 'No', confirmLabel: 'Yes', rounded: '{rounded.full}' })
 
     const wrapper = mount(ComponentShowcase)
     const el = wrapper.get('[data-testid="preview-Alert"]')
-    expect(el.find('hr').exists()).toBe(true)
-    expect(el.find('[aria-label="Close"]').exists()).toBe(true)
+
+    // separator uses the edited border
+    expect(el.find('hr').attributes('style')).toContain('var(--color-status-info)')
+    // close uses the edited icon color
+    expect(el.find('[aria-label="Close"]').attributes('style')).toContain('var(--color-status-error)')
+    // action labels are editable
+    expect(el.text()).toContain('No')
+    expect(el.text()).toContain('Yes')
   })
 
   it('Alert variants differ by status border color and render an icon + title', () => {

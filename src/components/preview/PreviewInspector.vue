@@ -23,48 +23,58 @@ function removeBase(prop: string) {
   store.removePath(p('tokens', 'base', prop))
 }
 
-// ── Suggestions (component-aware), each backed by the blueprint ──
-const hasHover = computed(() => !!bp.value?.tokens.hover)
-function toggleHover(on: boolean) {
-  if (on) store.setPath(p('tokens', 'hover'), { backgroundColor: '{colors.surface-overlay}' })
-  else store.removePath(p('tokens', 'hover'))
-}
-
-function hasAnatomy(key: string) {
-  return bp.value?.anatomy.includes(key) ?? false
-}
-function toggleAnatomy(key: string, on: boolean) {
-  if (!bp.value) return
-  const next = bp.value.anatomy.filter((a) => a !== key)
-  if (on) next.push(key)
-  store.setPath(p('anatomy'), next)
-}
-
-const hasClose = computed(() => bp.value?.props.dismissible?.default === true || hasAnatomy('close'))
-function toggleClose(on: boolean) {
-  store.setPath(p('props', 'dismissible'), { type: 'boolean', default: on })
-  toggleAnatomy('close', on)
-}
+// ── Suggestions ──
+// Each is backed by a token group on the blueprint (tokens.<key>), so once
+// enabled its properties are editable here via the same TokenGroupEditor.
+const CONTAINERS = ['Card', 'Alert', 'Modal']
 
 interface Suggestion {
   key: string
   label: string
   hint: string
   available: boolean
-  get: () => boolean
-  set: (on: boolean) => void
+  default: Record<string, unknown>
+  /** Extra side effect beyond creating/removing the token group. */
+  onToggle?: (on: boolean) => void
 }
-const CONTAINERS = ['Card', 'Alert', 'Modal']
-const suggestions = computed<Suggestion[]>(() => {
-  const n = name.value
-  const isContainer = CONTAINERS.includes(n)
+
+const suggestionDefs = computed<Suggestion[]>(() => {
+  const isContainer = CONTAINERS.includes(name.value)
   return [
-    { key: 'hover', label: 'Hover effect', hint: 'adds a hover token group', available: true, get: () => hasHover.value, set: toggleHover },
-    { key: 'separator', label: 'Separator', hint: 'divider between header & body', available: isContainer, get: () => hasAnatomy('separator'), set: (v: boolean) => toggleAnatomy('separator', v) },
-    { key: 'close', label: 'Close (✕) button', hint: 'dismissible', available: isContainer, get: () => hasClose.value, set: toggleClose },
-    { key: 'actions', label: 'Action buttons', hint: 'Cancel / Confirm footer', available: isContainer, get: () => hasAnatomy('actions'), set: (v: boolean) => toggleAnatomy('actions', v) },
+    { key: 'hover', label: 'Hover effect', hint: 'styles on hover', available: true, default: { backgroundColor: '{colors.surface-overlay}' } },
+    { key: 'separator', label: 'Separator', hint: 'divider line', available: isContainer, default: { borderColor: '{colors.surface-border}', borderWidth: '1px' } },
+    {
+      key: 'close',
+      label: 'Close (✕) button',
+      hint: 'dismissible',
+      available: isContainer,
+      default: { textColor: '{colors.on-surface-muted}', size: '16px' },
+      onToggle: (on: boolean) => store.setPath(p('props', 'dismissible'), { type: 'boolean', default: on }),
+    },
+    { key: 'actions', label: 'Action buttons', hint: 'Cancel / Confirm', available: isContainer, default: { cancelLabel: 'Cancel', confirmLabel: 'Confirm', rounded: '{rounded.md}' } },
   ].filter((s) => s.available)
 })
+
+function isOn(key: string) {
+  return !!bp.value?.tokens[key]
+}
+function toggle(s: Suggestion, on: boolean) {
+  if (on) store.setPath(p('tokens', s.key), { ...s.default })
+  else store.removePath(p('tokens', s.key))
+  s.onToggle?.(on)
+}
+function groupTokens(key: string): Record<string, unknown> {
+  return (bp.value?.tokens[key] ?? {}) as Record<string, unknown>
+}
+function setGroupProp(key: string, prop: string, value: unknown) {
+  store.setPath(p('tokens', key, prop), value)
+}
+function removeGroupProp(key: string, prop: string) {
+  store.removePath(p('tokens', key, prop))
+}
+function actionLabel(which: 'cancelLabel' | 'confirmLabel'): string {
+  return (groupTokens('actions')[which] as string) ?? ''
+}
 </script>
 
 <template>
@@ -84,11 +94,31 @@ const suggestions = computed<Suggestion[]>(() => {
 
     <section>
       <h4 class="insp__h">Suggestions</h4>
-      <label v-for="s in suggestions" :key="s.key" class="insp__sugg">
-        <input type="checkbox" :checked="s.get()" @change="s.set(($event.target as HTMLInputElement).checked)" />
-        <span class="insp__sugg-label">{{ s.label }}</span>
-        <span class="insp__sugg-hint">{{ s.hint }}</span>
-      </label>
+      <div v-for="s in suggestionDefs" :key="s.key" class="insp__sgroup">
+        <label class="insp__sugg">
+          <input type="checkbox" :checked="isOn(s.key)" @change="toggle(s, ($event.target as HTMLInputElement).checked)" />
+          <span class="insp__sugg-label">{{ s.label }}</span>
+          <span class="insp__sugg-hint">{{ s.hint }}</span>
+        </label>
+
+        <div v-if="isOn(s.key)" class="insp__sub">
+          <template v-if="s.key === 'actions'">
+            <label class="insp__field">
+              <span>Cancel label</span>
+              <input :value="actionLabel('cancelLabel')" @change="setGroupProp('actions', 'cancelLabel', ($event.target as HTMLInputElement).value)" />
+            </label>
+            <label class="insp__field">
+              <span>Confirm label</span>
+              <input :value="actionLabel('confirmLabel')" @change="setGroupProp('actions', 'confirmLabel', ($event.target as HTMLInputElement).value)" />
+            </label>
+          </template>
+          <TokenGroupEditor
+            :tokens="groupTokens(s.key)"
+            @update="(prop, v) => setGroupProp(s.key, prop, v)"
+            @remove="(prop) => removeGroupProp(s.key, prop)"
+          />
+        </div>
+      </div>
     </section>
   </aside>
 </template>
@@ -159,5 +189,37 @@ const suggestions = computed<Suggestion[]>(() => {
   font-size: 11px;
   color: var(--color-on-surface-subtle);
   margin-left: auto;
+}
+.insp__sgroup {
+  border-bottom: 1px solid var(--color-surface-border-subtle);
+  padding-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
+}
+.insp__sub {
+  margin: var(--spacing-xs) 0 var(--spacing-sm) var(--spacing-md);
+  padding-left: var(--spacing-sm);
+  border-left: 2px solid var(--color-surface-border);
+}
+.insp__field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--spacing-xs);
+}
+.insp__field span {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-on-surface-subtle);
+}
+.insp__field input {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-on-surface);
+  background-color: var(--color-surface-sunken);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
 }
 </style>
