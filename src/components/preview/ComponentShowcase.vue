@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { Info, CircleCheck, TriangleAlert, CircleAlert, X, ChevronDown } from '@lucide/vue'
+import { Info, CircleCheck, TriangleAlert, CircleAlert, X, ChevronDown, LayoutDashboard, FolderKanban, Settings, User, CreditCard } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import type { ComponentBlueprint } from '@/types/schema'
 import { resolveComponentStyle, refToVar } from '@/utils/previewStyle'
@@ -96,6 +96,23 @@ function sampleText(name: string, variant: string): string {
 function stateStyle(n: string, group: string): CSSProperties {
   const bp = bpOf(n)
   return bp ? resolveComponentStyle(schema.value, bp, viewportWidth.value, undefined, [group]).style : {}
+}
+
+// Sidebar menu-item icons (suggestion: tokens.itemIcon).
+const SIDEBAR_ICONS: Record<string, Component> = {
+  Dashboard: LayoutDashboard,
+  Projects: FolderKanban,
+  Settings: Settings,
+  Profile: User,
+  Billing: CreditCard,
+}
+const sidebarIcon = (label: string) => SIDEBAR_ICONS[label] ?? LayoutDashboard
+function itemIconStyle(): CSSProperties {
+  return { color: groupVal('Sidebar', 'itemIcon', 'textColor', 'currentColor') }
+}
+function itemIconSize(): number {
+  const g = bpOf('Sidebar')?.tokens.itemIcon as Record<string, unknown> | undefined
+  return parseInt(String(g?.size ?? '')) || 16
 }
 </script>
 
@@ -193,14 +210,23 @@ function stateStyle(n: string, group: string): CSSProperties {
 
             <!-- Sidebar: one-level vs multilevel -->
             <div v-else-if="c.name === 'Sidebar'" class="showcase__sidebar" :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`" :style="styleFor(c.name, vr)">
-              <div class="showcase__side-item">Dashboard</div>
-              <div class="showcase__side-item">Projects</div>
+              <div class="showcase__side-item">
+                <component :is="sidebarIcon('Dashboard')" v-if="hasGroup('Sidebar', 'itemIcon')" :size="itemIconSize()" :style="itemIconStyle()" aria-hidden="true" />Dashboard
+              </div>
+              <div class="showcase__side-item">
+                <component :is="sidebarIcon('Projects')" v-if="hasGroup('Sidebar', 'itemIcon')" :size="itemIconSize()" :style="itemIconStyle()" aria-hidden="true" />Projects
+              </div>
               <template v-if="vr.variant === 'multilevel'">
-                <div class="showcase__side-group">Settings <ChevronDown :size="12" aria-hidden="true" /></div>
+                <div class="showcase__side-group">
+                  <span class="showcase__side-label"><component :is="sidebarIcon('Settings')" v-if="hasGroup('Sidebar', 'itemIcon')" :size="itemIconSize()" :style="itemIconStyle()" aria-hidden="true" />Settings</span>
+                  <ChevronDown :size="12" aria-hidden="true" />
+                </div>
                 <div class="showcase__side-sub">Profile</div>
                 <div class="showcase__side-sub">Billing</div>
               </template>
-              <div v-else class="showcase__side-item">Settings</div>
+              <div v-else class="showcase__side-item">
+                <component :is="sidebarIcon('Settings')" v-if="hasGroup('Sidebar', 'itemIcon')" :size="itemIconSize()" :style="itemIconStyle()" aria-hidden="true" />Settings
+              </div>
             </div>
 
             <div v-else :data-testid="i === 0 ? `preview-${c.name}` : `preview-${c.name}-${vr.variant}`" :style="styleFor(c.name, vr)">{{ sampleText(c.name, vr.variant) }}</div>
@@ -400,11 +426,21 @@ function stateStyle(n: string, group: string): CSSProperties {
   padding: 6px 8px;
   border-radius: var(--radius-sm);
 }
+.showcase__side-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
 .showcase__side-group {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-weight: 600;
+}
+.showcase__side-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 .showcase__side-sub {
   padding-left: var(--spacing-lg);

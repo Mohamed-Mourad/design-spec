@@ -48,6 +48,18 @@ describe('ComponentShowcase — responsive preview', () => {
     expect(wrapper.find('[data-testid="preview-Radio"]').text()).toContain('Option A')
   })
 
+  it('renders sidebar menu-item icons when the itemIcon group is enabled', () => {
+    const store = useDesignSystemStore()
+    expect(store.schema.componentBlueprints.Sidebar.tokens.itemIcon).toBeFalsy()
+    const before = mount(ComponentShowcase)
+    expect(before.get('[data-testid="preview-Sidebar"]').find('svg').exists()).toBe(false)
+
+    store.setPath(['componentBlueprints', 'Sidebar', 'tokens', 'itemIcon'], { textColor: '{colors.primary}', size: '16px' })
+    const after = mount(ComponentShowcase)
+    const item = after.get('[data-testid="preview-Sidebar"]')
+    expect(item.find('svg').exists()).toBe(true)
+  })
+
   it('clicking a component selects it for editing', async () => {
     const store = useDesignSystemStore()
     const wrapper = mount(ComponentShowcase)

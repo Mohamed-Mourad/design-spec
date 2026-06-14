@@ -43,6 +43,7 @@ const suggestionDefs = computed<Suggestion[]>(() => {
   const isContainer = CONTAINERS.includes(name.value)
   return [
     { key: 'hover', label: 'Hover effect', hint: 'styles on hover', available: true, default: { backgroundColor: '{colors.surface-overlay}' } },
+    { key: 'itemIcon', label: 'Menu-item icons', hint: 'leading icons', available: name.value === 'Sidebar', default: { textColor: '{colors.on-surface-muted}', size: '16px' } },
     { key: 'separator', label: 'Separator', hint: 'divider line', available: isContainer, default: { borderColor: '{colors.surface-border}', borderWidth: '1px' } },
     {
       key: 'close',
