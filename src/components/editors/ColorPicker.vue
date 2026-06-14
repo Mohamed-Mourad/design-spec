@@ -107,30 +107,68 @@ async function pickFromScreen() {
   }
 }
 
-// Cross-browser fallback: a full-screen overlay captures one click; we sample
-// the effective background color of whatever element is under the pointer.
+// Cross-browser fallback: a full-screen overlay tracks the cursor, showing a
+// magnifier lens with the live color under the pointer; a click commits it.
 const sampling = ref(false)
+const lensX = ref(0)
+const lensY = ref(0)
+const lensColor = ref('#000000')
+
+/** Effective background color at an element, walking up to the first opaque one. */
+function sampleColorAt(start: Element | null): string | null {
+  let el = start as HTMLElement | null
+  while (el) {
+    const rgba = parseCssColor(getComputedStyle(el).backgroundColor)
+    if (rgba && rgba.a > 0) return rgbaToHex({ ...rgba, a: 1 })
+    el = el.parentElement
+  }
+  return null
+}
+
+/** Read what's under (x, y) with the overlay momentarily hidden from hit-testing. */
+function colorUnder(overlay: HTMLElement, x: number, y: number): string | null {
+  overlay.style.visibility = 'hidden'
+  const el = document.elementFromPoint(x, y)
+  overlay.style.visibility = 'visible'
+  return sampleColorAt(el)
+}
+
+let moveRaf = 0
+function onSampleMove(e: MouseEvent) {
+  const overlay = e.currentTarget as HTMLElement
+  const x = e.clientX
+  const y = e.clientY
+  if (moveRaf) return
+  moveRaf = requestAnimationFrame(() => {
+    moveRaf = 0
+    lensX.value = x
+    lensY.value = y
+    const c = colorUnder(overlay, x, y)
+    if (c) lensColor.value = c
+  })
+}
 
 function onSampleClick(e: MouseEvent) {
   e.stopPropagation() // keep the picker open (don't trigger its outside-click close)
-  const overlay = e.currentTarget as HTMLElement
-  overlay.style.display = 'none' // so elementFromPoint sees through it
-  let el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
-  overlay.style.display = ''
+  const c = colorUnder(e.currentTarget as HTMLElement, e.clientX, e.clientY)
   sampling.value = false
-  while (el) {
-    const rgba = parseCssColor(getComputedStyle(el).backgroundColor)
-    if (rgba && rgba.a > 0) {
-      setHex(rgbaToHex(rgba))
-      return
-    }
-    el = el.parentElement
-  }
+  if (c) setHex(c)
 }
+
+function onSampleKey(e: KeyboardEvent) {
+  if (e.key === 'Escape') sampling.value = false
+}
+watch(sampling, (on) => {
+  if (on) document.addEventListener('keydown', onSampleKey)
+  else document.removeEventListener('keydown', onSampleKey)
+})
 
 function pickColor() {
   if (hasEyeDropper) void pickFromScreen()
-  else sampling.value = true
+  else {
+    lensColor.value = currentHex.value
+    sampling.value = true
+  }
 }
 </script>
 
@@ -177,9 +215,17 @@ function pickColor() {
     <div
       v-if="sampling"
       class="cp__sample-overlay"
-      title="Click anywhere to sample a color"
+      @mousemove="onSampleMove"
       @click="onSampleClick"
-    />
+    >
+      <div
+        class="cp__lens"
+        :style="{ left: `${lensX}px`, top: `${lensY}px`, '--lens-color': lensColor }"
+      >
+        <span class="cp__lens-reticle" />
+        <span class="cp__lens-hex">{{ lensColor }}</span>
+      </div>
+    </div>
   </Teleport>
 </template>
 
@@ -299,5 +345,40 @@ function pickColor() {
   z-index: 2147483646;
   cursor: crosshair;
   background: transparent;
+}
+.cp__lens {
+  position: fixed;
+  width: 88px;
+  height: 88px;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: var(--lens-color);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cp__lens-reticle {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+  mix-blend-mode: difference;
+}
+.cp__lens-hex {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
 }
 </style>
