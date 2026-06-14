@@ -109,6 +109,43 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     }
   }
 
+  // ── Generic nested-path mutations (editors emit a path + value) ──
+  type PathKey = string | number
+
+  function resolveParent(path: PathKey[], create = false): Record<PathKey, unknown> | null {
+    let node: unknown = schema.value
+    for (let i = 0; i < path.length - 1; i++) {
+      if (node === null || typeof node !== 'object') return null
+      const obj = node as Record<PathKey, unknown>
+      if (create && (obj[path[i]] === undefined || obj[path[i]] === null)) obj[path[i]] = {}
+      node = obj[path[i]]
+    }
+    return node !== null && typeof node === 'object' ? (node as Record<PathKey, unknown>) : null
+  }
+
+  /**
+   * Set a value at a nested path, creating intermediate objects as needed.
+   * e.g. setPath(['componentBlueprints', 'Button', 'responsive', 'md', 'tokens', 'paddingX'], '{spacing.lg}').
+   */
+  function setPath(path: PathKey[], value: unknown) {
+    if (path.length === 0) return
+    logAction('setPath', [path.join('.')])
+    const parent = resolveParent(path, true)
+    if (!parent) return
+    parent[path[path.length - 1]] = value
+    snapshot()
+  }
+
+  /** Remove the key at a nested path. */
+  function removePath(path: PathKey[]) {
+    if (path.length === 0) return
+    logAction('removePath', [path.join('.')])
+    const parent = resolveParent(path)
+    if (!parent) return
+    delete parent[path[path.length - 1]]
+    snapshot()
+  }
+
   function updateMeta(updates: Partial<Pick<DesignSystemSchema, 'name' | 'description'>>) {
     logAction('updateMeta', [Object.keys(updates)])
     Object.assign(schema.value, updates)
@@ -153,6 +190,8 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     updateToken,
     addToken,
     removeToken,
+    setPath,
+    removePath,
     updateMeta,
     updateFrameworks,
     loadPreset,

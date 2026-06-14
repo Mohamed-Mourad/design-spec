@@ -1,6 +1,15 @@
 <script setup lang="ts">
+import { computed, type Component } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
+import ColorsTab from '@/components/editors/tabs/ColorsTab.vue'
+import TypographyTab from '@/components/editors/tabs/TypographyTab.vue'
+import SpacingLayoutTab from '@/components/editors/tabs/SpacingLayoutTab.vue'
+import ElevationTab from '@/components/editors/tabs/ElevationTab.vue'
+import MotionTab from '@/components/editors/tabs/MotionTab.vue'
+import StructureTab from '@/components/editors/tabs/StructureTab.vue'
+import BreakpointsTab from '@/components/editors/tabs/BreakpointsTab.vue'
+import ComponentsTab from '@/components/editors/tabs/ComponentsTab.vue'
 
 const store = useDesignSystemStore()
 const { activeEditorTab } = storeToRefs(store)
@@ -15,6 +24,19 @@ const tabs = [
   { id: 'breakpoints', label: 'Breakpoints' },
   { id: 'components', label: 'Components' },
 ]
+
+const tabComponents: Record<string, Component> = {
+  colors: ColorsTab,
+  typography: TypographyTab,
+  spacing: SpacingLayoutTab,
+  elevation: ElevationTab,
+  motion: MotionTab,
+  structure: StructureTab,
+  breakpoints: BreakpointsTab,
+  components: ComponentsTab,
+}
+
+const activeComponent = computed(() => tabComponents[activeEditorTab.value] ?? ColorsTab)
 </script>
 
 <template>
@@ -32,10 +54,7 @@ const tabs = [
     </nav>
 
     <div class="left-panel__content">
-      <div class="left-panel__placeholder">
-        <span class="left-panel__placeholder-label">{{ activeEditorTab }}</span>
-        <p class="left-panel__placeholder-text">Token editors — Phase 2</p>
-      </div>
+      <component :is="activeComponent" />
     </div>
   </aside>
 </template>
