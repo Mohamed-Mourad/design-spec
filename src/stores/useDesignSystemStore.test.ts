@@ -48,6 +48,20 @@ describe('useDesignSystemStore — compiler wiring', () => {
     expect(store.schema.colors.primary).toBe('#abcdef') // user edit preserved
   })
 
+  it('deep-fills new default tokens inside an existing blueprint variant', () => {
+    // Older saved Alert: an info variant with only a border, customized.
+    const stored = structuredClone(defaultSchema) as unknown as {
+      componentBlueprints: { Alert: { tokens: Record<string, Record<string, string>> } }
+    }
+    stored.componentBlueprints.Alert.tokens.info = { borderColor: '#0000ff' }
+    localStorage.setItem('dsa-schema-v1', JSON.stringify(stored))
+
+    const store = useDesignSystemStore()
+    const info = store.schema.componentBlueprints.Alert.tokens.info
+    expect(info.borderColor).toBe('#0000ff') // user value kept
+    expect(info.backgroundColor).toBe('{colors.status-info-surface}') // new default filled in
+  })
+
   it('batches mutations into a single undo step', () => {
     const store = useDesignSystemStore()
     const before = store.schema.colors.primary

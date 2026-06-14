@@ -20,23 +20,23 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
 }
 
 /**
- * Fill keys present in defaultSchema but missing from a stored schema (e.g. new
- * default components or tokens added since the schema was saved), without ever
- * overwriting the user's existing values. Two levels deep — enough for token
- * groups and componentBlueprints.
+ * Recursively fill keys present in `defaults` but missing from `target`, at any
+ * depth, without overwriting existing values (scalars and arrays the user has
+ * are kept as-is). Lets new default tokens land inside existing blueprints —
+ * e.g. a surface background added to an Alert variant the user already has.
  */
-function fillMissingDefaults(stored: Record<string, unknown>): DesignSystemSchema {
-  const defaults = defaultSchema as unknown as Record<string, unknown>
+function deepFillMissing(target: Record<string, unknown>, defaults: Record<string, unknown>): void {
   for (const [key, dv] of Object.entries(defaults)) {
-    if (stored[key] === undefined) {
-      stored[key] = structuredClone(dv)
-    } else if (isPlainObject(dv) && isPlainObject(stored[key])) {
-      const sub = stored[key] as Record<string, unknown>
-      for (const [k2, v2] of Object.entries(dv)) {
-        if (sub[k2] === undefined) sub[k2] = structuredClone(v2)
-      }
+    if (target[key] === undefined) {
+      target[key] = structuredClone(dv)
+    } else if (isPlainObject(dv) && isPlainObject(target[key])) {
+      deepFillMissing(target[key] as Record<string, unknown>, dv)
     }
   }
+}
+
+function fillMissingDefaults(stored: Record<string, unknown>): DesignSystemSchema {
+  deepFillMissing(stored, defaultSchema as unknown as Record<string, unknown>)
   return stored as unknown as DesignSystemSchema
 }
 
