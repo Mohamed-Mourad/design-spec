@@ -31,6 +31,16 @@ describe('PreviewInspector', () => {
     expect(store.schema.componentBlueprints.Alert.tokens.iconSep).toBeTruthy()
   })
 
+  it('resets a component to its shipped default', async () => {
+    const store = useDesignSystemStore()
+    store.setPath(['componentBlueprints', 'Alert', 'tokens', 'success', 'backgroundColor'], '#123456')
+    store.selectComponent('Alert')
+    const wrapper = mount(PreviewInspector)
+
+    await wrapper.get('[aria-label="Reset to default"]').trigger('click')
+    expect(store.schema.componentBlueprints.Alert.tokens.success.backgroundColor).toBe('{colors.status-success-surface}')
+  })
+
   it('action labels are editable', async () => {
     const store = useDesignSystemStore()
     store.selectComponent('Card')

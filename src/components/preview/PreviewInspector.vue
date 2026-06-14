@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { X } from '@lucide/vue'
+import { X, RotateCcw } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
+import { defaultSchema } from '@/defaults/schema'
 import TokenGroupEditor from '@/components/editors/TokenGroupEditor.vue'
 import ColorTokenEditor from '@/components/editors/ColorTokenEditor.vue'
 
@@ -15,6 +16,13 @@ const baseTokens = computed<Record<string, unknown>>(() => (bp.value?.tokens.bas
 
 function p(...rest: (string | number)[]) {
   return ['componentBlueprints', name.value, ...rest]
+}
+
+// Reset this component to its shipped default (discards only its edits).
+const canReset = computed(() => name.value in defaultSchema.componentBlueprints)
+function resetComponent() {
+  const def = defaultSchema.componentBlueprints[name.value]
+  if (def) store.setPath(['componentBlueprints', name.value], structuredClone(def))
 }
 
 function setBase(prop: string, value: unknown) {
@@ -114,9 +122,14 @@ function toggleVSep(on: boolean) {
   <aside v-if="bp" class="insp">
     <header class="insp__head">
       <span class="insp__name">{{ name }}</span>
-      <button class="insp__close" aria-label="Close inspector" @click="store.selectComponent(null)">
-        <X :size="14" aria-hidden="true" />
-      </button>
+      <div class="insp__head-actions">
+        <button v-if="canReset" class="insp__icon-btn" title="Reset to default" aria-label="Reset to default" @click="resetComponent">
+          <RotateCcw :size="13" aria-hidden="true" />
+        </button>
+        <button class="insp__icon-btn" aria-label="Close inspector" @click="store.selectComponent(null)">
+          <X :size="14" aria-hidden="true" />
+        </button>
+      </div>
     </header>
     <p class="insp__note">Edits apply everywhere — preview, code, and the Components tab.</p>
 
@@ -217,14 +230,20 @@ function toggleVSep(on: boolean) {
   font-size: 16px;
   color: var(--color-on-surface);
 }
-.insp__close {
+.insp__head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+.insp__icon-btn {
   display: inline-flex;
   background: none;
   border: none;
   color: var(--color-on-surface-muted);
   cursor: pointer;
+  padding: 2px;
 }
-.insp__close:hover {
+.insp__icon-btn:hover {
   color: var(--color-on-surface);
 }
 .insp__note {
