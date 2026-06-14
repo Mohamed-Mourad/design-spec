@@ -74,6 +74,11 @@ function startDrag(e: PointerEvent, el: HTMLElement | null, onMove: (xf: number,
   window.addEventListener('pointerup', up)
 }
 
+function onOpacity(e: Event) {
+  const pct = parseFloat((e.target as HTMLInputElement).value)
+  if (!Number.isNaN(pct)) a.value = clamp(pct / 100, 0, 1)
+}
+
 const onPad = (e: PointerEvent) =>
   startDrag(e, padEl.value, (x, y) => {
     s.value = x
@@ -200,6 +205,18 @@ function pickColor() {
     <div class="cp__row">
       <span class="cp__preview" :style="{ background: currentHex }" />
       <input v-model="hexField" class="cp__hex" spellcheck="false" aria-label="Hex value" @blur="commitHex" @keydown.enter="commitHex" />
+      <label class="cp__opacity" title="Opacity">
+        <input
+          class="cp__opacity-input"
+          type="number"
+          min="0"
+          max="100"
+          :value="Math.round(a * 100)"
+          aria-label="Opacity percent"
+          @change="onOpacity"
+        />
+        <span class="cp__opacity-pct">%</span>
+      </label>
       <button
         class="cp__eyedropper"
         aria-label="Pick a color"
@@ -314,6 +331,36 @@ function pickColor() {
   border: 1px solid var(--color-surface-border);
   border-radius: var(--radius-sm);
   padding: 4px 6px;
+}
+.cp__opacity {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  background-color: var(--color-surface-sunken);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+  padding: 0 4px 0 2px;
+}
+.cp__opacity-input {
+  width: 34px;
+  background: none;
+  border: none;
+  color: var(--color-on-surface);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 0;
+  text-align: right;
+}
+.cp__opacity-input::-webkit-outer-spin-button,
+.cp__opacity-input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+.cp__opacity-pct {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-on-surface-subtle);
 }
 .cp__eyedropper {
   flex-shrink: 0;
