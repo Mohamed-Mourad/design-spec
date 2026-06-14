@@ -89,6 +89,17 @@
   box-sizing: border-box;
 }
 
+/* Drop the native number-input spinners everywhere — they look out of place. */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 html,
 body,
 #app {
