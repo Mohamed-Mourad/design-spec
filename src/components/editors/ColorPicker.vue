@@ -28,15 +28,10 @@ const hueColor = computed(() => {
   return rgbaToHex({ r: c.r, g: c.g, b: c.b, a: 1 })
 })
 
-// Set true while we write h/s/v/a from an external value, so the [h,s,v,a]
-// watch doesn't echo that back out as a user edit.
-let internalSync = false
-
 function syncFromModel(hex: string) {
   if (!isHexColor(hex)) return
   const rgba = hexToRgba(hex)
   const hsv = rgbToHsv(rgba)
-  internalSync = true
   // Preserve hue when the color is greyscale (s/v collapse hue to 0).
   if (hsv.s !== 0) h.value = hsv.h
   s.value = hsv.s
@@ -51,12 +46,10 @@ watch(
     if (nv !== currentHex.value) syncFromModel(nv)
   },
 )
+// Emit only when the picker's color actually differs from the model — this both
+// avoids an echo loop and never swallows a real edit.
 watch([h, s, v, a], () => {
-  if (internalSync) {
-    internalSync = false
-    return
-  }
-  emit('update:modelValue', currentHex.value)
+  if (currentHex.value !== props.modelValue) emit('update:modelValue', currentHex.value)
 })
 
 function startDrag(e: PointerEvent, el: HTMLElement | null, onMove: (xf: number, yf: number) => void) {
@@ -89,17 +82,27 @@ const onAlpha = (e: PointerEvent) => startDrag(e, alphaEl.value, (x) => (a.value
 
 const hexField = ref('')
 watch(currentHex, (c) => (hexField.value = c), { immediate: true })
+
+function parseField(): string | null {
+  const next = normalizeHex(hexField.value.trim().startsWith('#') ? hexField.value.trim() : `#${hexField.value.trim()}`)
+  return isHexColor(next) ? next : null
+}
+// Apply immediately while typing/pasting a complete hex; emit so it propagates.
+function onHexInput() {
+  const next = parseField()
+  if (next) setHex(next)
+}
+// On blur/enter, apply if valid, otherwise revert to the current color.
 function commitHex() {
-  const next = normalizeHex(hexField.value.startsWith('#') ? hexField.value : `#${hexField.value}`)
-  if (isHexColor(next)) syncFromModel(next)
+  const next = parseField()
+  if (next) setHex(next)
   else hexField.value = currentHex.value
 }
 
 const hasEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window
 
 function setHex(hex: string) {
-  syncFromModel(hex)
-  emit('update:modelValue', currentHex.value)
+  syncFromModel(hex) // the [h,s,v,a] watch emits when the value differs
 }
 
 async function pickFromScreen() {
@@ -204,7 +207,7 @@ function pickColor() {
 
     <div class="cp__row">
       <span class="cp__preview" :style="{ background: currentHex }" />
-      <input v-model="hexField" class="cp__hex" spellcheck="false" aria-label="Hex value" @blur="commitHex" @keydown.enter="commitHex" />
+      <input v-model="hexField" class="cp__hex" spellcheck="false" aria-label="Hex value" @input="onHexInput" @blur="commitHex" @keydown.enter="commitHex" />
       <label class="cp__opacity" title="Opacity">
         <input
           class="cp__opacity-input"
