@@ -32,6 +32,13 @@ describe('golden — SKILL.md', () => {
   it('default schema', () => {
     expect(compileSkillMd(defaultSchema)).toMatchSnapshot()
   })
+  it('renders per-component responsive snippets', () => {
+    const md = compileSkillMd(responsiveSchema)
+    expect(md).toContain('- Responsive (mobile-first')
+    // tablet (768px) override must list before desktop (1024px) — mobile-first.
+    expect(md.indexOf('(tablet)')).toBeLessThan(md.indexOf('(desktop)'))
+    expect(md).toMatchSnapshot()
+  })
 })
 
 describe('golden — Tailwind', () => {

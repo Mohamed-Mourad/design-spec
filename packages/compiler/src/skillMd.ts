@@ -5,6 +5,25 @@
 // by `schema.export.frameworks`. Pure, deterministic.
 
 import type { DesignSystemSchema } from './types/schema.js'
+import type { ComponentBlueprint } from './types/schema.js'
+import { orderBreakpoints, type BreakpointLayer } from './resolveResponsive.js'
+
+/** Mobile-first list of a blueprint's per-breakpoint token overrides, or '' if none. */
+function responsiveSnippet(schema: DesignSystemSchema, bp: ComponentBlueprint): string {
+  const responsive = bp.responsive as Record<string, BreakpointLayer> | undefined
+  const ordered = orderBreakpoints(schema, responsive)
+  if (ordered.length === 0) return ''
+  const lines = ordered.map(({ name, minWidth, layer }) => {
+    const overrides = Object.entries(layer.tokens ?? {})
+      .filter(([k, v]) => k !== 'responsive' && v !== undefined)
+      .map(([k, v]) => `${k}: ${String(v)}`)
+      .join('; ')
+    const at = minWidth ? `≥${minWidth} (${name})` : name
+    const layout = layer.layout ? ` — ${layer.layout}` : ''
+    return `  - ${at}: ${overrides || '—'}${layout}`
+  })
+  return ['- Responsive (mobile-first; base applies until the breakpoint):', ...lines].join('\n')
+}
 
 function frameworkSection(framework: string, schema: DesignSystemSchema): string {
   const prefix = schema.export.tailwindClassPrefix
@@ -47,12 +66,14 @@ function blueprintSection(schema: DesignSystemSchema): string {
         return `  - \`${name}\`: ${t}${req}${def.description ? ` — ${def.description}` : ''}`
       })
       .join('\n')
+    const responsive = responsiveSnippet(schema, bp)
     return [
       `#### ${bp.name}`,
       bp.description,
       `- Anatomy: ${bp.anatomy.join(' › ')}`,
       `- Variants: ${bp.variants.join(', ') || '—'} · Sizes: ${bp.sizes.join(', ') || '—'} · States: ${bp.states.join(', ') || '—'}`,
       props ? `- Props:\n${props}` : '',
+      responsive,
     ]
       .filter((l) => l !== '')
       .join('\n')
