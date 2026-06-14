@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import FrameworkSelector from '@/components/layout/FrameworkSelector.vue'
+import WorkspaceMenu from '@/components/layout/WorkspaceMenu.vue'
 
 const store = useDesignSystemStore()
 const { schema, canUndo, canRedo } = storeToRefs(store)
@@ -27,6 +28,7 @@ function commitName(e: Event) {
     <div class="header__brand">
       <span class="header__logo">DS</span>
       <span class="header__product">Design Spec</span>
+      <WorkspaceMenu />
     </div>
 
     <div class="header__project">

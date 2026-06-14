@@ -1,11 +1,14 @@
-import { ref, computed, watchEffect } from 'vue'
+import { ref, computed, watch, watchEffect } from 'vue'
 import { defineStore } from 'pinia'
 import { compileDesignMd, compileSkillMd, compileAll } from '@design-spec/compiler'
 import type { DesignSystemSchema } from '@/types/schema'
 import type { FileOutput, Framework } from '@/types/compiler'
 import { defaultSchema } from '@/defaults/schema'
 
-const STORAGE_KEY = 'dsa-schema-v1'
+const LEGACY_KEY = 'dsa-schema-v1' // single-schema storage, pre-workspaces
+const WS_LIST_KEY = 'dsa-workspaces-v1'
+const WS_ACTIVE_KEY = 'dsa-active-workspace-v1'
+const wsSchemaKey = (id: string) => `dsa-ws-${id}`
 const HISTORY_LIMIT = 50
 const TRACE_LIMIT = 100
 
@@ -13,6 +16,11 @@ export interface ActionEntry {
   ts: number
   action: string
   args: unknown[]
+}
+
+export interface WorkspaceMeta {
+  id: string
+  name: string
 }
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
@@ -40,19 +48,49 @@ function fillMissingDefaults(stored: Record<string, unknown>): DesignSystemSchem
   return stored as unknown as DesignSystemSchema
 }
 
-function loadFromStorage(): DesignSystemSchema {
+function readJson<T>(key: string): T | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return fillMissingDefaults(JSON.parse(raw) as Record<string, unknown>)
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as T) : null
   } catch {
-    // ignore corrupt storage
+    return null
   }
-  return structuredClone(defaultSchema)
+}
+
+function newId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `ws-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function loadSchemaFor(id: string): DesignSystemSchema {
+  const raw = readJson<Record<string, unknown>>(wsSchemaKey(id))
+  return raw ? fillMissingDefaults(raw) : structuredClone(defaultSchema)
+}
+
+/** Load the workspace list + active id, migrating the legacy single schema once. */
+function initWorkspaces(): { list: WorkspaceMeta[]; activeId: string } {
+  let list = readJson<WorkspaceMeta[]>(WS_LIST_KEY)
+  if (!list || list.length === 0) {
+    const id = newId()
+    list = [{ id, name: 'My workspace' }]
+    const legacy = readJson<Record<string, unknown>>(LEGACY_KEY)
+    const schema = legacy ? fillMissingDefaults(legacy) : structuredClone(defaultSchema)
+    localStorage.setItem(wsSchemaKey(id), JSON.stringify(schema))
+    localStorage.setItem(WS_LIST_KEY, JSON.stringify(list))
+    localStorage.setItem(WS_ACTIVE_KEY, id)
+  }
+  let activeId = localStorage.getItem(WS_ACTIVE_KEY) ?? list[0].id
+  if (!list.some((w) => w.id === activeId)) activeId = list[0].id
+  return { list, activeId }
 }
 
 export const useDesignSystemStore = defineStore('designSystem', () => {
+  // ── Workspaces ──
+  const wsInit = initWorkspaces()
+  const workspaces = ref<WorkspaceMeta[]>(wsInit.list)
+  const activeWorkspaceId = ref<string>(wsInit.activeId)
+
   // ── Core state ──
-  const schema = ref<DesignSystemSchema>(loadFromStorage())
+  const schema = ref<DesignSystemSchema>(loadSchemaFor(wsInit.activeId))
   const activeEditorTab = ref<string>('colors')
   // The component selected for editing (from the preview or the Components tab).
   const selectedComponent = ref<string | null>(null)
@@ -149,10 +187,81 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   const skillMd = computed<string>(() => compileSkillMd(schema.value))
   const outputFiles = computed<FileOutput[]>(() => compileAll(schema.value))
 
-  // ── Persistence ──
+  // ── Persistence (per active workspace) ──
   watchEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(schema.value))
+    localStorage.setItem(wsSchemaKey(activeWorkspaceId.value), JSON.stringify(schema.value))
   })
+  watch(workspaces, (list) => localStorage.setItem(WS_LIST_KEY, JSON.stringify(list)), { deep: true })
+  watch(activeWorkspaceId, (id) => localStorage.setItem(WS_ACTIVE_KEY, id))
+
+  function resetHistory() {
+    historyStack.value = [JSON.stringify(schema.value)]
+    historyIndex.value = 0
+  }
+
+  // ── Workspace actions ──
+  const activeWorkspaceName = computed(
+    () => workspaces.value.find((w) => w.id === activeWorkspaceId.value)?.name ?? '',
+  )
+
+  function persistActive() {
+    localStorage.setItem(wsSchemaKey(activeWorkspaceId.value), JSON.stringify(schema.value))
+  }
+
+  function switchWorkspace(id: string) {
+    if (id === activeWorkspaceId.value || !workspaces.value.some((w) => w.id === id)) return
+    logAction('switchWorkspace', [id])
+    persistActive() // flush current edits before loading another
+    activeWorkspaceId.value = id
+    schema.value = loadSchemaFor(id)
+    selectedComponent.value = null
+    resetHistory()
+  }
+
+  function createWorkspace(name?: string): string {
+    const id = newId()
+    workspaces.value = [...workspaces.value, { id, name: name?.trim() || 'New workspace' }]
+    localStorage.setItem(wsSchemaKey(id), JSON.stringify(defaultSchema))
+    switchWorkspace(id)
+    return id
+  }
+
+  function renameWorkspace(id: string, name: string) {
+    const n = name.trim()
+    if (!n) return
+    workspaces.value = workspaces.value.map((w) => (w.id === id ? { ...w, name: n } : w))
+  }
+
+  function deleteWorkspace(id: string) {
+    localStorage.removeItem(wsSchemaKey(id))
+    const remaining = workspaces.value.filter((w) => w.id !== id)
+    if (remaining.length === 0) {
+      // Never leave zero workspaces — recreate a fresh default.
+      const nid = newId()
+      workspaces.value = [{ id: nid, name: 'My workspace' }]
+      localStorage.setItem(wsSchemaKey(nid), JSON.stringify(defaultSchema))
+      activeWorkspaceId.value = nid
+      schema.value = structuredClone(defaultSchema)
+      selectedComponent.value = null
+      resetHistory()
+      return
+    }
+    workspaces.value = remaining
+    if (activeWorkspaceId.value === id) {
+      activeWorkspaceId.value = remaining[0].id
+      schema.value = loadSchemaFor(remaining[0].id)
+      selectedComponent.value = null
+      resetHistory()
+    }
+  }
+
+  /** Reset the active workspace to all default values. */
+  function resetWorkspace() {
+    logAction('resetWorkspace', [])
+    schema.value = structuredClone(defaultSchema)
+    selectedComponent.value = null
+    resetHistory()
+  }
 
   // ── Actions ──
   function updateToken(group: keyof DesignSystemSchema, key: string, value: unknown) {
@@ -246,12 +355,19 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   }
 
   function reset() {
-    logAction('reset', [])
-    loadPreset(defaultSchema)
+    resetWorkspace()
   }
 
   return {
     schema,
+    workspaces,
+    activeWorkspaceId,
+    activeWorkspaceName,
+    switchWorkspace,
+    createWorkspace,
+    renameWorkspace,
+    deleteWorkspace,
+    resetWorkspace,
     activeEditorTab,
     selectedComponent,
     selectComponent,

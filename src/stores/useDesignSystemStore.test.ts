@@ -62,6 +62,51 @@ describe('useDesignSystemStore — compiler wiring', () => {
     expect(info.backgroundColor).toBe('{colors.status-info-surface}') // new default filled in
   })
 
+  it('starts with a single workspace', () => {
+    const store = useDesignSystemStore()
+    expect(store.workspaces.length).toBe(1)
+    expect(store.activeWorkspaceId).toBeTruthy()
+  })
+
+  it('keeps each workspace schema isolated across create + switch', () => {
+    const store = useDesignSystemStore()
+    const first = store.activeWorkspaceId
+    store.setPath(['colors', 'primary'], '#111111')
+
+    const second = store.createWorkspace('Second') // switches; fresh defaults
+    expect(store.activeWorkspaceId).toBe(second)
+    expect(store.schema.colors.primary).not.toBe('#111111')
+    store.setPath(['colors', 'primary'], '#222222')
+
+    store.switchWorkspace(first)
+    expect(store.schema.colors.primary).toBe('#111111') // isolated per workspace
+    store.switchWorkspace(second)
+    expect(store.schema.colors.primary).toBe('#222222')
+  })
+
+  it('renames and deletes workspaces', () => {
+    const store = useDesignSystemStore()
+    const id = store.createWorkspace('Temp')
+    store.renameWorkspace(id, 'Renamed')
+    expect(store.workspaces.find((w) => w.id === id)?.name).toBe('Renamed')
+    store.deleteWorkspace(id)
+    expect(store.workspaces.some((w) => w.id === id)).toBe(false)
+  })
+
+  it('deleting the last workspace recreates a fresh one', () => {
+    const store = useDesignSystemStore()
+    store.deleteWorkspace(store.workspaces[0].id)
+    expect(store.workspaces.length).toBe(1)
+    expect(store.schema.colors.primary).toBe(defaultSchema.colors.primary)
+  })
+
+  it('resetWorkspace restores all defaults', () => {
+    const store = useDesignSystemStore()
+    store.setPath(['colors', 'primary'], '#abcabc')
+    store.resetWorkspace()
+    expect(store.schema.colors.primary).toBe(defaultSchema.colors.primary)
+  })
+
   it('batches mutations into a single undo step', () => {
     const store = useDesignSystemStore()
     const before = store.schema.colors.primary
