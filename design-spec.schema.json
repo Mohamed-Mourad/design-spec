@@ -682,6 +682,8 @@
           "items": {
             "enum": [
               "react-tailwind",
+              "react-css",
+              "vue-tailwind",
               "vue-css",
               "flutter"
             ]
