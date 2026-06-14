@@ -349,8 +349,20 @@ export const defaultSchema: DesignSystemSchema = {
   },
 
   darkMode: {
-    enabled: false,
-    colors: {},
+    enabled: true,
+    // Color overrides applied in dark mode; keys not listed inherit the light value.
+    colors: {
+      'surface-page': '#0F1115',
+      'surface-default': '#161A21',
+      'surface-raised': '#1E232C',
+      'surface-overlay': '#272D38',
+      'surface-sunken': '#0B0D11',
+      'surface-border': '#2C333F',
+      'surface-border-subtle': '#1E232C',
+      'on-surface': '#E6E9EF',
+      'on-surface-muted': '#9AA3B2',
+      'on-surface-subtle': '#5C6370',
+    },
   },
 
   export: {
