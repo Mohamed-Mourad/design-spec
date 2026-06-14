@@ -69,5 +69,6 @@ export {
 } from './mcp/route.js'
 export type { ComponentTokensSlice, LayoutSystemSlice } from './mcp/route.js'
 
-// Atomic write helper
-export { atomicWrite } from './write.js'
+// Node-only I/O helpers (atomicWrite) live behind the './node' subpath so the
+// browser entry stays free of `node:fs`. CLI/janitor import them from
+// '@design-spec/compiler/node'.

@@ -9,7 +9,7 @@
 // atomic write helper — so the normal path is unchanged.
 
 import { readFile } from 'node:fs/promises'
-import { atomicWrite } from '@design-spec/compiler'
+import { atomicWrite } from '@design-spec/compiler/node'
 
 /** One staged file change captured during a plan run. */
 export interface PlannedWrite {

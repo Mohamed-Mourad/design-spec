@@ -8,7 +8,7 @@ import { readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import envPaths from 'env-paths'
-import { atomicWrite } from '@design-spec/compiler'
+import { atomicWrite } from '@design-spec/compiler/node'
 import type { ExportConfig } from '@design-spec/compiler'
 
 export interface GlobalConfig {
