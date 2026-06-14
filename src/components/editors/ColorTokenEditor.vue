@@ -35,7 +35,6 @@ const resolved = computed(() => {
   return typeof node === 'string' ? node : '#000000'
 })
 
-const isRef = computed(() => isTokenReference(props.value))
 const pickerValue = computed(() => (isHexColor(resolved.value) ? resolved.value.slice(0, 7) : '#000000'))
 
 function commit() {
@@ -62,8 +61,7 @@ function onPicker(e: Event) {
       class="row__picker"
       type="color"
       :value="pickerValue"
-      :disabled="isRef"
-      aria-label="Pick color"
+      aria-label="Pick color (sets a raw hex, replacing a token reference)"
       @input="onPicker"
     />
     <input
