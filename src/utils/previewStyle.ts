@@ -86,20 +86,33 @@ function applyProp(schema: DesignSystemSchema, prop: string, value: unknown, sty
 }
 
 /**
- * Resolve a blueprint's render style at `width` px (Infinity = fit). Starts from
- * base tokens, then applies each responsive override whose breakpoint min-width
- * is ≤ width, mobile-first. Returns the CSS plus whether it's hidden here.
+ * Resolve a blueprint's render style at `width` px (Infinity = fit). Cascade:
+ * base tokens → the named variant's overrides → each responsive override whose
+ * breakpoint min-width is ≤ width (mobile-first). Returns the CSS plus whether
+ * it's hidden at this width.
  */
 export function resolveComponentStyle(
   schema: DesignSystemSchema,
   bp: ComponentBlueprint,
   width: number,
+  variant?: string,
 ): { style: CSSProperties; hidden: boolean } {
   const style: CSSProperties = {}
   const base = bp.tokens.base ?? {}
   for (const [prop, value] of Object.entries(base)) {
     if (prop === 'responsive') continue
     applyProp(schema, prop, value, style)
+  }
+
+  // Variant overrides (e.g. secondary, destructive) layer over base.
+  if (variant) {
+    const group = bp.tokens[variant] as Record<string, unknown> | undefined
+    if (group) {
+      for (const [prop, value] of Object.entries(group)) {
+        if (prop === 'responsive') continue
+        applyProp(schema, prop, value, style)
+      }
+    }
   }
 
   let hidden = false

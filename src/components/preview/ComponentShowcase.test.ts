@@ -16,4 +16,22 @@ describe('ComponentShowcase — responsive preview', () => {
     wrapper = mount(ComponentShowcase)
     expect(wrapper.get('[data-testid="preview-Button"]').attributes('style')).toContain('var(--spacing-lg)')
   })
+
+  it('renders every Button variant with its own overrides', () => {
+    const store = useDesignSystemStore()
+    const wrapper = mount(ComponentShowcase)
+    // primary (first) + the three variant overrides each get an element.
+    expect(wrapper.find('[data-testid="preview-Button"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="preview-Button-secondary"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="preview-Button-destructive"]').exists()).toBe(true)
+    // secondary overrides the background to the raised surface.
+    expect(wrapper.get('[data-testid="preview-Button-secondary"]').attributes('style')).toContain(
+      'var(--color-surface-raised)',
+    )
+    // destructive overrides to the error color.
+    expect(wrapper.get('[data-testid="preview-Button-destructive"]').attributes('style')).toContain(
+      'var(--color-status-error)',
+    )
+    void store
+  })
 })
