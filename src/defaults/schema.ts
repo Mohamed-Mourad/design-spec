@@ -1,4 +1,5 @@
 import type { DesignSystemSchema } from '@/types/schema'
+import { tier1Blueprints } from '@/defaults/blueprints'
 
 export const defaultSchema: DesignSystemSchema = {
   version: 'alpha',
@@ -335,7 +336,7 @@ export const defaultSchema: DesignSystemSchema = {
     },
   },
 
-  componentBlueprints: {},
+  componentBlueprints: tier1Blueprints,
 
   prose: {
     overview: '',
