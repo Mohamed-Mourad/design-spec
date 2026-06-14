@@ -7,16 +7,18 @@ import type { Framework } from '@/types/compiler'
 const store = useDesignSystemStore()
 const { schema } = storeToRefs(store)
 
-const options: { id: Framework; label: string; pro?: boolean }[] = [
+// `soon` = compiler not built yet (Flutter ships in Phase 10), so it can't be
+// selected — there is nothing to emit. Not a Pro/billing gate.
+const options: { id: Framework; label: string; soon?: boolean }[] = [
   { id: 'react-tailwind', label: 'React + Tailwind' },
   { id: 'vue-css', label: 'Vue + CSS' },
-  { id: 'flutter', label: 'Flutter', pro: true },
+  { id: 'flutter', label: 'Flutter', soon: true },
 ]
 
 const selected = computed(() => schema.value.export.frameworks)
 
-function toggle(id: Framework, pro?: boolean) {
-  if (pro) return
+function toggle(id: Framework, soon?: boolean) {
+  if (soon) return
   const current = new Set(selected.value)
   if (current.has(id)) {
     if (current.size === 1) return // keep at least one framework
@@ -34,13 +36,13 @@ function toggle(id: Framework, pro?: boolean) {
       v-for="opt in options"
       :key="opt.id"
       class="fw__chip"
-      :class="{ 'fw__chip--on': selected.includes(opt.id), 'fw__chip--pro': opt.pro }"
+      :class="{ 'fw__chip--on': selected.includes(opt.id), 'fw__chip--soon': opt.soon }"
       :aria-pressed="selected.includes(opt.id)"
-      :disabled="opt.pro"
-      :title="opt.pro ? `${opt.label} — Pro` : opt.label"
-      @click="toggle(opt.id, opt.pro)"
+      :disabled="opt.soon"
+      :title="opt.soon ? `${opt.label} — compiler not built yet (Phase 10)` : opt.label"
+      @click="toggle(opt.id, opt.soon)"
     >
-      {{ opt.label }}<span v-if="opt.pro" class="fw__pro-tag">Pro</span>
+      {{ opt.label }}<span v-if="opt.soon" class="fw__soon-tag">Soon</span>
     </button>
   </div>
 </template>
@@ -73,11 +75,11 @@ function toggle(id: Framework, pro?: boolean) {
   background-color: var(--color-primary);
   border-color: var(--color-primary);
 }
-.fw__chip--pro {
+.fw__chip--soon {
   opacity: 0.55;
   cursor: not-allowed;
 }
-.fw__pro-tag {
+.fw__soon-tag {
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
