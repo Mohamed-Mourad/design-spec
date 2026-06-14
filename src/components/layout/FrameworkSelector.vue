@@ -1,8 +1,25 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import type { Framework } from '@/types/compiler'
+
+// Native <details> doesn't close on outside click — wire it up manually.
+const root = ref<HTMLDetailsElement | null>(null)
+function onDocClick(e: MouseEvent) {
+  if (root.value?.open && !root.value.contains(e.target as Node)) root.value.open = false
+}
+function onKey(e: KeyboardEvent) {
+  if (e.key === 'Escape' && root.value?.open) root.value.open = false
+}
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+  document.addEventListener('keydown', onKey)
+})
+onUnmounted(() => {
+  document.removeEventListener('click', onDocClick)
+  document.removeEventListener('keydown', onKey)
+})
 
 // Independent stack toggles: framework (React/Vue) × styling (Tailwind/CSS).
 // Each cell is its own combo, so a designer can ship any mix — e.g. just
@@ -44,7 +61,7 @@ const summary = computed(() => `${selected.value.length} stack${selected.value.l
 </script>
 
 <template>
-  <details class="fw">
+  <details ref="root" class="fw">
     <summary class="fw__summary">Stacks · {{ summary }}</summary>
     <div class="fw__panel">
       <table class="fw__matrix">
