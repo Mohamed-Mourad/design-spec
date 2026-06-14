@@ -290,7 +290,7 @@ function itemIconSize(): number {
   border-color: var(--color-surface-border);
 }
 .showcase__group--selected {
-  border-color: var(--color-primary);
+  border-color: var(--ds-accent);
 }
 .showcase__name {
   display: flex;
@@ -306,7 +306,7 @@ function itemIconSize(): number {
 }
 .showcase__edit {
   font-size: 10px;
-  color: var(--color-primary);
+  color: var(--ds-accent);
   opacity: 0;
   transition: opacity var(--transition-duration-fast) var(--transition-easing-ease-out);
 }

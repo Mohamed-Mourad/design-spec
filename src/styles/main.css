@@ -83,6 +83,12 @@
   --z-tooltip: 600;
 }
 
+/* App-chrome accent — a fixed brand color that the live-preview frame (which
+   overrides --color-* with the user's schema) must not shadow. */
+:root {
+  --ds-accent: #c8813d;
+}
+
 *,
 *::before,
 *::after {
