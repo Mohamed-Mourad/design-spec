@@ -1,18 +1,7 @@
-export type Framework = 'react-tailwind' | 'vue-css' | 'flutter'
+// FileOutput is the compiler I/O contract — re-export from the source of truth.
+// Framework is a convenience alias derived from the export config.
+import type { ExportConfig } from '@design-spec/compiler'
 
-export interface FileOutput {
-  filename: string
-  content: string
-  language: 'markdown' | 'javascript' | 'typescript' | 'css' | 'dart' | 'json'
-  path?: string
-}
+export type { FileOutput } from '@design-spec/compiler'
 
-export interface CompilerOptions {
-  frameworks: Framework[]
-  cssVariablePrefix: string
-  webNamingConvention: 'kebab-case' | 'camelCase' | 'snake_case' | 'SCREAMING_SNAKE'
-  flutterNaming: 'prefixed-class' | 'snake_const' | 'raw'
-  fontLoading: 'auto' | 'manual'
-  fontSource: 'google' | 'bunny' | 'custom'
-  fontSourceUrl?: string
-}
+export type Framework = ExportConfig['frameworks'][number]

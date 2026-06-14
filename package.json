@@ -15,6 +15,7 @@
     "publish:compiler": "npm publish --workspace @design-spec/compiler"
   },
   "dependencies": {
+    "@design-spec/compiler": "*",
     "@lucide/vue": "^1.17.0",
     "@unhead/vue": "^3.1.1",
     "class-variance-authority": "^0.7.1",

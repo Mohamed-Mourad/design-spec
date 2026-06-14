@@ -1,5 +1,6 @@
 import { ref, computed, watchEffect } from 'vue'
 import { defineStore } from 'pinia'
+import { compileDesignMd, compileSkillMd, compileAll } from '@design-spec/compiler'
 import type { DesignSystemSchema } from '@/types/schema'
 import type { FileOutput, Framework } from '@/types/compiler'
 import { defaultSchema } from '@/defaults/schema'
@@ -70,19 +71,10 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     schema.value = JSON.parse(historyStack.value[historyIndex.value]) as DesignSystemSchema
   }
 
-  // ── Compiled outputs (stubs — compilers implemented in later phases) ──
-  const designMd = computed<string>(() => {
-    return `<!-- DESIGN.md for ${schema.value.name} — compiler coming in Phase 1 -->`
-  })
-
-  const skillMd = computed<string>(() => {
-    return `<!-- SKILL.md for ${schema.value.name} — compiler coming in Phase 3 -->`
-  })
-
-  const outputFiles = computed<FileOutput[]>(() => [
-    { filename: 'DESIGN.md', content: designMd.value, language: 'markdown' },
-    { filename: 'SKILL.md', content: skillMd.value, language: 'markdown' },
-  ])
+  // ── Compiled outputs (pure (schema) => string from @design-spec/compiler) ──
+  const designMd = computed<string>(() => compileDesignMd(schema.value))
+  const skillMd = computed<string>(() => compileSkillMd(schema.value))
+  const outputFiles = computed<FileOutput[]>(() => compileAll(schema.value))
 
   // ── Persistence ──
   watchEffect(() => {

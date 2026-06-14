@@ -161,13 +161,13 @@ export const defaultSchema: DesignSystemSchema = {
   },
 
   shadows: {
-    none: 'none',
-    xs: '0 1px 2px rgba(0,0,0,0.05)',
-    sm: '0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)',
-    md: '0 4px 6px -1px rgba(0,0,0,0.10), 0 2px 4px -2px rgba(0,0,0,0.10)',
-    lg: '0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.10)',
-    xl: '0 20px 25px -5px rgba(0,0,0,0.10), 0 8px 10px -6px rgba(0,0,0,0.10)',
-    inner: 'inset 0 2px 4px rgba(0,0,0,0.06)',
+    none: { value: 'none' },
+    xs: { value: '0 1px 2px rgba(0,0,0,0.05)' },
+    sm: { value: ['0 1px 3px rgba(0,0,0,0.10)', '0 1px 2px rgba(0,0,0,0.06)'] },
+    md: { value: ['0 4px 6px -1px rgba(0,0,0,0.10)', '0 2px 4px -2px rgba(0,0,0,0.10)'] },
+    lg: { value: ['0 10px 15px -3px rgba(0,0,0,0.10)', '0 4px 6px -4px rgba(0,0,0,0.10)'] },
+    xl: { value: ['0 20px 25px -5px rgba(0,0,0,0.10)', '0 8px 10px -6px rgba(0,0,0,0.10)'] },
+    inner: { value: 'inset 0 2px 4px rgba(0,0,0,0.06)', inset: true },
   },
 
   borders: {
@@ -283,7 +283,6 @@ export const defaultSchema: DesignSystemSchema = {
       paddingY: '8px',
     },
     'button-ghost': {
-      backgroundColor: 'transparent',
       textColor: '{colors.on-surface-muted}',
       typography: '{typography.label-lg}',
       rounded: '{rounded.md}',
