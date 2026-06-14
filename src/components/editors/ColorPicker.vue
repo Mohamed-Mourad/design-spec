@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { Pipette } from '@lucide/vue'
 import { hexToRgba, rgbaToHex, rgbToHsv, hsvToRgb, isHexColor, normalizeHex } from '@/utils/colorUtils'
 
 // Figma-style color picker: saturation/value pad, hue + alpha sliders, hex
@@ -129,8 +130,14 @@ async function pickFromScreen() {
     <div class="cp__row">
       <span class="cp__preview" :style="{ background: currentHex }" />
       <input v-model="hexField" class="cp__hex" spellcheck="false" aria-label="Hex value" @blur="commitHex" @keydown.enter="commitHex" />
-      <button v-if="hasEyeDropper" class="cp__eyedropper" aria-label="Pick from screen" title="Pick from screen" @click="pickFromScreen">
-        ⊙
+      <button
+        class="cp__eyedropper"
+        :disabled="!hasEyeDropper"
+        aria-label="Pick a color from the screen"
+        :title="hasEyeDropper ? 'Pick a color from the screen' : 'Eyedropper not supported in this browser'"
+        @click="pickFromScreen"
+      >
+        <Pipette :size="14" aria-hidden="true" />
       </button>
     </div>
   </div>
@@ -224,16 +231,22 @@ async function pickFromScreen() {
 }
 .cp__eyedropper {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 26px;
   height: 26px;
-  font-size: 14px;
   color: var(--color-on-surface-muted);
   background-color: var(--color-surface-raised);
   border: 1px solid var(--color-surface-border);
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
-.cp__eyedropper:hover {
+.cp__eyedropper:hover:not(:disabled) {
   color: var(--color-on-surface);
+}
+.cp__eyedropper:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 </style>
