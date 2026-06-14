@@ -31,6 +31,19 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   const activeEditorTab = ref<string>('colors')
   const activePreviewFile = ref<string>('DESIGN.md')
   const activeViewport = ref<'mobile' | 'tablet' | 'desktop' | 'fit'>('desktop')
+  // Pixel width each viewport constrains the preview to (fit = fluid).
+  const VIEWPORT_WIDTHS: Record<string, number> = { mobile: 375, tablet: 768, desktop: 1280, fit: Infinity }
+  const viewportWidth = computed(() => VIEWPORT_WIDTHS[activeViewport.value])
+  function setViewport(v: 'mobile' | 'tablet' | 'desktop' | 'fit') {
+    activeViewport.value = v
+  }
+
+  // Preview-only dark mode (applies schema.darkMode.colors); independent of the
+  // exported darkMode.enabled flag.
+  const previewDark = ref(false)
+  function togglePreviewDark() {
+    previewDark.value = !previewDark.value
+  }
 
   // ── Action trace (rolling 100 entries — attached to error reports) ──
   const actionTrace = ref<ActionEntry[]>([])
@@ -181,6 +194,10 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     activeEditorTab,
     activePreviewFile,
     activeViewport,
+    viewportWidth,
+    setViewport,
+    previewDark,
+    togglePreviewDark,
     actionTrace,
     canUndo,
     canRedo,
