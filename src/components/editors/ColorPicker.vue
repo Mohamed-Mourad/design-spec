@@ -107,31 +107,30 @@ async function pickFromScreen() {
   }
 }
 
-// Cross-browser fallback: click any element; sample its effective background.
-function pickFromDom() {
-  document.body.style.cursor = 'crosshair'
-  const handler = (e: MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    document.removeEventListener('click', handler, true)
-    document.body.style.cursor = ''
-    let el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
-    while (el) {
-      const rgba = parseCssColor(getComputedStyle(el).backgroundColor)
-      if (rgba && rgba.a > 0) {
-        setHex(rgbaToHex(rgba))
-        return
-      }
-      el = el.parentElement
+// Cross-browser fallback: a full-screen overlay captures one click; we sample
+// the effective background color of whatever element is under the pointer.
+const sampling = ref(false)
+
+function onSampleClick(e: MouseEvent) {
+  e.stopPropagation() // keep the picker open (don't trigger its outside-click close)
+  const overlay = e.currentTarget as HTMLElement
+  overlay.style.display = 'none' // so elementFromPoint sees through it
+  let el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+  overlay.style.display = ''
+  sampling.value = false
+  while (el) {
+    const rgba = parseCssColor(getComputedStyle(el).backgroundColor)
+    if (rgba && rgba.a > 0) {
+      setHex(rgbaToHex(rgba))
+      return
     }
+    el = el.parentElement
   }
-  // Defer so the click that triggered this doesn't immediately fire the handler.
-  setTimeout(() => document.addEventListener('click', handler, true), 0)
 }
 
 function pickColor() {
   if (hasEyeDropper) void pickFromScreen()
-  else pickFromDom()
+  else sampling.value = true
 }
 </script>
 
@@ -173,6 +172,15 @@ function pickColor() {
       </button>
     </div>
   </div>
+
+  <Teleport to="body">
+    <div
+      v-if="sampling"
+      class="cp__sample-overlay"
+      title="Click anywhere to sample a color"
+      @click="onSampleClick"
+    />
+  </Teleport>
 </template>
 
 <style scoped>
@@ -280,5 +288,16 @@ function pickColor() {
 .cp__eyedropper:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+</style>
+
+<style>
+/* Teleported to body — must be unscoped. */
+.cp__sample-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  cursor: crosshair;
+  background: transparent;
 }
 </style>
