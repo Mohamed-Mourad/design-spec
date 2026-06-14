@@ -3,43 +3,12 @@ import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import { useHighlighter } from '@/composables/useHighlighter'
-import type { FileOutput } from '@/types/compiler'
+import { buildTree } from '@/utils/fileTree'
+import FileTreeNode from '@/components/preview/FileTreeNode.vue'
 
 const store = useDesignSystemStore()
 const { outputFiles, activePreviewFile } = storeToRefs(store)
 const { ready, highlight } = useHighlighter()
-
-// Build a folder/file tree from the flat FileOutput[] (filenames may contain '/').
-interface TreeNode {
-  name: string
-  path: string
-  children: TreeNode[]
-  file?: FileOutput
-}
-
-function buildTree(files: FileOutput[]): TreeNode[] {
-  const root: TreeNode = { name: '', path: '', children: [] }
-  for (const file of files) {
-    const parts = file.filename.split('/')
-    let node = root
-    parts.forEach((part, i) => {
-      const isLeaf = i === parts.length - 1
-      let child = node.children.find((c) => c.name === part)
-      if (!child) {
-        child = { name: part, path: parts.slice(0, i + 1).join('/'), children: [] }
-        node.children.push(child)
-      }
-      if (isLeaf) child.file = file
-      node = child
-    })
-  }
-  const sort = (nodes: TreeNode[]) => {
-    nodes.sort((a, b) => Number(!!a.file) - Number(!!b.file) || a.name.localeCompare(b.name))
-    nodes.forEach((n) => sort(n.children))
-  }
-  sort(root.children)
-  return root.children
-}
 
 const tree = computed(() => buildTree(outputFiles.value))
 const activeFile = computed(
@@ -61,28 +30,13 @@ const highlighted = computed(() =>
 <template>
   <div class="fp">
     <nav class="fp__tree" aria-label="Generated files">
-      <template v-for="node in tree" :key="node.path">
-        <button
-          v-if="node.file"
-          class="fp__file"
-          :class="{ 'fp__file--active': activePreviewFile === node.file.filename }"
-          @click="activePreviewFile = node.file.filename"
-        >
-          {{ node.name }}
-        </button>
-        <div v-else class="fp__folder">
-          <span class="fp__folder-label">{{ node.name }}/</span>
-          <button
-            v-for="child in node.children"
-            :key="child.path"
-            class="fp__file fp__file--nested"
-            :class="{ 'fp__file--active': child.file && activePreviewFile === child.file.filename }"
-            @click="child.file && (activePreviewFile = child.file.filename)"
-          >
-            {{ child.name }}
-          </button>
-        </div>
-      </template>
+      <FileTreeNode
+        v-for="node in tree"
+        :key="node.path"
+        :node="node"
+        :active-path="activePreviewFile"
+        @select="activePreviewFile = $event"
+      />
     </nav>
 
     <div class="fp__content">

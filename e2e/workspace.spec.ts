@@ -32,4 +32,8 @@ test('Button tablet padding override flows to preview and SKILL.md', async ({ pa
   await page.getByRole('button', { name: 'SKILL.md' }).click()
   await expect(page.locator('.fp__content')).toContainText('{spacing.lg}')
   await expect(page.locator('.fp__content')).toContainText('(md)')
+
+  // Nested component files (components/<stack>/…) are selectable in the tree.
+  await page.getByRole('button', { name: 'Button.tsx', exact: true }).click()
+  await expect(page.locator('.right-panel__filename')).toHaveText('components/react-tailwind/Button.tsx')
 })
