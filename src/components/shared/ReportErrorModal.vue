@@ -1,21 +1,41 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useErrorReport } from '@/composables/useErrorReport'
 import { captureUserReport } from '@/utils/telemetry'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 
-const { isOpen, capturedError, capturedTrace, closeReport } = useErrorReport()
+const { isOpen, capturedError, capturedTrace, capturedKind, closeReport } = useErrorReport()
 const store = useDesignSystemStore()
 
 const message = ref('')
 const submitted = ref(false)
 
+const isBehavior = computed(() => capturedKind.value === 'behavior')
+const title = computed(() => (isBehavior.value ? 'Report unexpected behavior' : 'Report a problem'))
+const hint = computed(() =>
+  isBehavior.value
+    ? 'Describe what seemed off or unexpected — what you expected vs. what happened. Your recent action history is included automatically.'
+    : 'Describe what you were doing when the error occurred. Your recent action history will be included automatically.',
+)
+const placeholder = computed(() =>
+  isBehavior.value ? 'What did you expect, and what happened instead?' : 'Optional: describe what happened...',
+)
+// A behavior report has no error attached — the typed comment IS the report, so
+// require it. An error report can be sent with the trace alone.
+const canSubmit = computed(() => !isBehavior.value || message.value.trim().length > 0)
+
 function submit() {
-  captureUserReport(message.value.trim(), capturedError.value, {
-    actionTrace: capturedTrace.value,
-    schemaName: store.schema.name,
-    frameworks: store.schema.export.frameworks,
-  })
+  if (!canSubmit.value) return
+  captureUserReport(
+    message.value.trim(),
+    capturedError.value,
+    {
+      actionTrace: capturedTrace.value,
+      schemaName: store.schema.name,
+      frameworks: store.schema.export.frameworks,
+    },
+    capturedKind.value,
+  )
   submitted.value = true
   setTimeout(() => {
     closeReport()
@@ -47,19 +67,16 @@ function handleKeydown(e: KeyboardEvent) {
 
         <template v-else>
           <header class="modal__header">
-            <h2 id="report-title" class="modal__title">Report a problem</h2>
+            <h2 id="report-title" class="modal__title">{{ title }}</h2>
             <button class="modal__close" aria-label="Close" @click="closeReport">✕</button>
           </header>
 
           <div class="modal__body">
-            <p class="modal__hint">
-              Describe what you were doing when the error occurred. Your recent action history
-              will be included automatically.
-            </p>
+            <p class="modal__hint">{{ hint }}</p>
             <textarea
               v-model="message"
               class="modal__textarea"
-              placeholder="Optional: describe what happened..."
+              :placeholder="placeholder"
               rows="4"
               autofocus
             />
@@ -71,7 +88,7 @@ function handleKeydown(e: KeyboardEvent) {
 
           <footer class="modal__footer">
             <button class="modal__btn modal__btn--cancel" @click="closeReport">Cancel</button>
-            <button class="modal__btn modal__btn--submit" @click="submit">Send Report</button>
+            <button class="modal__btn modal__btn--submit" :disabled="!canSubmit" @click="submit">Send Report</button>
           </footer>
         </template>
       </div>
@@ -223,8 +240,13 @@ function handleKeydown(e: KeyboardEvent) {
   border-color: transparent;
 }
 
-.modal__btn--submit:hover {
+.modal__btn--submit:hover:not(:disabled) {
   background-color: var(--color-primary-glow);
+}
+
+.modal__btn--submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .modal__submitted {
