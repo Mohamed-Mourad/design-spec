@@ -6,8 +6,11 @@
 import { readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import type { FrameworkStack } from '@design-spec/compiler'
 
-export type Framework = 'react-tailwind' | 'vue-css' | 'flutter'
+// Re-exported under the local name the CLI already uses; the compiler is the
+// single source of truth for the stack union.
+export type Framework = FrameworkStack
 
 export interface Detection {
   frameworks: Framework[]
@@ -50,13 +53,15 @@ export async function detectFramework(root: string): Promise<Detection> {
     'tailwindcss' in deps || TAILWIND_CONFIGS.some((c) => existsSync(join(root, c)))
   if (hasTailwind) signals.push('found tailwindcss')
 
+  // Framework × styling: pair each detected framework with Tailwind if present,
+  // otherwise its CSS-variables stack.
   if ('react' in deps || 'next' in deps) {
     signals.push('found react/next')
-    frameworks.push('react-tailwind')
+    frameworks.push(hasTailwind ? 'react-tailwind' : 'react-css')
   }
   if ('vue' in deps || 'nuxt' in deps) {
     signals.push('found vue/nuxt')
-    frameworks.push('vue-css')
+    frameworks.push(hasTailwind ? 'vue-tailwind' : 'vue-css')
   }
 
   // De-dupe while preserving order.

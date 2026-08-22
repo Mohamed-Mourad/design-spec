@@ -18,7 +18,7 @@ import * as ui from '../ui.js'
 import type { DesignSystemSchema, ExportConfig } from '@design-spec/compiler'
 
 const NAMING: ExportConfig['webNamingConvention'][] = ['kebab-case', 'camelCase', 'snake_case', 'SCREAMING_SNAKE']
-const FRAMEWORKS: ExportConfig['frameworks'] = ['react-tailwind', 'vue-css', 'flutter']
+const FRAMEWORKS: ExportConfig['frameworks'] = ['react-tailwind', 'react-css', 'vue-tailwind', 'vue-css', 'flutter']
 const FONT_LOADING: ExportConfig['fontLoading'][] = ['auto', 'manual']
 
 interface ConfigFlags {
@@ -80,7 +80,7 @@ export function registerConfig(program: Command): void {
     .description('view or edit the project export config (frameworks, naming, prefixes)')
     .option('--list', 'print the current export config', false)
     .option('-y, --yes', 'accept current/flag values without prompting', false)
-    .option('--frameworks <list>', 'comma-separated: react-tailwind,vue-css,flutter')
+    .option('--frameworks <list>', 'comma-separated: react-tailwind,react-css,vue-tailwind,vue-css,flutter')
     .option('--naming <convention>', `one of: ${NAMING.join(', ')}`)
     .option('--prefix <prefix>', 'CSS variable prefix')
     .option('--font-loading <mode>', 'auto | manual')

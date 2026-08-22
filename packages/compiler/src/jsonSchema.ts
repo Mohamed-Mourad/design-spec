@@ -299,7 +299,7 @@ export const designSpecJsonSchema = {
       additionalProperties: false,
       required: ['frameworks', 'webNamingConvention', 'cssVariablePrefix', 'tailwindClassPrefix', 'flutterNaming', 'fontLoading', 'fontSource'],
       properties: {
-        frameworks: { type: 'array', minItems: 1, items: { enum: ['react-tailwind', 'vue-css', 'flutter'] } },
+        frameworks: { type: 'array', minItems: 1, items: { enum: ['react-tailwind', 'react-css', 'vue-tailwind', 'vue-css', 'flutter'] } },
         webNamingConvention: { enum: ['kebab-case', 'camelCase', 'snake_case', 'SCREAMING_SNAKE'] },
         cssVariablePrefix: { type: 'string' },
         tailwindClassPrefix: { type: 'string' },

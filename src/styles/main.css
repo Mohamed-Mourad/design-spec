@@ -83,10 +83,27 @@
   --z-tooltip: 600;
 }
 
+/* App-chrome accent — a fixed brand color that the live-preview frame (which
+   overrides --color-* with the user's schema) must not shadow. */
+:root {
+  --ds-accent: #c8813d;
+}
+
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/* Drop the native number-input spinners everywhere — they look out of place. */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 html,

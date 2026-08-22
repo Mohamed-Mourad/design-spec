@@ -32,11 +32,40 @@ function declarations(group: Record<string, unknown>, cssPrefix: string): string
   return out
 }
 
-function kebab(name: string): string {
+export function kebab(name: string): string {
   return name
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
     .replace(/[\s_]+/g, '-')
     .toLowerCase()
+}
+
+/**
+ * CSS rule blocks for a blueprint (base `.cls`, per-variant `.cls--v`, and
+ * mobile-first `@media` overrides) — no `<style>` wrapper. Shared by the Vue
+ * scoped-style emitter and the React+CSS standalone `.css` emitter.
+ */
+export function cssRuleBlocks(
+  schema: DesignSystemSchema,
+  bp: ComponentBlueprint,
+  cls: string,
+  cssPrefix: string,
+): string[] {
+  const out: string[] = [`.${cls} {`, ...declarations(bp.tokens.base as Record<string, unknown>, cssPrefix), '}']
+  if (bp.variants.length > 1) {
+    for (const v of bp.variants) {
+      const group = bp.tokens[v] as Record<string, unknown> | undefined
+      if (!group) continue
+      const decls = declarations(group, cssPrefix)
+      if (decls.length) out.push('', `.${cls}--${v} {`, ...decls, '}')
+    }
+  }
+  const responsive = bp.responsive as Record<string, BreakpointLayer> | undefined
+  for (const { minWidth, layer } of orderBreakpoints(schema, responsive)) {
+    if (!layer.tokens || minWidth === null) continue
+    const decls = declarations(layer.tokens as Record<string, unknown>, cssPrefix)
+    if (decls.length) out.push('', `@media (min-width: ${minWidth}) {`, `  .${cls} {`, ...decls.map((d) => `  ${d}`), '  }', '}')
+  }
+  return out
 }
 
 function compileOne(schema: DesignSystemSchema, bp: ComponentBlueprint): FileOutput {
@@ -71,25 +100,10 @@ function compileOne(schema: DesignSystemSchema, bp: ComponentBlueprint): FileOut
   template.push('</template>')
 
   // ── <style scoped> ──
-  const style: string[] = ['<style scoped>', `.${cls} {`, ...declarations(bp.tokens.base as Record<string, unknown>, cssPrefix), '}']
-  if (multiVariant) {
-    for (const v of bp.variants) {
-      const group = bp.tokens[v] as Record<string, unknown> | undefined
-      if (!group) continue
-      const decls = declarations(group, cssPrefix)
-      if (decls.length) style.push('', `.${cls}--${v} {`, ...decls, '}')
-    }
-  }
-  const responsive = bp.responsive as Record<string, BreakpointLayer> | undefined
-  for (const { name, minWidth, layer } of orderBreakpoints(schema, responsive)) {
-    if (!layer.tokens || minWidth === null) continue
-    const decls = declarations(layer.tokens as Record<string, unknown>, cssPrefix)
-    if (decls.length) style.push('', `@media (min-width: ${minWidth}) {`, `  .${cls} {`, ...decls.map((d) => `  ${d}`), '  }', '}')
-  }
-  style.push('</style>')
+  const style = ['<style scoped>', ...cssRuleBlocks(schema, bp, cls, cssPrefix), '</style>']
 
   const content = [...HEADER, '', ...script, '', ...template, '', ...style, ''].join('\n')
-  return { filename: `components/${Name}.vue`, content, language: 'vue' }
+  return { filename: `components/vue-css/${Name}.vue`, content, language: 'vue' }
 }
 
 /** Compile every blueprint to a Vue SFC. */

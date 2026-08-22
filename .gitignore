@@ -8,3 +8,7 @@ coverage
 
 # Stakpak session files
 .stakpak/session*
+
+# Playwright
+test-results/
+playwright-report/

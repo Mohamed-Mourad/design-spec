@@ -1,4 +1,5 @@
 import type { DesignSystemSchema } from '@/types/schema'
+import { tier1Blueprints } from '@/defaults/blueprints'
 
 export const defaultSchema: DesignSystemSchema = {
   version: 'alpha',
@@ -36,6 +37,12 @@ export const defaultSchema: DesignSystemSchema = {
     'status-warning': '#F59E0B',
     'status-success': '#10B981',
     'status-info': '#3B82F6',
+
+    // Soft status backgrounds — tinted surfaces for alerts/badges.
+    'status-error-surface': '#FEF2F2',
+    'status-warning-surface': '#FFFBEB',
+    'status-success-surface': '#ECFDF5',
+    'status-info-surface': '#EFF6FF',
 
     'interactive-focus-ring': '#3B6EF5',
   },
@@ -161,13 +168,13 @@ export const defaultSchema: DesignSystemSchema = {
   },
 
   shadows: {
-    none: 'none',
-    xs: '0 1px 2px rgba(0,0,0,0.05)',
-    sm: '0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)',
-    md: '0 4px 6px -1px rgba(0,0,0,0.10), 0 2px 4px -2px rgba(0,0,0,0.10)',
-    lg: '0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.10)',
-    xl: '0 20px 25px -5px rgba(0,0,0,0.10), 0 8px 10px -6px rgba(0,0,0,0.10)',
-    inner: 'inset 0 2px 4px rgba(0,0,0,0.06)',
+    none: { value: 'none' },
+    xs: { value: '0 1px 2px rgba(0,0,0,0.05)' },
+    sm: { value: ['0 1px 3px rgba(0,0,0,0.10)', '0 1px 2px rgba(0,0,0,0.06)'] },
+    md: { value: ['0 4px 6px -1px rgba(0,0,0,0.10)', '0 2px 4px -2px rgba(0,0,0,0.10)'] },
+    lg: { value: ['0 10px 15px -3px rgba(0,0,0,0.10)', '0 4px 6px -4px rgba(0,0,0,0.10)'] },
+    xl: { value: ['0 20px 25px -5px rgba(0,0,0,0.10)', '0 8px 10px -6px rgba(0,0,0,0.10)'] },
+    inner: { value: 'inset 0 2px 4px rgba(0,0,0,0.06)', inset: true },
   },
 
   borders: {
@@ -283,7 +290,6 @@ export const defaultSchema: DesignSystemSchema = {
       paddingY: '8px',
     },
     'button-ghost': {
-      backgroundColor: 'transparent',
       textColor: '{colors.on-surface-muted}',
       typography: '{typography.label-lg}',
       rounded: '{rounded.md}',
@@ -336,7 +342,7 @@ export const defaultSchema: DesignSystemSchema = {
     },
   },
 
-  componentBlueprints: {},
+  componentBlueprints: tier1Blueprints,
 
   prose: {
     overview: '',
@@ -349,8 +355,25 @@ export const defaultSchema: DesignSystemSchema = {
   },
 
   darkMode: {
-    enabled: false,
-    colors: {},
+    enabled: true,
+    // Color overrides applied in dark mode; keys not listed inherit the light value.
+    colors: {
+      'surface-page': '#0F1115',
+      'surface-default': '#161A21',
+      'surface-raised': '#1E232C',
+      'surface-overlay': '#272D38',
+      'surface-sunken': '#0B0D11',
+      'surface-border': '#2C333F',
+      'surface-border-subtle': '#1E232C',
+      'on-surface': '#E6E9EF',
+      'on-surface-muted': '#9AA3B2',
+      'on-surface-subtle': '#5C6370',
+      // Darker, desaturated status tints that read on a dark surface.
+      'status-error-surface': '#2A1719',
+      'status-warning-surface': '#2A2113',
+      'status-success-surface': '#15251D',
+      'status-info-surface': '#16263A',
+    },
   },
 
   export: {

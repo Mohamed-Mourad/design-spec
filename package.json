@@ -11,27 +11,36 @@
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
     "type-check": "vue-tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:e2e": "playwright test",
     "build:compiler": "npm run build --workspace @design-spec/compiler",
     "publish:compiler": "npm publish --workspace @design-spec/compiler"
   },
   "dependencies": {
+    "@design-spec/compiler": "*",
     "@lucide/vue": "^1.17.0",
     "@unhead/vue": "^3.1.1",
     "class-variance-authority": "^0.7.1",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "pinia": "^3.0.2",
+    "shiki": "^1.29.2",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/vite": "^4.1.7",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^25.9.1",
     "@vitejs/plugin-vue": "^5.2.3",
+    "@vue/test-utils": "^2.4.11",
+    "jsdom": "^25.0.1",
     "tailwindcss": "^4.1.7",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
+    "vitest": "^3.2.6",
     "vue-tsc": "^2.2.8"
   }
 }

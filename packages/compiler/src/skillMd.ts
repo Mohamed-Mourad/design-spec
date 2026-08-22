@@ -5,6 +5,25 @@
 // by `schema.export.frameworks`. Pure, deterministic.
 
 import type { DesignSystemSchema } from './types/schema.js'
+import type { ComponentBlueprint } from './types/schema.js'
+import { orderBreakpoints, type BreakpointLayer } from './resolveResponsive.js'
+
+/** Mobile-first list of a blueprint's per-breakpoint token overrides, or '' if none. */
+function responsiveSnippet(schema: DesignSystemSchema, bp: ComponentBlueprint): string {
+  const responsive = bp.responsive as Record<string, BreakpointLayer> | undefined
+  const ordered = orderBreakpoints(schema, responsive)
+  if (ordered.length === 0) return ''
+  const lines = ordered.map(({ name, minWidth, layer }) => {
+    const overrides = Object.entries(layer.tokens ?? {})
+      .filter(([k, v]) => k !== 'responsive' && v !== undefined)
+      .map(([k, v]) => `${k}: ${String(v)}`)
+      .join('; ')
+    const at = minWidth ? `≥${minWidth} (${name})` : name
+    const layout = layer.layout ? ` — ${layer.layout}` : ''
+    return `  - ${at}: ${overrides || '—'}${layout}`
+  })
+  return ['- Responsive (mobile-first; base applies until the breakpoint):', ...lines].join('\n')
+}
 
 function frameworkSection(framework: string, schema: DesignSystemSchema): string {
   const prefix = schema.export.tailwindClassPrefix
@@ -15,6 +34,22 @@ function frameworkSection(framework: string, schema: DesignSystemSchema): string
         '### React + Tailwind',
         '',
         `- Reference tokens via Tailwind utilities, never inline hex. e.g. \`className="${prefix}text-primary ${prefix}rounded-md"\`.`,
+        '- Token names map 1:1 to `tailwind.config.js` theme keys generated from the schema.',
+        '- Never write `text-[#...]` arbitrary values — that is drift and will be auto-fixed.',
+      ].join('\n')
+    case 'react-css':
+      return [
+        '### React + CSS custom properties',
+        '',
+        `- Components reference semantic classes styled in their \`.css\` via \`var(--${cssPrefix}color-primary)\`.`,
+        '- Variables are emitted to `tokens.css` from the schema; import it once at the app root.',
+        '- Never hard-code hex — reference the variable in the component CSS.',
+      ].join('\n')
+    case 'vue-tailwind':
+      return [
+        '### Vue + Tailwind',
+        '',
+        `- Reference tokens via Tailwind utilities in the template, never inline hex. e.g. \`class="${prefix}text-primary ${prefix}rounded-md"\`.`,
         '- Token names map 1:1 to `tailwind.config.js` theme keys generated from the schema.',
         '- Never write `text-[#...]` arbitrary values — that is drift and will be auto-fixed.',
       ].join('\n')
@@ -47,12 +82,14 @@ function blueprintSection(schema: DesignSystemSchema): string {
         return `  - \`${name}\`: ${t}${req}${def.description ? ` — ${def.description}` : ''}`
       })
       .join('\n')
+    const responsive = responsiveSnippet(schema, bp)
     return [
       `#### ${bp.name}`,
       bp.description,
       `- Anatomy: ${bp.anatomy.join(' › ')}`,
       `- Variants: ${bp.variants.join(', ') || '—'} · Sizes: ${bp.sizes.join(', ') || '—'} · States: ${bp.states.join(', ') || '—'}`,
       props ? `- Props:\n${props}` : '',
+      responsive,
     ]
       .filter((l) => l !== '')
       .join('\n')

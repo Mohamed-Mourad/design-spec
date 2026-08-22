@@ -5,7 +5,7 @@
 // source-of-truth contract; see the `evolving-schema-contract` skill before
 // changing any shape.
 
-export const COMPILER_VERSION = '0.1.0' as const
+export const COMPILER_VERSION = '0.2.0' as const
 
 // Contract types (single origin)
 export * from './types/schema.js'
@@ -27,6 +27,8 @@ export { compileTailwind } from './tailwind.js'
 export { compileVue } from './vue.js'
 export { compileReactComponents } from './components/react.js'
 export { compileVueComponents } from './components/vue.js'
+export { compileReactCssComponents } from './components/reactCss.js'
+export { compileVueTailwindComponents } from './components/vueTailwind.js'
 export { compileAll } from './compile.js'
 
 // Responsive cascade resolution + validation
@@ -69,5 +71,6 @@ export {
 } from './mcp/route.js'
 export type { ComponentTokensSlice, LayoutSystemSlice } from './mcp/route.js'
 
-// Atomic write helper
-export { atomicWrite } from './write.js'
+// Node-only I/O helpers (atomicWrite) live behind the './node' subpath so the
+// browser entry stays free of `node:fs`. CLI/janitor import them from
+// '@design-spec/compiler/node'.

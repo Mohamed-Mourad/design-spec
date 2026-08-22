@@ -118,8 +118,15 @@ export interface ComponentBlueprint {
 // ── Settings layers ──────────────────────────────────────────────────────────
 
 /** Layer 1 — CLI-configured, git-tracked, governs all code-generation output. */
+/**
+ * One emitted stack = framework × styling. Independent axes so a designer can
+ * ship any mix of stacks (e.g. react-tailwind + vue-css for two teams).
+ * `flutter` is its own stack (own styling); its compiler lands in Phase 10.
+ */
+export type FrameworkStack = 'react-tailwind' | 'react-css' | 'vue-tailwind' | 'vue-css' | 'flutter'
+
 export interface ExportConfig {
-  frameworks: Array<'react-tailwind' | 'vue-css' | 'flutter'>
+  frameworks: FrameworkStack[]
   webNamingConvention: 'kebab-case' | 'camelCase' | 'snake_case' | 'SCREAMING_SNAKE'
   /** Default "" — emits `--color-primary`. */
   cssVariablePrefix: string
