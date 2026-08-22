@@ -227,6 +227,11 @@ test.describe('Git import', () => {
 
     // And says how much still wants a look.
     await expect(page.getByRole('button', { name: /acme\/storefront/ })).toContainText('to check')
+
+    // …→ ZIP. The Free path out of the workspace.
+    const download = page.waitForEvent('download')
+    await page.getByTestId('export-zip').click()
+    expect((await download).suggestedFilename()).toBe('storefront.zip')
   })
 
   test('an inferred token wears a Verify chip that an edit clears', async ({ page }) => {
