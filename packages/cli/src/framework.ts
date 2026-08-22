@@ -1,12 +1,13 @@
 // framework.ts — detect a project's UI framework from its manifest + file tree.
 //
-// Pure-ish: reads the filesystem but returns a plain result. `init` uses this to
-// pre-select export frameworks and decide which scanners to run.
+// A thin filesystem adapter over the compiler's `detectFramework`, which is the
+// single source of truth for what "this is a react-tailwind project" means. The
+// cloud retrofit calls the same function with files harvested over the GitHub
+// Contents API, so the CLI and the web never disagree about a repo.
 
-import { readFile } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
 import type { FrameworkStack } from '@design-spec/compiler'
+import { detectFramework as detect } from '@design-spec/compiler'
+import { collectImportFiles } from './scan.js'
 
 // Re-exported under the local name the CLI already uses; the compiler is the
 // single source of truth for the stack union.
@@ -17,61 +18,12 @@ export interface Detection {
   /** Human-readable signals that drove the detection (shown in --verbose/init). */
   signals: string[]
   hasTailwind: boolean
+  /** Project name from package.json / pubspec.yaml, when present. */
+  projectName?: string
 }
-
-async function readPackageJson(root: string): Promise<{ deps: Record<string, string>; raw: boolean }> {
-  const p = join(root, 'package.json')
-  if (!existsSync(p)) return { deps: {}, raw: false }
-  try {
-    const pkg = JSON.parse(await readFile(p, 'utf8')) as {
-      dependencies?: Record<string, string>
-      devDependencies?: Record<string, string>
-    }
-    return { deps: { ...pkg.dependencies, ...pkg.devDependencies }, raw: true }
-  } catch {
-    return { deps: {}, raw: true }
-  }
-}
-
-const TAILWIND_CONFIGS = ['tailwind.config.js', 'tailwind.config.ts', 'tailwind.config.cjs', 'tailwind.config.mjs']
 
 /** Detect the framework(s) in `root`. Falls back to react-tailwind if unknown. */
 export async function detectFramework(root: string): Promise<Detection> {
-  const signals: string[] = []
-  const frameworks: Framework[] = []
-
-  // Flutter
-  if (existsSync(join(root, 'pubspec.yaml'))) {
-    signals.push('found pubspec.yaml')
-    frameworks.push('flutter')
-  }
-
-  const { deps, raw } = await readPackageJson(root)
-  if (raw) signals.push('found package.json')
-
-  const hasTailwind =
-    'tailwindcss' in deps || TAILWIND_CONFIGS.some((c) => existsSync(join(root, c)))
-  if (hasTailwind) signals.push('found tailwindcss')
-
-  // Framework × styling: pair each detected framework with Tailwind if present,
-  // otherwise its CSS-variables stack.
-  if ('react' in deps || 'next' in deps) {
-    signals.push('found react/next')
-    frameworks.push(hasTailwind ? 'react-tailwind' : 'react-css')
-  }
-  if ('vue' in deps || 'nuxt' in deps) {
-    signals.push('found vue/nuxt')
-    frameworks.push(hasTailwind ? 'vue-tailwind' : 'vue-css')
-  }
-
-  // De-dupe while preserving order.
-  const seen = new Set<Framework>()
-  const unique = frameworks.filter((f) => (seen.has(f) ? false : (seen.add(f), true)))
-
-  if (unique.length === 0) {
-    signals.push('no framework detected — defaulting to react-tailwind')
-    unique.push('react-tailwind')
-  }
-
-  return { frameworks: unique, signals, hasTailwind }
+  const { files, paths } = await collectImportFiles(root)
+  return detect(files, paths)
 }

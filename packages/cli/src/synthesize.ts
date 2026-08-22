@@ -1,57 +1,55 @@
-// synthesize.ts — build a project schema from detected signals + defaults.
+// synthesize.ts — turn a scan into the project's committed schema.
 //
-// Pure given its inputs. Starts from defaultSchema (so every field is present
-// and valid), overlays detected frameworks and any scanned tokens, and names
-// the system after the project. Anything not detected is filled by the default
-// preset — init never produces a half-empty schema.
+// The extraction itself lives in `@design-spec/compiler`
+// (`extractDesignSystem`), shared byte-for-byte with the cloud retrofit. This
+// module is the CLI's thin layer on top: run the shared engine over the files on
+// disk, hand it the byte-exact tokens only the CLI can produce (a locally
+// evaluated config), then apply the CLI's own flags — an explicit
+// `--frameworks` list and the export-config overrides from the survey.
+//
+// `init` therefore never produces a half-empty schema: everything the repo does
+// not speak to is filled from the baseline preset and reported as `defaulted`.
 
-import { defaultSchema, type DesignSystemSchema, type ColorValue, type DimensionValue } from '@design-spec/compiler'
+import {
+  extractDesignSystem,
+  type DesignSystemSchema,
+  type ExportConfig,
+  type ImportExtraction,
+  type ImportFile,
+  type ResolvedTokens,
+} from '@design-spec/compiler'
 
-type Framework = DesignSystemSchema['export']['frameworks'][number]
+type Framework = ExportConfig['frameworks'][number]
 
 export interface SynthInput {
   /** Project display name (from package.json name or dir). */
   name?: string
-  frameworks: Framework[]
-  scanned: {
-    colors?: Record<string, ColorValue>
-    spacing?: Record<string, DimensionValue>
-    rounded?: Record<string, DimensionValue>
-  }
+  /** Explicit `--frameworks` list; when absent, detection decides. */
+  frameworks?: Framework[]
+  files: ImportFile[]
+  paths?: string[]
+  /** Tokens lifted by evaluating the project's own config locally. */
+  resolved?: ResolvedTokens
   /** Optional export-config overrides from flags/survey. */
-  exportOverrides?: Partial<DesignSystemSchema['export']>
+  exportOverrides?: Partial<ExportConfig>
 }
 
-function titleCase(s: string): string {
-  return s.replace(/[-_/]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()).trim()
+export interface SynthResult {
+  schema: DesignSystemSchema
+  extraction: ImportExtraction
+  frameworks: Framework[]
 }
 
-/** Deep-ish clone of the default preset (plain JSON, so structuredClone is safe). */
-function freshDefault(): DesignSystemSchema {
-  return structuredClone(defaultSchema)
-}
+export function synthesizeSchema(input: SynthInput): SynthResult {
+  const extraction = extractDesignSystem(
+    { repo: input.name, files: input.files, paths: input.paths },
+    { resolved: input.resolved },
+  )
 
-export function synthesizeSchema(input: SynthInput): DesignSystemSchema {
-  const schema = freshDefault()
+  const schema: DesignSystemSchema = extraction.schema
+  const frameworks = input.frameworks?.length ? input.frameworks : extraction.detection.frameworks
 
-  if (input.name) {
-    schema.name = titleCase(input.name)
-    schema.description = `Design system for ${schema.name}.`
-  }
+  schema.export = { ...schema.export, frameworks, ...input.exportOverrides }
 
-  schema.export = { ...schema.export, frameworks: input.frameworks, ...input.exportOverrides }
-
-  // Overlay scanned tokens; detected values win over defaults for the same key,
-  // but default keys with no detected counterpart are preserved.
-  if (input.scanned.colors && Object.keys(input.scanned.colors).length) {
-    schema.colors = { ...schema.colors, ...input.scanned.colors }
-  }
-  if (input.scanned.spacing && Object.keys(input.scanned.spacing).length) {
-    schema.spacing = { ...schema.spacing, ...input.scanned.spacing }
-  }
-  if (input.scanned.rounded && Object.keys(input.scanned.rounded).length) {
-    schema.rounded = { ...schema.rounded, ...input.scanned.rounded }
-  }
-
-  return schema
+  return { schema, extraction, frameworks }
 }
