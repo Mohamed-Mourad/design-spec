@@ -1,0 +1,220 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`extractDesignSystem — golden output > pins the extraction report the workspace shows the user 1`] = `
+[
+  {
+    "kind": "parsed",
+    "message": "found package.json",
+    "source": "detection",
+  },
+  {
+    "kind": "parsed",
+    "message": "found tailwindcss dependency",
+    "source": "detection",
+  },
+  {
+    "kind": "parsed",
+    "message": "found react/next",
+    "source": "detection",
+  },
+  {
+    "kind": "fallback",
+    "message": "read 27 resolved custom properties from the compiled bundle",
+    "source": ".next/static/css/8f2a1c.css",
+  },
+  {
+    "kind": "parsed",
+    "message": "read 1 custom properties",
+    "source": "app/globals.css",
+  },
+  {
+    "kind": "parsed",
+    "message": "read 3 colors statically",
+    "source": "tailwind.config.ts",
+  },
+  {
+    "kind": "skipped",
+    "message": "\`presets[0]\` cannot be evaluated without running the config",
+    "source": "tailwind.config.ts",
+  },
+  {
+    "kind": "skipped",
+    "message": "\`theme.extend....basePreset.theme.extend\` cannot be evaluated without running the config",
+    "source": "tailwind.config.ts",
+  },
+  {
+    "kind": "skipped",
+    "message": "\`theme.extend.colors....basePreset.theme.colors\` cannot be evaluated without running the config",
+    "source": "tailwind.config.ts",
+  },
+  {
+    "kind": "skipped",
+    "message": "\`theme.extend.colors.[accentKey]\` cannot be evaluated without running the config",
+    "source": "tailwind.config.ts",
+  },
+  {
+    "kind": "skipped",
+    "message": "\`theme.extend.colors.env\` cannot be evaluated without running the config",
+    "source": "tailwind.config.ts",
+  },
+  {
+    "kind": "skipped",
+    "message": "\`theme.extend.spacing\` cannot be evaluated without running the config",
+    "source": "tailwind.config.ts",
+  },
+  {
+    "kind": "skipped",
+    "message": "\`plugins[0]\` cannot be evaluated without running the config",
+    "source": "tailwind.config.ts",
+  },
+  {
+    "kind": "inferred",
+    "message": "\`colors.neutral\` snapped to the nearest palette color \`surface\`",
+    "source": "closest-match",
+  },
+  {
+    "kind": "inferred",
+    "message": "\`spacing.base\` snapped to the nearest declared step \`16px\`",
+    "source": "closest-match",
+  },
+  {
+    "kind": "inferred",
+    "message": "\`spacing.2xl\` snapped to the nearest declared step \`40px\`",
+    "source": "closest-match",
+  },
+  {
+    "kind": "parsed",
+    "message": "body typography set to \`Satoshi\` (from \`sans\`)",
+    "source": "font stack",
+  },
+  {
+    "kind": "inferred",
+    "message": "type sizes snapped to the repo's 5-step scale",
+    "source": "closest-match",
+  },
+  {
+    "kind": "parsed",
+    "message": "read 2 dark-mode color overrides",
+    "source": "dark scheme",
+  },
+]
+`;
+
+exports[`extractDesignSystem — golden output > pins the schema synthesized from the unparseable-config repo 1`] = `
+{
+  "breakpoints": {
+    "desktop": "1024px",
+    "md": "768px",
+    "tablet": "768px",
+    "wide": "1280px",
+  },
+  "colors": {
+    "accent-nebula": "#7C3AED",
+    "border": "#27272A",
+    "canvas": "#0B0B0F",
+    "error": "#F43F5E",
+    "muted": "#9CA3AF",
+    "neutral": "#0B0B0F",
+    "on-surface": "#F4F4F5",
+    "primary": "#4F46E5",
+    "secondary": "#64748B",
+    "success": "#22C55E",
+    "surface": "#0B0B0F",
+  },
+  "darkMode": {
+    "colors": {
+      "on-surface": "#FAFAFA",
+      "surface": "#050507",
+    },
+    "enabled": true,
+  },
+  "rounded": {
+    "full": "9999px",
+    "lg": "0.75rem",
+    "md": "8px",
+    "none": 0,
+    "sm": "4px",
+  },
+  "spacing": {
+    "2xl": "40px",
+    "base": "16px",
+    "lg": "24px",
+    "md": "16px",
+    "sm": "8px",
+    "xl": "40px",
+    "xs": "4px",
+  },
+  "states": {
+    "borders.width": {
+      "thick": "defaulted",
+      "thin": "defaulted",
+    },
+    "breakpoints": {
+      "desktop": "defaulted",
+      "md": "inferred",
+      "tablet": "defaulted",
+      "wide": "defaulted",
+    },
+    "colors": {
+      "accent-nebula": "inferred",
+      "border": "inferred",
+      "canvas": "extracted",
+      "error": "inferred",
+      "muted": "extracted",
+      "neutral": "inferred",
+      "on-surface": "inferred",
+      "primary": "extracted",
+      "secondary": "inferred",
+      "success": "inferred",
+      "surface": "inferred",
+    },
+    "darkMode.colors": {
+      "on-surface": "inferred",
+      "surface": "inferred",
+    },
+    "rounded": {
+      "full": "defaulted",
+      "lg": "extracted",
+      "md": "inferred",
+      "none": "defaulted",
+      "sm": "inferred",
+    },
+    "shadows": {
+      "lg": "defaulted",
+      "md": "defaulted",
+      "sm": "inferred",
+    },
+    "spacing": {
+      "2xl": "inferred",
+      "base": "inferred",
+      "lg": "inferred",
+      "md": "inferred",
+      "sm": "inferred",
+      "xl": "inferred",
+      "xs": "inferred",
+    },
+    "typography": {
+      "body-lg": "inferred",
+      "body-md": "inferred",
+      "body-sm": "inferred",
+      "headline-lg": "inferred",
+      "headline-md": "inferred",
+      "label-md": "inferred",
+    },
+  },
+  "summary": {
+    "defaulted": 9,
+    "extracted": 4,
+    "inferred": 27,
+  },
+  "unparseableLayers": [
+    "presets[0]",
+    "theme.extend....basePreset.theme.extend",
+    "theme.extend.colors....basePreset.theme.colors",
+    "theme.extend.colors.[accentKey]",
+    "theme.extend.colors.env",
+    "theme.extend.spacing",
+    "plugins[0]",
+  ],
+}
+`;
