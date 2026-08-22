@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import FrameworkSelector from '@/components/layout/FrameworkSelector.vue'
 import WorkspaceMenu from '@/components/layout/WorkspaceMenu.vue'
+import ImportBadge from '@/components/import/ImportBadge.vue'
 
 const store = useDesignSystemStore()
 const { schema, canUndo, canRedo } = storeToRefs(store)
@@ -45,6 +46,8 @@ function commitName(e: Event) {
         {{ schema.name }}
       </button>
     </div>
+
+    <ImportBadge />
 
     <div class="header__actions">
       <FrameworkSelector />

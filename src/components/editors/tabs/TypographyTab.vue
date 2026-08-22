@@ -4,6 +4,7 @@ import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import type { TypographyToken } from '@/types/schema'
 import TypographyEditor from '@/components/editors/TypographyEditor.vue'
 import AddTokenRow from '@/components/editors/AddTokenRow.vue'
+import TokenStateRow from '@/components/shared/TokenStateRow.vue'
 
 const store = useDesignSystemStore()
 const { schema } = storeToRefs(store)
@@ -27,14 +28,9 @@ function add(name: string) {
 
 <template>
   <section>
-    <TypographyEditor
-      v-for="(value, key) in schema.typography"
-      :key="key"
-      :token-key="key"
-      :value="value"
-      @update="update"
-      @remove="remove"
-    />
+    <TokenStateRow v-for="(value, key) in schema.typography" :key="key" group="typography" :token-key="key">
+      <TypographyEditor :token-key="key" :value="value" @update="update" @remove="remove" />
+    </TokenStateRow>
     <AddTokenRow placeholder="new type scale" @add="add" />
   </section>
 </template>

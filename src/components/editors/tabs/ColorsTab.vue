@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import ColorTokenEditor from '@/components/editors/ColorTokenEditor.vue'
 import AddTokenRow from '@/components/editors/AddTokenRow.vue'
+import TokenStateRow from '@/components/shared/TokenStateRow.vue'
 
 const store = useDesignSystemStore()
 const { schema } = storeToRefs(store)
@@ -46,14 +47,9 @@ function clearDark(key: string) {
     </div>
 
     <template v-if="mode === 'light'">
-      <ColorTokenEditor
-        v-for="(value, key) in schema.colors"
-        :key="key"
-        :token-key="key"
-        :value="value"
-        @update="update"
-        @remove="remove"
-      />
+      <TokenStateRow v-for="(value, key) in schema.colors" :key="key" group="colors" :token-key="key">
+        <ColorTokenEditor :token-key="key" :value="value" @update="update" @remove="remove" />
+      </TokenStateRow>
       <AddTokenRow placeholder="new color token" @add="add" />
     </template>
 
@@ -63,7 +59,9 @@ function clearDark(key: string) {
         <span class="dark-row__badge" :class="{ 'dark-row__badge--on': isOverridden(key) }">
           {{ isOverridden(key) ? '●' : '○' }}
         </span>
-        <ColorTokenEditor :token-key="key" :value="darkValue(key)" @update="updateDark" @remove="clearDark" />
+        <TokenStateRow group="darkMode.colors" :token-key="key">
+          <ColorTokenEditor :token-key="key" :value="darkValue(key)" @update="updateDark" @remove="clearDark" />
+        </TokenStateRow>
       </div>
     </template>
   </section>
@@ -103,8 +101,9 @@ function clearDark(key: string) {
   align-items: center;
   gap: var(--spacing-sm);
 }
-.dark-row > :deep(.row) {
+.dark-row > :deep(.tsr) {
   flex: 1;
+  min-width: 0;
 }
 .dark-row__badge {
   font-size: 9px;

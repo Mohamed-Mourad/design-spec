@@ -6,6 +6,7 @@ import NumberTokenEditor from '@/components/editors/NumberTokenEditor.vue'
 import ScaleGenerator from '@/components/editors/ScaleGenerator.vue'
 import TokenRefPicker from '@/components/editors/TokenRefPicker.vue'
 import AddTokenRow from '@/components/editors/AddTokenRow.vue'
+import TokenStateRow from '@/components/shared/TokenStateRow.vue'
 
 const store = useDesignSystemStore()
 const { schema } = storeToRefs(store)
@@ -20,27 +21,27 @@ function applyScale(tokens: Record<string, string>) {
     <div>
       <h3 class="head">Spacing scale</h3>
       <ScaleGenerator @generate="applyScale" />
-      <DimensionEditor
-        v-for="(value, key) in schema.spacing"
-        :key="key"
-        :token-key="key"
-        :value="value"
-        @update="(k, v) => store.setPath(['spacing', k], v)"
-        @remove="(k) => store.removePath(['spacing', k])"
-      />
+      <TokenStateRow v-for="(value, key) in schema.spacing" :key="key" group="spacing" :token-key="key">
+        <DimensionEditor
+          :token-key="key"
+          :value="value"
+          @update="(k, v) => store.setPath(['spacing', k], v)"
+          @remove="(k) => store.removePath(['spacing', k])"
+        />
+      </TokenStateRow>
       <AddTokenRow placeholder="new spacing token" @add="(n) => store.setPath(['spacing', n], '16px')" />
     </div>
 
     <div>
       <h3 class="head">Radius</h3>
-      <DimensionEditor
-        v-for="(value, key) in schema.rounded"
-        :key="key"
-        :token-key="key"
-        :value="value"
-        @update="(k, v) => store.setPath(['rounded', k], v)"
-        @remove="(k) => store.removePath(['rounded', k])"
-      />
+      <TokenStateRow v-for="(value, key) in schema.rounded" :key="key" group="rounded" :token-key="key">
+        <DimensionEditor
+          :token-key="key"
+          :value="value"
+          @update="(k, v) => store.setPath(['rounded', k], v)"
+          @remove="(k) => store.removePath(['rounded', k])"
+        />
+      </TokenStateRow>
       <AddTokenRow placeholder="new radius token" @add="(n) => store.setPath(['rounded', n], '8px')" />
     </div>
 

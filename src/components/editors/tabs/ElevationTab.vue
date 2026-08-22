@@ -6,6 +6,7 @@ import ShadowEditor from '@/components/editors/ShadowEditor.vue'
 import NumberTokenEditor from '@/components/editors/NumberTokenEditor.vue'
 import OpacityEditor from '@/components/editors/OpacityEditor.vue'
 import AddTokenRow from '@/components/editors/AddTokenRow.vue'
+import TokenStateRow from '@/components/shared/TokenStateRow.vue'
 
 const store = useDesignSystemStore()
 const { schema } = storeToRefs(store)
@@ -15,14 +16,14 @@ const { schema } = storeToRefs(store)
   <section class="stack">
     <div>
       <h3 class="head">Shadows</h3>
-      <ShadowEditor
-        v-for="(value, key) in schema.shadows"
-        :key="key"
-        :token-key="key"
-        :value="value"
-        @update="(k, v) => store.setPath(['shadows', k], v)"
-        @remove="(k) => store.removePath(['shadows', k])"
-      />
+      <TokenStateRow v-for="(value, key) in schema.shadows" :key="key" group="shadows" :token-key="key">
+        <ShadowEditor
+          :token-key="key"
+          :value="value"
+          @update="(k, v) => store.setPath(['shadows', k], v)"
+          @remove="(k) => store.removePath(['shadows', k])"
+        />
+      </TokenStateRow>
       <AddTokenRow
         placeholder="new shadow token"
         @add="(n) => store.setPath(['shadows', n], { value: '0 1px 2px rgba(0,0,0,0.1)' } satisfies ShadowToken)"
