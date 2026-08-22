@@ -1,0 +1,31 @@
+name: 'Design Spec Drift-Janitor'
+description: 'Auto-commits design-token fixes onto your PR branch and posts a 🧹 summary. Remediation, not obstruction — never blocks the build.'
+author: 'Design Spec'
+
+branding:
+  icon: 'feather'
+  color: 'purple'
+
+# Inputs are passed to the container automatically as INPUT_<NAME> env vars
+# (Docker action convention); config.ts reads them. No `env:` block needed.
+inputs:
+  token:
+    description: 'GitHub token with contents:write + pull-requests:write. Defaults to the workflow token.'
+    required: false
+    default: ${{ github.token }}
+  schema:
+    description: 'Path to design-spec.schema.json, relative to the repo root.'
+    required: false
+    default: 'design-spec.schema.json'
+  source-glob:
+    description: 'Glob of source files to scan for token drift.'
+    required: false
+    default: '**/*.{ts,tsx,js,jsx,vue,css,scss,dart}'
+  strict:
+    description: 'Fail the check on advisory (non-fixable) drift. Auto-fixes are still committed; default false never blocks the merge.'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

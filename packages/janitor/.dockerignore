@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# .dockerignore — keep the build context minimal
+# ─────────────────────────────────────────────────────────────────────────────
+# Build context = packages/janitor only. Exclude everything that isn't needed
+# by the Dockerfile COPY instructions (package.json, package-lock.json,
+# tsconfig.json, src/).
+
+# Dependencies are installed inside the image via npm ci
+node_modules
+
+# Build output is produced inside the image via tsc
+dist
+
+# Tests — not needed in the image
+test
+*.test.ts
+vitest.config.ts
+
+# Documentation, metadata, and scripts — not copied into image
+README.md
+action.yml
+.dockerignore
+Dockerfile
+generate-lockfile.sh
+
+# Editor / OS artifacts
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Git metadata
+.git
+.gitignore
