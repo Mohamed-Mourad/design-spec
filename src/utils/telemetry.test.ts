@@ -13,7 +13,7 @@ describe('captureUserReport — report_kind tagging', () => {
   })
 
   it('tags a behavior report and defaults its message', async () => {
-    const beacon = vi.fn(() => true)
+    const beacon = vi.fn((_url: string, _body: string) => true)
     vi.stubGlobal('navigator', { sendBeacon: beacon })
     const { captureUserReport } = await import('./telemetry')
 
@@ -31,7 +31,7 @@ describe('captureUserReport — report_kind tagging', () => {
   })
 
   it('defaults to error kind and carries the error message', async () => {
-    const beacon = vi.fn(() => true)
+    const beacon = vi.fn((_url: string, _body: string) => true)
     vi.stubGlobal('navigator', { sendBeacon: beacon })
     const { captureUserReport } = await import('./telemetry')
 
