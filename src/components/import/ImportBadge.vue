@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { Github, X } from '@lucide/vue'
+import { GitFork, X } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import ImportReport from '@/components/import/ImportReport.vue'
 import type { ImportExtraction } from '@design-spec/compiler'
@@ -47,7 +47,7 @@ const extraction = computed<ImportExtraction | null>(() => {
 <template>
   <template v-if="importProvenance">
     <button class="badge" :class="{ 'badge--clear': pendingReview.total === 0 }" @click="open = true">
-      <Github :size="12" aria-hidden="true" />
+      <GitFork :size="12" aria-hidden="true" />
       <span class="badge__repo">{{ importProvenance.repoFullName }}</span>
       <span v-if="pendingReview.total > 0" class="badge__count">{{ pendingReview.total }} to check</span>
       <span v-else class="badge__count">all checked</span>

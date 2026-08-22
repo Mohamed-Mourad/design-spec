@@ -274,8 +274,11 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
    */
   function applyImport(imported: DesignSystemSchema, provenance: ImportProvenance) {
     logAction('applyImport', [provenance.repoFullName, provenance.branch])
-    schema.value = structuredClone(imported)
-    importProvenance.value = provenance
+    // A JSON round-trip, not structuredClone: callers reasonably hand us values
+    // read out of a ref, and structuredClone throws DataCloneError on a Vue
+    // reactive proxy. Both shapes are plain JSON by contract.
+    schema.value = JSON.parse(JSON.stringify(imported)) as DesignSystemSchema
+    importProvenance.value = JSON.parse(JSON.stringify(provenance)) as ImportProvenance
     persistImport()
     selectedComponent.value = null
     resetHistory()

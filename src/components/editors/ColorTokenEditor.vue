@@ -118,6 +118,7 @@ function commit() {
     <input
       v-model="draft"
       class="row__hex"
+      :data-testid="`token-editor-color-${tokenKey}`"
       spellcheck="false"
       aria-label="Color value or token reference"
       @blur="commit"

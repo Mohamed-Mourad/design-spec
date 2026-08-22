@@ -53,24 +53,24 @@ const frameworks = computed(() => props.extraction.detection.frameworks.join(', 
     </header>
 
     <ul class="tally">
-      <li class="tally__item">
+      <li class="tally__item" data-testid="tally-extracted">
         <span class="tally__n">{{ summary.extracted }}</span>
         <span class="tally__label">Extracted</span>
         <span class="tally__hint">read verbatim</span>
       </li>
-      <li class="tally__item tally__item--inferred">
+      <li class="tally__item tally__item--inferred" data-testid="tally-inferred">
         <span class="tally__n">{{ summary.inferred }}</span>
         <span class="tally__label">Verify</span>
         <span class="tally__hint">inferred — worth a glance</span>
       </li>
-      <li class="tally__item tally__item--defaulted">
+      <li class="tally__item tally__item--defaulted" data-testid="tally-defaulted">
         <span class="tally__n">{{ summary.defaulted }}</span>
         <span class="tally__label">Review</span>
         <span class="tally__hint">baseline values</span>
       </li>
     </ul>
 
-    <p v-if="extraction.usedFallback" class="fallback">
+    <p v-if="extraction.usedFallback" class="fallback" data-testid="fallback-notice">
       <Layers :size="12" aria-hidden="true" />
       <span>
         {{ extraction.unparseableLayers.length }} config layer{{ extraction.unparseableLayers.length === 1 ? '' : 's' }}

@@ -261,3 +261,33 @@ describe('useDesignSystemStore — import provenance', () => {
     expect(store.schema.colors.brand).toBe('#C8813D')
   })
 })
+
+describe('applyImport — reactive inputs', () => {
+  it('accepts values read out of a ref, not just plain objects', async () => {
+    // The dialog reads the scan result out of a ref, so what reaches applyImport
+    // is a Vue reactive proxy. structuredClone throws DataCloneError on one, and
+    // the whole populate step silently failed because of it.
+    const { ref } = await import('vue')
+    const store = useDesignSystemStore()
+    const held = ref({
+      schema: structuredClone(defaultSchema),
+      provenance: {
+        repoFullName: 'acme/storefront',
+        branch: 'main',
+        commitSha: 'abc1234',
+        importSessionId: 'sess-1',
+        signals: [],
+        usedFallback: false,
+        unparseableLayers: [],
+        states: { colors: { primary: 'inferred' } },
+        scannedAt: 0,
+      },
+    })
+
+    expect(() =>
+      store.applyImport(held.value.schema, held.value.provenance as never),
+    ).not.toThrow()
+    expect(store.importProvenance?.repoFullName).toBe('acme/storefront')
+    expect(store.tokenStateFor('colors', 'primary')).toBe('inferred')
+  })
+})

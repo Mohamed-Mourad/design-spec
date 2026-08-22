@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ArrowLeft, GitBranch, Github, Lock, Search, Terminal, X } from '@lucide/vue'
+import { ArrowLeft, GitBranch, GitFork, Lock, Search, Terminal, X } from '@lucide/vue'
 import { useImportStore } from '@/stores/useImportStore'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import ImportReport from '@/components/import/ImportReport.vue'
@@ -72,7 +72,7 @@ function back() {
           <ArrowLeft :size="14" aria-hidden="true" />
         </button>
         <h2 class="dialog__title">
-          <Github :size="15" aria-hidden="true" />
+          <GitFork :size="15" aria-hidden="true" />
           Import from GitHub
         </h2>
         <span v-if="login" class="dialog__login">{{ login }}</span>
@@ -112,7 +112,7 @@ function back() {
               stores none of them — only the design system it synthesizes.
             </p>
             <button class="btn btn--primary" :disabled="busy" @click="imports.connect(false)">
-              <Github :size="14" aria-hidden="true" />
+              <GitFork :size="14" aria-hidden="true" />
               Connect GitHub
             </button>
             <p class="step__fine">
@@ -154,7 +154,7 @@ function back() {
               <p class="notice__title">This repository is private.</p>
               <p class="notice__text">Grant repository access to scan it.</p>
               <button class="btn btn--primary" @click="imports.connect(true)">
-                <Github :size="14" aria-hidden="true" />
+                <GitFork :size="14" aria-hidden="true" />
                 Grant repository access
               </button>
             </div>

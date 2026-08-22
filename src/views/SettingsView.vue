@@ -2,7 +2,7 @@
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useHead } from '@unhead/vue'
-import { ArrowLeft, Check, Github, Terminal } from '@lucide/vue'
+import { ArrowLeft, Check, GitFork, Terminal } from '@lucide/vue'
 import { RouterLink } from 'vue-router'
 import { useImportStore } from '@/stores/useImportStore'
 
@@ -30,7 +30,7 @@ onMounted(() => imports.init())
 
     <section class="card">
       <h2 class="card__title">
-        <Github :size="15" aria-hidden="true" />
+        <GitFork :size="15" aria-hidden="true" />
         GitHub
       </h2>
 
@@ -77,7 +77,7 @@ onMounted(() => imports.init())
           </p>
           <div class="card__actions">
             <button class="btn btn--primary" :disabled="busy" @click="imports.connect(false)">
-              <Github :size="14" aria-hidden="true" />
+              <GitFork :size="14" aria-hidden="true" />
               Connect GitHub
             </button>
           </div>
