@@ -67,7 +67,16 @@ export {
   parseHex,
 } from './colorMatch.js'
 export type { Lab, Rgb } from './colorMatch.js'
-export { SCALE_GAP_FRACTION, SCALE_SNAP_CAP_PX, nearestScaleToken } from './scaleMatch.js'
+export { SCALE_GAP_FRACTION, SCALE_SNAP_CAP_PX, nearestScaleToken, matchScales, nearestInScale, SCALE_ORDER } from './scaleMatch.js'
+export type { ScaleMatch, ScaleName } from './scaleMatch.js'
+export { nearestColorMatch } from './colorMatch.js'
+export type { ColorMatch } from './colorMatch.js'
+
+// Generative bootstrapper snapping — rough vision output -> schema tokens.
+// Same ΔE / gap-relative engine as detect+fix, so what a screenshot snaps to
+// upstream is byte-identical to what the Janitor rewrites to downstream.
+export { snapColor, snapSpatial, snapRef } from './snap.js'
+export type { Snap, ColorSnap, SpatialSnap, SnapMiss, SnapColorOptions, SnapSpatialOptions } from './snap.js'
 
 // Git Import / Retrofit extraction — static-only, no code evaluation. Shared by
 // the CLI (files off disk) and the web scanner (files harvested over the GitHub

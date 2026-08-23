@@ -20,6 +20,12 @@ export const SCALE_GAP_FRACTION = 0.4
 /** Absolute ceiling on the derived radius — stops a coarse scale snapping from afar. */
 export const SCALE_SNAP_CAP_PX = 8
 
+/** The token groups that hold a dimensional scale, in match order. */
+export type ScaleName = 'spacing' | 'rounded'
+
+/** Default match order. `spacing` first, so a value in both scales reads as spacing. */
+export const SCALE_ORDER: readonly ScaleName[] = ['spacing', 'rounded']
+
 /** A `DimensionValue` to its px magnitude, or null for non-px units (rem/em). */
 function parsePx(value: unknown): number | null {
   if (typeof value === 'number') return value
@@ -28,18 +34,37 @@ function parsePx(value: unknown): number | null {
   return m ? Number(m[1]) : null
 }
 
-interface ScaleHit {
+/**
+ * The nearest slot in one scale, with the distance to it and the tolerance that
+ * distance had to clear. Reported whether or not it cleared: a value that snaps
+ * to nothing still has a nearest neighbour, and naming it is what turns "no
+ * token matched" into "add a token?".
+ */
+export interface ScaleMatch {
+  /** `spacing.md` — the nearest slot in this scale. */
   path: string
+  /** The slot's px value. */
   value: number
+  /** `|slot − raw|`, in px. */
+  distance: number
+  /** `min(SCALE_GAP_FRACTION × localGap, SCALE_SNAP_CAP_PX)`. */
+  tolerance: number
+  /** `distance ≤ tolerance` — the only thing that licenses a rewrite. */
+  within: boolean
 }
 
 /**
- * Nearest token within one scale, or null if the nearest slot is outside the
- * gap-relative tolerance. The tolerance is `min(FRACTION × localGap, CAP)`,
- * where localGap is the distance between the nearest slot and its neighbour on
- * the side the value falls — so the radius tracks the scale's own granularity.
+ * Nearest token within one scale. The tolerance is
+ * `min(FRACTION × localGap, CAP)`, where localGap is the distance between the
+ * nearest slot and its closest neighbour — so the radius tracks the scale's own
+ * granularity. A single-slot scale has no gap to derive from and falls back to
+ * the absolute cap.
  */
-function nearestInScale(group: string, entries: Record<string, unknown>, px: number): ScaleHit | null {
+export function nearestInScale(
+  group: string,
+  entries: Record<string, unknown>,
+  px: number,
+): ScaleMatch | null {
   const slots: Array<{ name: string; value: number }> = []
   for (const [name, v] of Object.entries(entries)) {
     const n = parsePx(v)
@@ -68,8 +93,27 @@ function nearestInScale(group: string, entries: Record<string, unknown>, px: num
   }
 
   const tolerance = Math.min(SCALE_GAP_FRACTION * localGap, SCALE_SNAP_CAP_PX)
-  if (minD > tolerance) return null
-  return { path: `${group}.${nearest.name}`, value: nearest.value }
+  return {
+    path: `${group}.${nearest.name}`,
+    value: nearest.value,
+    distance: minD,
+    tolerance,
+    within: minD <= tolerance,
+  }
+}
+
+/** The nearest slot in each requested scale, in the order the scales were given. */
+export function matchScales(
+  schema: DesignSystemSchema,
+  px: number,
+  scales: readonly ScaleName[] = SCALE_ORDER,
+): ScaleMatch[] {
+  const out: ScaleMatch[] = []
+  for (const scale of scales) {
+    const hit = nearestInScale(scale, schema[scale] as Record<string, unknown>, px)
+    if (hit) out.push(hit)
+  }
+  return out
 }
 
 /**
@@ -80,11 +124,7 @@ function nearestInScale(group: string, entries: Record<string, unknown>, px: num
  * in iteration order (spacing before rounded) — deterministic.
  */
 export function nearestScaleToken(schema: DesignSystemSchema, px: number): string | null {
-  const hits = [
-    nearestInScale('spacing', schema.spacing, px),
-    nearestInScale('rounded', schema.rounded, px),
-  ].filter((h): h is ScaleHit => h !== null)
-
+  const hits = matchScales(schema, px).filter((h) => h.within)
   if (hits.length === 0) return null
   if (new Set(hits.map((h) => h.value)).size > 1) return null // distinct slots → bypass
   return hits[0].path

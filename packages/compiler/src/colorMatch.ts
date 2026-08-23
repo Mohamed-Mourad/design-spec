@@ -27,6 +27,16 @@ export interface Lab {
   b: number
 }
 
+/** The closest color token to a raw value, and how far off it is. */
+export interface ColorMatch {
+  /** `colors.primary` — the token path. */
+  path: string
+  /** The token's hex, as written in the schema. */
+  value: string
+  /** CIE76 ΔE between the raw value and the token. `0` for an exact hex. */
+  deltaE: number
+}
+
 /** Parse a 3- or 6-digit hex (with or without `#`) to 0–255 RGB, or null. */
 export function parseHex(hex: string): Rgb | null {
   let h = hex.replace('#', '')
@@ -80,6 +90,29 @@ export function deltaE76(a: Lab, b: Lab): number {
 }
 
 /**
+ * The nearest color token to a hex, with the ΔE to it. No tolerance is applied:
+ * a value that snaps to nothing still has a nearest neighbour, and naming it is
+ * what turns "no token matched" into "unmapped — add a token?".
+ *
+ * An exact hex match wins outright. Ties keep the first token in schema
+ * insertion order — deterministic.
+ */
+export function nearestColorMatch(schema: DesignSystemSchema, hex: string): ColorMatch | null {
+  const targetLab = hexToLab(hex)
+  if (!targetLab) return null
+
+  let best: ColorMatch | null = null
+  for (const [name, value] of Object.entries(schema.colors)) {
+    if (value.toLowerCase() === hex.toLowerCase()) return { path: `colors.${name}`, value, deltaE: 0 }
+    const lab = hexToLab(value)
+    if (!lab) continue
+    const d = deltaE76(targetLab, lab)
+    if (best === null || d < best.deltaE) best = { path: `colors.${name}`, value, deltaE: d }
+  }
+  return best
+}
+
+/**
  * Nearest color token to a hex by perceptual distance. An exact hex match wins
  * outright; otherwise the closest token in CIELAB is returned only if its ΔE is
  * within `maxDeltaE`. Beyond the threshold → null (unmapped, left untouched).
@@ -90,17 +123,6 @@ export function nearestColorToken(
   hex: string,
   maxDeltaE = COLOR_DELTA_E_THRESHOLD,
 ): string | null {
-  const targetLab = hexToLab(hex)
-  if (!targetLab) return null
-
-  let best: { name: string; d: number } | null = null
-  for (const [name, value] of Object.entries(schema.colors)) {
-    if (value.toLowerCase() === hex.toLowerCase()) return `colors.${name}`
-    const lab = hexToLab(value)
-    if (!lab) continue
-    const d = deltaE76(targetLab, lab)
-    if (best === null || d < best.d) best = { name, d }
-  }
-  if (best && best.d <= maxDeltaE) return `colors.${best.name}`
-  return null
+  const best = nearestColorMatch(schema, hex)
+  return best && best.deltaE <= maxDeltaE ? best.path : null
 }
