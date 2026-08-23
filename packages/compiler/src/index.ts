@@ -46,6 +46,12 @@ export type {
   ResponsiveIssueKind,
 } from './resolveResponsive.js'
 
+// Token delta — what changed between two design systems. Shared by the web
+// staging flow, the closed Figma plugin's approval diff, and mirrored by the Go
+// backend's pull-request body.
+export { diffTokens, isEmptyDelta, tokenGroupOf, changesByGroup, TOKEN_GROUPS } from './tokenDelta.js'
+export type { TokenChange, TokenDelta, TokenGroup } from './tokenDelta.js'
+
 // Drift detect + auto-fix
 export { detect, nearestColorToken } from './detect.js'
 export type { Drift, DriftKind } from './detect.js'
