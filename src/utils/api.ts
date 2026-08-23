@@ -210,6 +210,11 @@ export interface PullRequestResult {
   commit_sha: string
 }
 
+/** A designer push also reports how much the pull request actually changes. */
+export interface PushResult extends PullRequestResult {
+  changed_tokens: number
+}
+
 interface Collection<T> {
   data: T[]
   next_cursor: string | null
@@ -266,4 +271,18 @@ export const api = {
       commit_message?: string
     },
   ) => request<PullRequestResult>(`/github/import/${id}/pull-request`, { method: 'POST', body }),
+
+  /**
+   * The designer loop: push edited tokens back to the imported repository.
+   *
+   * The bundle is all this sends. The branch, the base commit, the diff table
+   * and the commit message are all the server's — see the backend's
+   * docs/github-push-contract.md — so there is deliberately no way to express
+   * "push to main" from here.
+   */
+  pushTokens: (importSessionId: string, files: { path: string; content: string }[]) =>
+    request<PushResult>('/github/push', {
+      method: 'POST',
+      body: { import_session_id: importSessionId, files },
+    }),
 }

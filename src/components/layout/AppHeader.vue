@@ -5,6 +5,7 @@ import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import FrameworkSelector from '@/components/layout/FrameworkSelector.vue'
 import WorkspaceMenu from '@/components/layout/WorkspaceMenu.vue'
 import ImportBadge from '@/components/import/ImportBadge.vue'
+import PushTokensButton from '@/components/import/PushTokensButton.vue'
 import { downloadBundle } from '@/utils/exportBundle'
 
 const store = useDesignSystemStore()
@@ -67,6 +68,7 @@ function commitName(e: Event) {
 
     <div class="header__actions">
       <FrameworkSelector />
+      <PushTokensButton />
       <button
         class="header__icon-btn"
         :disabled="!canUndo"
