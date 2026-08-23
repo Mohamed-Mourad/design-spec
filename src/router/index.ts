@@ -19,9 +19,21 @@ const router = createRouter({
       component: () => import('@/views/PreviewView.vue'),
     },
     {
+      // Pro short link — the same view, reading a stored snapshot rather than
+      // the workspace or a hash.
       path: '/preview/:id',
-      name: 'preview-shared',
+      name: 'preview-snapshot',
       component: () => import('@/views/PreviewView.vue'),
+    },
+    {
+      path: '/p/:slug',
+      name: 'proposal',
+      component: () => import('@/views/ProposalView.vue'),
+    },
+    {
+      path: '/embed/:slug',
+      name: 'embed',
+      component: () => import('@/views/EmbedView.vue'),
     },
     {
       path: '/features',

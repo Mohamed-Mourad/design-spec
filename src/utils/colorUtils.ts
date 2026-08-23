@@ -109,3 +109,24 @@ export function hsvToRgb(h: number, s: number, v: number): { r: number; g: numbe
   else [r, g, b] = [c, 0, x]
   return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 }
 }
+
+// ── Legibility ───────────────────────────────────────────────────────────────
+
+/** WCAG relative luminance of a hex color (0 = black, 1 = white). */
+export function relativeLuminance(hex: string): number {
+  const { r, g, b } = hexToRgba(hex)
+  const channel = (c: number) => {
+    const s = c / 255
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+  }
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+}
+
+/**
+ * Black or white, whichever reads better on `background`. Used wherever a label
+ * sits directly on an arbitrary token color — a swatch caption has no way to
+ * know whether the system's `primary` is near-black or near-white.
+ */
+export function readableInk(background: string): '#000000' | '#FFFFFF' {
+  return relativeLuminance(background) > 0.45 ? '#000000' : '#FFFFFF'
+}

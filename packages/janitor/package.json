@@ -15,7 +15,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@design-spec/compiler": "0.1.0"
+    "@design-spec/compiler": "0.2.0"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",

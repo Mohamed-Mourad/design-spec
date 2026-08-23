@@ -5,6 +5,7 @@ import { Smartphone, Tablet, Monitor, Maximize, Moon, Sun } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import ComponentShowcase from '@/components/preview/ComponentShowcase.vue'
 import PreviewInspector from '@/components/preview/PreviewInspector.vue'
+import { schemaCssVars } from '@/utils/previewStyle'
 
 const store = useDesignSystemStore()
 const { schema, activeViewport, viewportWidth, previewDark, selectedComponent } = storeToRefs(store)
@@ -18,19 +19,7 @@ const viewports = [
 
 // Inject the *current schema's* tokens as CSS custom properties so the preview
 // reflects live edits. Dark mode swaps in schema.darkMode.colors overrides.
-const previewVars = computed<Record<string, string>>(() => {
-  const vars: Record<string, string> = {}
-  const dark = previewDark.value ? schema.value.darkMode.colors : {}
-  for (const [k, v] of Object.entries(schema.value.colors)) {
-    vars[`--color-${k}`] = (dark[k] as string | undefined) ?? v
-  }
-  for (const [k, v] of Object.entries(schema.value.spacing)) vars[`--spacing-${k}`] = String(v)
-  for (const [k, v] of Object.entries(schema.value.rounded)) vars[`--rounded-${k}`] = String(v)
-  for (const [k, v] of Object.entries(schema.value.shadows)) {
-    vars[`--shadow-${k}`] = Array.isArray(v.value) ? v.value.join(', ') : v.value
-  }
-  return vars
-})
+const previewVars = computed(() => schemaCssVars(schema.value, previewDark.value))
 
 const frameStyle = computed(() => ({
   width: Number.isFinite(viewportWidth.value) ? `${viewportWidth.value}px` : '100%',

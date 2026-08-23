@@ -2,7 +2,7 @@ import { ref, computed, watch, watchEffect } from 'vue'
 import { defineStore } from 'pinia'
 import { compileDesignMd, compileSkillMd, compileAll } from '@design-spec/compiler'
 import type { ExtractionSignal, TokenState, TokenStateMap } from '@design-spec/compiler'
-import type { DesignSystemSchema } from '@/types/schema'
+import type { BentoLayoutConfig, DesignSystemSchema, WebPresentationConfig } from '@/types/schema'
 import type { FileOutput, Framework } from '@/types/compiler'
 import { defaultSchema } from '@/defaults/schema'
 
@@ -474,6 +474,34 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     snapshot()
   }
 
+  /**
+   * Write the bento layout into `schema.presentation`. That whole layer is
+   * remote-wins on sync (§20) — it is a designer's concern, unlike
+   * `schema.export`, which the developer owns — and it is optional locally, so
+   * the first write has to establish the layer rather than assume it.
+   */
+  function updateBentoLayout(layout: BentoLayoutConfig) {
+    logAction('updateBentoLayout', [layout.cells.length, layout.gridColumns, layout.theme])
+    schema.value.presentation = {
+      ogImageStrategy: 'client-canvas',
+      ...schema.value.presentation,
+      bentoLayout: layout,
+    }
+    snapshot()
+  }
+
+  /**
+   * Patch the proposal branding and embed options — the rest of the
+   * presentation layer. Same remote-wins layer as the bento layout, same
+   * establish-on-first-write rule.
+   */
+  function updatePresentation(patch: Partial<WebPresentationConfig>) {
+    logAction('updatePresentation', [Object.keys(patch)])
+    const current = schema.value.presentation ?? { ogImageStrategy: 'client-canvas' as const }
+    schema.value.presentation = { ...current, ...patch }
+    snapshot()
+  }
+
   function updateFrameworks(frameworks: Framework[]) {
     logAction('updateFrameworks', [frameworks])
     schema.value.export.frameworks = frameworks
@@ -482,7 +510,10 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
 
   function loadPreset(preset: DesignSystemSchema) {
     logAction('loadPreset', [preset.name])
-    schema.value = structuredClone(preset)
+    // A JSON round-trip rather than structuredClone, for the same reason
+    // applyImport does it: callers hand us values read out of a ref, and
+    // structuredClone throws DataCloneError on a Vue reactive proxy.
+    schema.value = JSON.parse(JSON.stringify(preset)) as DesignSystemSchema
     historyStack.value = [JSON.stringify(schema.value)]
     historyIndex.value = 0
   }
@@ -538,6 +569,8 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     beginBatch,
     endBatch,
     updateMeta,
+    updateBentoLayout,
+    updatePresentation,
     updateFrameworks,
     loadPreset,
     importFromJson,

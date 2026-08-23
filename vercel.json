@@ -1,3 +1,10 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "headers": [
+    {
+      "comment": "Only the embed route may be framed at all. The per-proposal allowlist is enforced by the page itself (src/utils/framing.ts), because a static host cannot vary a header by which proposal it is about to serve — but every other route is refused here, where it cannot be bypassed.",
+      "source": "/((?!embed/).*)",
+      "headers": [{ "key": "Content-Security-Policy", "value": "frame-ancestors 'none'" }]
+    }
+  ]
 }

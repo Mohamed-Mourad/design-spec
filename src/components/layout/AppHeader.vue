@@ -68,6 +68,14 @@ function commitName(e: Event) {
 
     <div class="header__actions">
       <FrameworkSelector />
+      <RouterLink
+        class="header__preview-btn"
+        to="/preview"
+        data-testid="open-preview"
+        title="Open the shareable bento preview"
+      >
+        Preview
+      </RouterLink>
       <PushTokensButton />
       <button
         class="header__icon-btn"
@@ -230,5 +238,24 @@ function commitName(e: Event) {
 
 .header__export-btn:hover {
   background-color: var(--color-primary-glow);
+}
+
+.header__preview-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-raised);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-on-surface-muted);
+  text-decoration: none;
+}
+
+.header__preview-btn:hover {
+  color: var(--color-on-surface);
+  background-color: var(--color-surface-overlay);
 }
 </style>
