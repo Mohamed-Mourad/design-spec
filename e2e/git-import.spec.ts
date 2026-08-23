@@ -19,7 +19,9 @@ test.describe('Git import', () => {
     await page.goto(`/settings#ds_token=${SESSION}&login=octocat`)
 
     await expect(page.getByText('Connected as')).toBeVisible()
-    await expect(page.getByText('octocat')).toBeVisible()
+    // Settings names the login twice now — the connection line, and the plugin
+    // section that tells you which account to paste into it.
+    await expect(page.locator('strong.mono')).toHaveText('octocat')
 
     // The token must not survive in the address bar — that is browser history.
     expect(page.url()).not.toContain(SESSION)
