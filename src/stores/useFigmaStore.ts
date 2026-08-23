@@ -14,7 +14,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api, ApiError, apiConfigured, githubLogin, sessionToken } from '@/utils/api'
 import { clearFigmaPat, figmaPat, setFigmaPat } from '@/utils/figma/pat'
-import { FigmaError, importFromFigma } from '@/utils/figma/client'
+import { fetchFileMeta, FigmaError, importFromFigma } from '@/utils/figma/client'
 import { figmaFileKey, type FigmaImport, type FigmaMergeMode } from '@/utils/figma/map'
 import type { FigmaFileMeta } from '@/utils/figma/types'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
@@ -49,6 +49,11 @@ export const useFigmaStore = defineStore('figma', () => {
 
   const link = ref<FigmaLink | null>(readLink(design.activeWorkspaceId))
 
+  /** The linked file moved since the tokens were taken. Never applied on its own. */
+  const changeAvailable = ref(false)
+  const remoteVersion = ref<string | null>(null)
+  let pollTimer: ReturnType<typeof setInterval> | undefined
+
   const hasPat = computed(() => pat.value.trim().length > 0)
   const fileKey = computed(() => figmaFileKey(fileInput.value))
   const canImport = computed(() => hasPat.value && fileKey.value !== null && !busy.value)
@@ -76,6 +81,8 @@ export const useFigmaStore = defineStore('figma', () => {
   /** Re-read the link after a workspace switch; each workspace has its own file. */
   function syncWorkspace(): void {
     link.value = readLink(design.activeWorkspaceId)
+    changeAvailable.value = false
+    remoteVersion.value = null
   }
 
   // ── the token ──────────────────────────────────────────────────────────────
@@ -173,13 +180,94 @@ export const useFigmaStore = defineStore('figma', () => {
       version: meta.version,
       importedAt: Date.now(),
     })
+    changeAvailable.value = false
+    remoteVersion.value = meta.version
     trackEvent('figma_import_apply', { mode: mergeMode.value, tokens: result.counts.tokens })
     return true
   }
 
   /** Stop following the linked file, keeping the tokens it produced. */
   function unlink(): void {
+    stopWatching()
+    changeAvailable.value = false
+    remoteVersion.value = null
     writeLink(null)
+  }
+
+  // ── change detection ───────────────────────────────────────────────────────
+
+  /**
+   * How often the linked file's version is checked while the workspace is open.
+   *
+   * Sixty seconds is the number in the plan and it is a deliberate ceiling on
+   * how much of a designer's Figma rate limit this costs: `?depth=1` is the
+   * cheapest read the API offers, and one a minute is well inside the budget of
+   * a token that is also being used interactively.
+   */
+  const POLL_INTERVAL_MS = 60_000
+
+  const canWatch = computed(() => isPro.value && hasPat.value && link.value !== null)
+
+  /**
+   * Check the linked file's version once.
+   *
+   * Deliberately silent about failures: this runs in the background on a timer,
+   * and a red banner appearing because Figma rate-limited a poll would be
+   * alarming out of all proportion. An unusable token is different — it will
+   * never succeed, so watching stops rather than retrying every minute forever.
+   */
+  async function checkForChange(): Promise<boolean> {
+    const current = link.value
+    if (!current || !hasPat.value) return false
+    try {
+      const meta = await fetchFileMeta(current.fileKey, pat.value)
+      remoteVersion.value = meta.version
+      changeAvailable.value = meta.version !== current.version
+      if (changeAvailable.value) {
+        trackEvent('figma_change_detected', { file_key: current.fileKey })
+      }
+      return changeAvailable.value
+    } catch (e) {
+      if (e instanceof FigmaError && (e.status === 401 || e.status === 403 || e.status === 404)) {
+        stopWatching()
+      }
+      return false
+    }
+  }
+
+  /**
+   * Poll the linked file while the workspace is open. Nothing is ever applied
+   * from here — the badge offers a sync, a person decides (§15).
+   */
+  function startWatching(): void {
+    stopWatching()
+    if (!canWatch.value) return
+    void checkForChange()
+    pollTimer = setInterval(() => {
+      // A hidden tab is a tab nobody is looking at; skipping the tick keeps a
+      // workspace left open overnight from spending a rate limit on nothing.
+      if (typeof document !== 'undefined' && document.hidden) return
+      void checkForChange()
+    }, POLL_INTERVAL_MS)
+  }
+
+  function stopWatching(): void {
+    if (pollTimer !== undefined) {
+      clearInterval(pollTimer)
+      pollTimer = undefined
+    }
+  }
+
+  /**
+   * Accept the new version without importing it — "I know, and I don't want
+   * those changes". Follows the file from here, so the badge stays quiet until
+   * it moves again.
+   */
+  function acknowledgeChange(): void {
+    const current = link.value
+    if (!current || !remoteVersion.value) return
+    writeLink({ ...current, version: remoteVersion.value })
+    changeAvailable.value = false
   }
 
   function reset(): void {
@@ -200,9 +288,12 @@ export const useFigmaStore = defineStore('figma', () => {
     isPro,
     entitlementChecked,
     link,
+    changeAvailable,
+    remoteVersion,
     hasPat,
     fileKey,
     canImport,
+    canWatch,
     init,
     syncWorkspace,
     checkEntitlement,
@@ -211,6 +302,10 @@ export const useFigmaStore = defineStore('figma', () => {
     runImport,
     applyToWorkspace,
     unlink,
+    checkForChange,
+    startWatching,
+    stopWatching,
+    acknowledgeChange,
     reset,
   }
 })

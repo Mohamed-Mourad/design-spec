@@ -5,6 +5,7 @@ import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import FrameworkSelector from '@/components/layout/FrameworkSelector.vue'
 import WorkspaceMenu from '@/components/layout/WorkspaceMenu.vue'
 import ImportBadge from '@/components/import/ImportBadge.vue'
+import FigmaSyncBadge from '@/components/import/FigmaSyncBadge.vue'
 import PushTokensButton from '@/components/import/PushTokensButton.vue'
 import { downloadBundle } from '@/utils/exportBundle'
 
@@ -65,6 +66,7 @@ function commitName(e: Event) {
     </div>
 
     <ImportBadge />
+    <FigmaSyncBadge />
 
     <div class="header__actions">
       <FrameworkSelector />

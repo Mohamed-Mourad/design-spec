@@ -231,7 +231,7 @@ describe('useFigmaStore — reading a file', () => {
 
     expect(figma.error).toBeNull()
     expect(result?.colors['brand-primary']).toBe('#3366E6')
-    expect(result?.notes.at(-1)?.reason).toContain('does not expose the Variables API')
+    expect(result?.notes[result.notes.length - 1]?.reason).toContain('does not expose the Variables API')
   })
 
   it('says whose problem a rejected token is, without echoing it', async () => {
@@ -325,5 +325,142 @@ describe('useFigmaStore — applying to a workspace', () => {
     const figma = await readFile()
     figma.applyToWorkspace()
     expect(JSON.stringify(design.schema)).not.toContain(PAT)
+  })
+})
+
+describe('useFigmaStore — following a linked file', () => {
+  async function linkPro(over: Record<string, Route> = {}) {
+    stubFetch(proRoutes(over))
+    signIn()
+    const figma = useFigmaStore()
+    figma.rememberPat(PAT)
+    figma.fileInput = FILE_URL
+    await figma.init()
+    await figma.runImport()
+    figma.applyToWorkspace()
+    return figma
+  }
+
+  it('raises a badge when the file version moves', async () => {
+    const figma = await linkPro()
+    stubFetch(figmaRoutes({ '?depth=1': { status: 200, body: { ...FILE_META, version: '901' } } }))
+
+    expect(await figma.checkForChange()).toBe(true)
+    expect(figma.changeAvailable).toBe(true)
+    expect(figma.remoteVersion).toBe('901')
+  })
+
+  it('stays quiet while the file is unchanged', async () => {
+    const figma = await linkPro()
+    expect(await figma.checkForChange()).toBe(false)
+    expect(figma.changeAvailable).toBe(false)
+  })
+
+  it('never applies a change on its own', async () => {
+    const design = useDesignSystemStore()
+    const figma = await linkPro()
+    const before = JSON.stringify(design.schema)
+    stubFetch(figmaRoutes({ '?depth=1': { status: 200, body: { ...FILE_META, version: '901' } } }))
+
+    await figma.checkForChange()
+    expect(JSON.stringify(design.schema)).toBe(before)
+  })
+
+  it('acknowledging follows the new version without importing it', async () => {
+    const figma = await linkPro()
+    stubFetch(figmaRoutes({ '?depth=1': { status: 200, body: { ...FILE_META, version: '901' } } }))
+    await figma.checkForChange()
+
+    figma.acknowledgeChange()
+    expect(figma.changeAvailable).toBe(false)
+    expect(figma.link?.version).toBe('901')
+    expect(await figma.checkForChange()).toBe(false)
+  })
+
+  it('applying a fresh read clears the badge', async () => {
+    const figma = await linkPro()
+    stubFetch(figmaRoutes({ '?depth=1': { status: 200, body: { ...FILE_META, version: '901' } } }))
+    await figma.checkForChange()
+    expect(figma.changeAvailable).toBe(true)
+
+    await figma.runImport()
+    figma.applyToWorkspace()
+    expect(figma.changeAvailable).toBe(false)
+    expect(figma.link?.version).toBe('901')
+  })
+
+  it('a failed poll is silent — no error banner from a background check', async () => {
+    const figma = await linkPro()
+    stubFetch(figmaRoutes({ '?depth=1': { status: 429, body: {} } }))
+
+    expect(await figma.checkForChange()).toBe(false)
+    expect(figma.error).toBeNull()
+  })
+
+  it('only watches on Pro, with a token and a linked file', async () => {
+    const figma = await linkPro()
+    expect(figma.canWatch).toBe(true)
+    figma.forgetPat()
+    expect(figma.canWatch).toBe(false)
+  })
+
+  it('does not watch a free workspace', async () => {
+    stubFetch(figmaRoutes())
+    const figma = useFigmaStore()
+    figma.rememberPat(PAT)
+    figma.fileInput = FILE_URL
+    await figma.init()
+    await figma.runImport()
+    figma.applyToWorkspace()
+    expect(figma.canWatch).toBe(false)
+  })
+
+  it('polls on a timer while the workspace is open and stops on request', async () => {
+    vi.useFakeTimers()
+    try {
+      stubFetch(proRoutes())
+      signIn()
+      const figma = useFigmaStore()
+      figma.rememberPat(PAT)
+      figma.fileInput = FILE_URL
+      await figma.init()
+      await figma.runImport()
+      figma.applyToWorkspace()
+
+      stubFetch(figmaRoutes({ '?depth=1': { status: 200, body: { ...FILE_META, version: '902' } } }))
+      figma.startWatching()
+      await vi.advanceTimersByTimeAsync(60_000)
+      const polled = calls.filter((c) => c.url.includes('depth=1')).length
+      expect(polled).toBeGreaterThanOrEqual(2)
+
+      figma.stopWatching()
+      await vi.advanceTimersByTimeAsync(180_000)
+      expect(calls.filter((c) => c.url.includes('depth=1')).length).toBe(polled)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('stops watching a file the token can no longer read', async () => {
+    vi.useFakeTimers()
+    try {
+      stubFetch(proRoutes())
+      signIn()
+      const figma = useFigmaStore()
+      figma.rememberPat(PAT)
+      figma.fileInput = FILE_URL
+      await figma.init()
+      await figma.runImport()
+      figma.applyToWorkspace()
+
+      stubFetch(figmaRoutes({ '?depth=1': { status: 403, body: {} } }))
+      figma.startWatching()
+      await vi.advanceTimersByTimeAsync(0)
+      const after = calls.filter((c) => c.url.includes('depth=1')).length
+      await vi.advanceTimersByTimeAsync(180_000)
+      expect(calls.filter((c) => c.url.includes('depth=1')).length).toBe(after)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
