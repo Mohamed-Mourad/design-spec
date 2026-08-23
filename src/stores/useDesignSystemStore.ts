@@ -2,7 +2,7 @@ import { ref, computed, watch, watchEffect } from 'vue'
 import { defineStore } from 'pinia'
 import { compileDesignMd, compileSkillMd, compileAll } from '@design-spec/compiler'
 import type { ExtractionSignal, TokenState, TokenStateMap } from '@design-spec/compiler'
-import type { DesignSystemSchema } from '@/types/schema'
+import type { BentoLayoutConfig, DesignSystemSchema } from '@/types/schema'
 import type { FileOutput, Framework } from '@/types/compiler'
 import { defaultSchema } from '@/defaults/schema'
 
@@ -474,6 +474,22 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     snapshot()
   }
 
+  /**
+   * Write the bento layout into `schema.presentation`. That whole layer is
+   * remote-wins on sync (§20) — it is a designer's concern, unlike
+   * `schema.export`, which the developer owns — and it is optional locally, so
+   * the first write has to establish the layer rather than assume it.
+   */
+  function updateBentoLayout(layout: BentoLayoutConfig) {
+    logAction('updateBentoLayout', [layout.cells.length, layout.gridColumns, layout.theme])
+    schema.value.presentation = {
+      ogImageStrategy: 'client-canvas',
+      ...schema.value.presentation,
+      bentoLayout: layout,
+    }
+    snapshot()
+  }
+
   function updateFrameworks(frameworks: Framework[]) {
     logAction('updateFrameworks', [frameworks])
     schema.value.export.frameworks = frameworks
@@ -541,6 +557,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     beginBatch,
     endBatch,
     updateMeta,
+    updateBentoLayout,
     updateFrameworks,
     loadPreset,
     importFromJson,

@@ -86,6 +86,28 @@ describe('PreviewView', () => {
     expect(previous).toBeDefined()
   })
 
+  it('writes layout edits through to schema.presentation', async () => {
+    const store = useDesignSystemStore()
+    const wrapper = await mountPreview()
+
+    await wrapper.get('[data-testid="customize-bento"]').trigger('click')
+    await wrapper.get('[aria-label="Hide the Colors cell"]').trigger('click')
+
+    const cells = store.schema.presentation?.bentoLayout?.cells ?? []
+    expect(cells.find((c) => c.id === 'colors')?.visible).toBe(false)
+    // The cell it hid is gone from the rendered bento, not merely dimmed.
+    expect(wrapper.findAll('[data-bento-cell="colors"]')).toHaveLength(0)
+  })
+
+  it('does not offer to customize someone else shared system', async () => {
+    window.location.hash = `#${encodeSchemaHash(shared())}`
+
+    const wrapper = await mountPreview()
+
+    expect(wrapper.find('[data-testid="customize-bento"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="bento-layout-editor"]').exists()).toBe(false)
+  })
+
   it('offers the share affordance on both the own and the shared view', async () => {
     expect((await mountPreview()).find('[data-testid="share-link"]').exists()).toBe(true)
 

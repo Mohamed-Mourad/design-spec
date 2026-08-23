@@ -3,9 +3,10 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useHead } from '@unhead/vue'
-import { ArrowLeft, FilePlus2 } from '@lucide/vue'
+import { ArrowLeft, FilePlus2, SlidersHorizontal, X } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import BentoPreview from '@/components/preview/bento/BentoPreview.vue'
+import BentoLayoutEditor from '@/components/preview/BentoLayoutEditor.vue'
 import ShareLinkButton from '@/components/preview/ShareLinkButton.vue'
 import { renderOgImage } from '@/utils/ogCanvas'
 import { decodeSchemaHash } from '@/utils/shareLink'
@@ -95,6 +96,13 @@ function openInWorkspace() {
   store.loadPreset(incoming)
   router.push('/workspace')
 }
+
+/**
+ * The layout is edited here rather than in the workspace panels because this is
+ * the only place its result is visible. A shared link is someone else's system,
+ * so it is read-only — the viewer can copy it into a workspace and edit that.
+ */
+const customizing = ref(false)
 </script>
 
 <template>
@@ -126,8 +134,33 @@ function openInWorkspace() {
         <span>Open in workspace</span>
       </button>
 
+      <button
+        v-if="!isShared"
+        class="preview-view__ghost"
+        data-testid="customize-bento"
+        :aria-expanded="customizing"
+        title="Choose which cells show, how wide they are, and in what order"
+        @click="customizing = !customizing"
+      >
+        <SlidersHorizontal :size="15" aria-hidden="true" />
+        <span>Customize</span>
+      </button>
+
       <ShareLinkButton :schema="schema" />
     </div>
+
+    <aside v-if="customizing && !isShared" class="preview-view__drawer">
+      <header class="preview-view__drawer-head">
+        <h2 class="preview-view__drawer-title">Bento layout</h2>
+        <button class="preview-view__ghost" aria-label="Close the layout editor" @click="customizing = false">
+          <X :size="15" aria-hidden="true" />
+        </button>
+      </header>
+      <BentoLayoutEditor
+        :layout="schema.presentation?.bentoLayout"
+        @update="store.updateBentoLayout($event)"
+      />
+    </aside>
 
     <p v-if="hashRejected" class="preview-view__notice" data-testid="bad-share-link">
       That share link is damaged or incomplete, so this is your own workspace instead.
@@ -182,6 +215,37 @@ function openInWorkspace() {
 .preview-view__ghost:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-interactive-focus-ring);
+}
+
+.preview-view__drawer {
+  position: fixed;
+  top: 64px;
+  right: var(--spacing-md);
+  bottom: var(--spacing-md);
+  z-index: var(--z-dropdown);
+  width: 340px;
+  max-width: calc(100vw - var(--spacing-lg));
+  overflow-y: auto;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-default);
+  box-shadow: var(--shadow-lg);
+}
+
+.preview-view__drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+}
+
+.preview-view__drawer-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--color-on-surface);
 }
 
 .preview-view__notice {
