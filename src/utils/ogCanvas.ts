@@ -71,7 +71,14 @@ export async function renderOgImage(
   const canvas = document.createElement('canvas')
   canvas.width = OG_WIDTH
   canvas.height = OG_HEIGHT
-  const ctx = canvas.getContext('2d')
+  // Not every environment has a 2D rasteriser behind the element — jsdom
+  // raises rather than returning null, and a hardened browser can refuse.
+  let ctx: CanvasRenderingContext2D | null = null
+  try {
+    ctx = canvas.getContext('2d')
+  } catch {
+    return null
+  }
   if (!ctx) return null
 
   const accent = branding?.accentColor ?? schema.colors.primary ?? '#c8813d'

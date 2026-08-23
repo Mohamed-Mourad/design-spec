@@ -482,7 +482,10 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
 
   function loadPreset(preset: DesignSystemSchema) {
     logAction('loadPreset', [preset.name])
-    schema.value = structuredClone(preset)
+    // A JSON round-trip rather than structuredClone, for the same reason
+    // applyImport does it: callers hand us values read out of a ref, and
+    // structuredClone throws DataCloneError on a Vue reactive proxy.
+    schema.value = JSON.parse(JSON.stringify(preset)) as DesignSystemSchema
     historyStack.value = [JSON.stringify(schema.value)]
     historyIndex.value = 0
   }
