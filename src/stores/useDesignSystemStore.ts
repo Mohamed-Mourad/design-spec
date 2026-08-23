@@ -5,6 +5,7 @@ import type { ExtractionSignal, TokenState, TokenStateMap } from '@design-spec/c
 import type { BentoLayoutConfig, DesignSystemSchema, WebPresentationConfig } from '@/types/schema'
 import type { FileOutput, Framework } from '@/types/compiler'
 import { defaultSchema } from '@/defaults/schema'
+import { applyFigmaImport as foldFigmaImport, type FigmaImport, type FigmaMergeMode } from '@/utils/figma/map'
 
 const LEGACY_KEY = 'dsa-schema-v1' // single-schema storage, pre-workspaces
 const WS_LIST_KEY = 'dsa-workspaces-v1'
@@ -284,6 +285,24 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     resetHistory()
   }
 
+  /**
+   * Fold tokens read out of a Figma file into this workspace.
+   *
+   * Unlike a repository import this never replaces the workspace: a Figma file
+   * carries colors, type, effects and — on Pro — variables, but nothing about
+   * components, blueprints or prose. Merging is the honest operation, and
+   * `replace` still only swaps the groups the file actually populated.
+   *
+   * It is one undo step, so a designer who dislikes what a file did can take it
+   * straight back.
+   */
+  function applyFigmaImport(imported: FigmaImport, mode: FigmaMergeMode) {
+    // Counts, never values: token values can carry a client's unreleased brand.
+    logAction('applyFigmaImport', [mode, imported.counts.tokens])
+    schema.value = foldFigmaImport(schema.value, imported, mode)
+    snapshot()
+  }
+
   /** Forget an import's provenance, keeping the schema it produced. */
   function dismissImport() {
     importProvenance.value = null
@@ -545,6 +564,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     tokenStateFor,
     clearTokenState,
     applyImport,
+    applyFigmaImport,
     dismissImport,
     activeEditorTab,
     selectedComponent,

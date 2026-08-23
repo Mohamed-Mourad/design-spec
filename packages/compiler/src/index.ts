@@ -5,7 +5,7 @@
 // source-of-truth contract; see the `evolving-schema-contract` skill before
 // changing any shape.
 
-export const COMPILER_VERSION = '0.2.0' as const
+export const COMPILER_VERSION = '0.3.0' as const
 
 // Contract types (single origin)
 export * from './types/schema.js'
@@ -45,6 +45,12 @@ export type {
   ResponsiveCascadeIssue,
   ResponsiveIssueKind,
 } from './resolveResponsive.js'
+
+// Token delta — what changed between two design systems. Shared by the web
+// staging flow, the closed Figma plugin's approval diff, and mirrored by the Go
+// backend's pull-request body.
+export { diffTokens, isEmptyDelta, tokenGroupOf, changesByGroup, TOKEN_GROUPS } from './tokenDelta.js'
+export type { TokenChange, TokenDelta, TokenGroup } from './tokenDelta.js'
 
 // Drift detect + auto-fix
 export { detect, nearestColorToken } from './detect.js'

@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ChevronDown, Plus, Pencil, Trash2, Check, RotateCcw, Copy, GitFork } from '@lucide/vue'
+import { ChevronDown, Plus, Pencil, Trash2, Check, RotateCcw, Copy, Frame, GitFork } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import ImportDialog from '@/components/import/ImportDialog.vue'
+import FigmaImportDialog from '@/components/import/FigmaImportDialog.vue'
 
 const store = useDesignSystemStore()
 const { workspaces, activeWorkspaceId, activeWorkspaceName } = storeToRefs(store)
 
 const importing = ref(false)
+const importingFigma = ref(false)
 
 const root = ref<HTMLDetailsElement | null>(null)
 const newName = ref('')
@@ -80,11 +82,15 @@ function resetActive() {
       <button class="wm__import" data-testid="open-import" @click="importing = true; close()">
         <GitFork :size="12" /> Import from GitHub…
       </button>
+      <button class="wm__import" data-testid="open-figma-import" @click="importingFigma = true; close()">
+        <Frame :size="12" /> Import from Figma…
+      </button>
       <button class="wm__reset" @click="resetActive"><RotateCcw :size="12" /> Reset to defaults</button>
     </div>
   </details>
 
   <ImportDialog v-if="importing" @close="importing = false" />
+  <FigmaImportDialog v-if="importingFigma" @close="importingFigma = false" />
 </template>
 
 <style scoped>

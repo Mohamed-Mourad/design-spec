@@ -1,21 +1,52 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useHead } from '@unhead/vue'
-import { ArrowLeft, Check, GitFork, Terminal } from '@lucide/vue'
+import { ArrowLeft, Check, Copy, Frame, GitFork, ShieldCheck, Terminal } from '@lucide/vue'
 import { RouterLink } from 'vue-router'
 import { useImportStore } from '@/stores/useImportStore'
+import { useFigmaStore } from '@/stores/useFigmaStore'
+import { sessionToken } from '@/utils/api'
+import { maskedPat } from '@/utils/figma/pat'
 
 // The OAuth callback lands here, so this is where the GitHub connection is
 // managed. `init()` picks the session out of the URL fragment and scrubs it from
 // the address bar before anything else reads it.
+//
+// It is also where both Figma credentials are explained, because they are
+// different things and the difference is the whole security story: the PAT is
+// this browser's and never leaves it, while the session the plugin uses is the
+// same one this app already holds.
 
 useHead({ title: 'Settings — Design Spec' })
 
 const imports = useImportStore()
+const figma = useFigmaStore()
 const { busy, error, connected, canPush, login } = storeToRefs(imports)
+const { pat } = storeToRefs(figma)
 
-onMounted(() => imports.init())
+const hasPat = computed(() => pat.value.trim().length > 0)
+
+const revealed = ref(false)
+const copied = ref(false)
+const session = computed(() => sessionToken() ?? '')
+
+async function copySession() {
+  try {
+    await navigator.clipboard.writeText(session.value)
+    copied.value = true
+    setTimeout(() => (copied.value = false), 2000)
+  } catch {
+    // Clipboard permission denied — revealing it is the fallback, and the
+    // button below already offers that.
+    revealed.value = true
+  }
+}
+
+onMounted(async () => {
+  await imports.init()
+  await figma.init()
+})
 </script>
 
 <template>
@@ -87,6 +118,63 @@ onMounted(() => imports.init())
           </p>
         </template>
       </template>
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">
+        <Frame :size="15" aria-hidden="true" />
+        Figma
+      </h2>
+
+      <p class="card__text">
+        <template v-if="hasPat">
+          A personal access token is stored in this browser
+          (<span class="mono">{{ maskedPat(pat) }}</span
+          >). It is used to call Figma from this tab.
+        </template>
+        <template v-else>
+          No Figma token is stored. The import dialog asks for one when you first read a file.
+        </template>
+      </p>
+
+      <p class="privacy">
+        <ShieldCheck :size="12" aria-hidden="true" />
+        <span>
+          Your Figma token never reaches Design Spec's servers — the browser calls Figma directly,
+          and our API has no code that talks to Figma at all. Forgetting it here removes it from this
+          browser; revoking it in Figma revokes it everywhere.
+        </span>
+      </p>
+
+      <div v-if="hasPat" class="card__actions">
+        <button class="btn btn--ghost" @click="figma.forgetPat()">Forget Figma token</button>
+      </div>
+
+      <h3 class="card__sub">Token Sandbox plugin</h3>
+      <p class="card__text">
+        The Figma plugin reads token changes you stage for approval. It signs in with this Design
+        Spec session — never with a Figma token.
+      </p>
+      <template v-if="connected && session">
+        <div class="stored">
+          <span class="stored__value">{{ revealed ? session : '••••••••••••••••••••' }}</span>
+          <button class="stored__link" @click="revealed = !revealed">
+            {{ revealed ? 'Hide' : 'Reveal' }}
+          </button>
+        </div>
+        <div class="card__actions">
+          <button class="btn btn--ghost" data-testid="copy-session" @click="copySession">
+            <component :is="copied ? Check : Copy" :size="13" aria-hidden="true" />
+            {{ copied ? 'Copied' : 'Copy session for the plugin' }}
+          </button>
+        </div>
+        <p class="card__fine">
+          Paste it into the plugin along with your account name,
+          <span class="mono">{{ login }}</span
+          >. Treat it like a password: anyone holding it can act as you until it expires.
+        </p>
+      </template>
+      <p v-else class="card__fine">Connect GitHub above to get a session the plugin can use.</p>
     </section>
 
     <section class="card">
@@ -216,6 +304,68 @@ onMounted(() => imports.init())
   height: 12px;
   border: 1px solid var(--color-surface-border);
   border-radius: var(--radius-full);
+}
+
+.card__sub {
+  margin: var(--spacing-sm) 0 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-subtle);
+}
+
+.privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-sunken);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--color-on-surface-muted);
+}
+.privacy svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-status-success);
+}
+
+.stored {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: 34px;
+  padding: 0 var(--spacing-sm);
+  background-color: var(--color-surface-sunken);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+}
+.stored__value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-on-surface);
+}
+.stored__link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--color-on-surface-muted);
+  cursor: pointer;
+}
+.stored__link:hover {
+  color: var(--color-on-surface);
 }
 
 .code {

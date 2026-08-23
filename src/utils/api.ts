@@ -11,6 +11,8 @@
 //     design-spec-backend/docs/github-import-contract.md is the only agreement
 //     needed between the two repos.
 
+import type { TokenChange, TokenDelta } from '@design-spec/compiler'
+
 /**
  * Read lazily, not at module load: the value is build-time config in
  * production but must be observable per-call so tests can drive both the
@@ -231,8 +233,25 @@ export function githubAuthorizeUrl(redirectUri: string, scope: 'import' | 'write
   return `${apiUrl()}/api/v1/auth/github/start?${q.toString()}`
 }
 
+export interface Entitlement {
+  org: string
+  plan: 'free' | 'pro_team'
+  status: 'active' | 'past_due' | 'canceled'
+  hosted_janitor: boolean
+  seats: number
+  seats_used: number
+}
+
 export const api = {
   githubStatus: () => request<ConnectionStatus>('/auth/github/status'),
+
+  /**
+   * What this account is allowed to do right now. The server answers free
+   * defaults rather than a 404 when there is no subscription, so a caller can
+   * always branch on hosted_janitor without special-casing 'never subscribed'.
+   */
+  entitlement: (org: string) =>
+    request<Entitlement>(`/billing/entitlement?org=${encodeURIComponent(org)}`),
   githubDisconnect: () => request<void>('/auth/github', { method: 'DELETE' }),
 
   repos: (cursor?: string, q?: string) => {
@@ -285,6 +304,42 @@ export const api = {
       method: 'POST',
       body: { import_session_id: importSessionId, files },
     }),
+}
+
+// ── the Figma approval queue (mirrors docs/staging-contract.md) ──────────────
+
+/**
+ * One token delta waiting on — or already carrying — a designer's decision.
+ *
+ * This is a private contract between this app, the API and the closed Figma
+ * plugin. It is typed here because this app stages changes onto the queue; the
+ * plugin is the one that drains it.
+ */
+export interface StagedChange {
+  id: string
+  user_id: string
+  file_key: string
+  status: 'pending' | 'approved' | 'rejected'
+  payload: { schema_name?: string; changes: TokenChange[]; groups?: string[] }
+  created_at: string
+  updated_at: string
+  resolved_at: string | null
+}
+
+function stagingPath(user: string, fileKey: string): string {
+  return `/staging/${encodeURIComponent(user)}/${encodeURIComponent(fileKey)}`
+}
+
+export const staging = {
+  /** Queue a delta for approval inside Figma. Pro. */
+  stage: (user: string, fileKey: string, payload: { schema_name: string } & TokenDelta) =>
+    request<StagedChange>(stagingPath(user, fileKey), { method: 'POST', body: payload }),
+
+  /** Read the queue. Defaults to what is still waiting on a designer. */
+  list: (user: string, fileKey: string, status?: StagedChange['status']) =>
+    request<{ data: StagedChange[] }>(
+      stagingPath(user, fileKey) + (status ? `?status=${status}` : ''),
+    ),
 }
 
 // ── the portfolio layer (mirrors docs/proposals-contract.md) ─────────────────
