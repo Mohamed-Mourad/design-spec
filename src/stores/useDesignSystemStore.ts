@@ -2,7 +2,7 @@ import { ref, computed, watch, watchEffect } from 'vue'
 import { defineStore } from 'pinia'
 import { compileDesignMd, compileSkillMd, compileAll } from '@design-spec/compiler'
 import type { ExtractionSignal, TokenState, TokenStateMap } from '@design-spec/compiler'
-import type { BentoLayoutConfig, DesignSystemSchema } from '@/types/schema'
+import type { BentoLayoutConfig, DesignSystemSchema, WebPresentationConfig } from '@/types/schema'
 import type { FileOutput, Framework } from '@/types/compiler'
 import { defaultSchema } from '@/defaults/schema'
 
@@ -490,6 +490,18 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     snapshot()
   }
 
+  /**
+   * Patch the proposal branding and embed options — the rest of the
+   * presentation layer. Same remote-wins layer as the bento layout, same
+   * establish-on-first-write rule.
+   */
+  function updatePresentation(patch: Partial<WebPresentationConfig>) {
+    logAction('updatePresentation', [Object.keys(patch)])
+    const current = schema.value.presentation ?? { ogImageStrategy: 'client-canvas' as const }
+    schema.value.presentation = { ...current, ...patch }
+    snapshot()
+  }
+
   function updateFrameworks(frameworks: Framework[]) {
     logAction('updateFrameworks', [frameworks])
     schema.value.export.frameworks = frameworks
@@ -558,6 +570,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     endBatch,
     updateMeta,
     updateBentoLayout,
+    updatePresentation,
     updateFrameworks,
     loadPreset,
     importFromJson,

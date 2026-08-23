@@ -286,3 +286,88 @@ export const api = {
       body: { import_session_id: importSessionId, files },
     }),
 }
+
+// ── the portfolio layer (mirrors docs/proposals-contract.md) ─────────────────
+
+export interface Proposal {
+  slug: string
+  url: string
+  embed_url: string
+  og_image_url: string | null
+  og_image_status: 'pending' | 'ready' | 'failed'
+  schema_json?: unknown
+  created_at: string
+  updated_at: string
+}
+
+export interface SlugAvailability {
+  slug: string
+  available: boolean
+  reason: 'taken' | 'reserved' | 'invalid' | null
+}
+
+export interface SnapshotLink {
+  id: string
+  url: string
+  schema_json?: unknown
+  created_at: string
+}
+
+/**
+ * Read a published proposal or snapshot without a session.
+ *
+ * The authenticated `request` helper attaches the session JWT and clears it on
+ * a 401; neither is right here. A stranger opening `/p/{slug}` has no session
+ * to attach, and a stale one must not be destroyed just because they followed
+ * a link.
+ */
+async function publicRequest<T>(path: string): Promise<T> {
+  if (!apiConfigured()) {
+    throw new ApiError(0, 'This link needs a Design Spec backend to resolve.')
+  }
+  let res: Response
+  try {
+    res = await fetch(`${apiUrl()}/api/v1${path}`)
+  } catch {
+    throw new ApiError(0, 'Could not reach the Design Spec API.')
+  }
+  const text = await res.text()
+  let payload: unknown = null
+  if (text) {
+    try {
+      payload = JSON.parse(text)
+    } catch {
+      payload = null
+    }
+  }
+  if (!res.ok) {
+    const envelope = (payload ?? {}) as { error?: string }
+    throw new ApiError(res.status, envelope.error ?? `Request failed (${res.status})`)
+  }
+  return payload as T
+}
+
+export const portfolio = {
+  slugAvailability: (slug: string) =>
+    request<SlugAvailability>(`/proposals/availability?slug=${encodeURIComponent(slug)}`),
+
+  listProposals: () => request<{ data: Proposal[] }>('/proposals'),
+
+  publish: (slug: string, schema: unknown) =>
+    request<Proposal>('/proposals', { method: 'POST', body: { slug, schema_json: schema } }),
+
+  updateProposal: (slug: string, body: { slug?: string; schema_json?: unknown }) =>
+    request<Proposal>(`/proposals/${encodeURIComponent(slug)}`, { method: 'PATCH', body }),
+
+  unpublish: (slug: string) =>
+    request<void>(`/proposals/${encodeURIComponent(slug)}`, { method: 'DELETE' }),
+
+  /** Public — a reader of `/p/{slug}` has no account. */
+  getProposal: (slug: string) => publicRequest<Proposal>(`/proposals/${encodeURIComponent(slug)}`),
+
+  createSnapshot: (schema: unknown) =>
+    request<SnapshotLink>('/snapshots', { method: 'POST', body: { schema_json: schema } }),
+
+  /** Public — a reader of `/preview/{id}` has no account either. */
+  getSnapshot: (id: string) => publicRequest<SnapshotLink>(`/snapshots/${encodeURIComponent(id)}`),
+}
