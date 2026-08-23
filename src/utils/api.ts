@@ -231,8 +231,25 @@ export function githubAuthorizeUrl(redirectUri: string, scope: 'import' | 'write
   return `${apiUrl()}/api/v1/auth/github/start?${q.toString()}`
 }
 
+export interface Entitlement {
+  org: string
+  plan: 'free' | 'pro_team'
+  status: 'active' | 'past_due' | 'canceled'
+  hosted_janitor: boolean
+  seats: number
+  seats_used: number
+}
+
 export const api = {
   githubStatus: () => request<ConnectionStatus>('/auth/github/status'),
+
+  /**
+   * What this account is allowed to do right now. The server answers free
+   * defaults rather than a 404 when there is no subscription, so a caller can
+   * always branch on hosted_janitor without special-casing 'never subscribed'.
+   */
+  entitlement: (org: string) =>
+    request<Entitlement>(`/billing/entitlement?org=${encodeURIComponent(org)}`),
   githubDisconnect: () => request<void>('/auth/github', { method: 'DELETE' }),
 
   repos: (cursor?: string, q?: string) => {
