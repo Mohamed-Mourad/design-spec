@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ChevronDown, Plus, Pencil, Trash2, Check, RotateCcw, Copy } from '@lucide/vue'
+import { ChevronDown, Plus, Pencil, Trash2, Check, RotateCcw, Copy, GitFork } from '@lucide/vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
+import ImportDialog from '@/components/import/ImportDialog.vue'
 
 const store = useDesignSystemStore()
 const { workspaces, activeWorkspaceId, activeWorkspaceName } = storeToRefs(store)
+
+const importing = ref(false)
 
 const root = ref<HTMLDetailsElement | null>(null)
 const newName = ref('')
@@ -46,7 +49,7 @@ function resetActive() {
 
 <template>
   <details ref="root" class="wm">
-    <summary class="wm__summary">
+    <summary class="wm__summary" data-testid="workspace-menu">
       <span class="wm__current">{{ activeWorkspaceName }}</span>
       <ChevronDown :size="13" aria-hidden="true" />
     </summary>
@@ -74,9 +77,14 @@ function resetActive() {
         <button class="wm__icon" aria-label="Create workspace" title="Create" @click="addWorkspace"><Plus :size="14" /></button>
       </div>
 
+      <button class="wm__import" data-testid="open-import" @click="importing = true; close()">
+        <GitFork :size="12" /> Import from GitHub…
+      </button>
       <button class="wm__reset" @click="resetActive"><RotateCcw :size="12" /> Reset to defaults</button>
     </div>
   </details>
+
+  <ImportDialog v-if="importing" @close="importing = false" />
 </template>
 
 <style scoped>
@@ -203,13 +211,33 @@ function resetActive() {
   border-radius: var(--radius-sm);
   padding: 4px 6px;
 }
-.wm__reset {
+.wm__import {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   width: 100%;
   margin-top: var(--spacing-sm);
+  background: none;
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-on-surface-muted);
+  cursor: pointer;
+}
+.wm__import:hover {
+  color: var(--color-on-surface);
+  border-color: var(--color-primary);
+}
+.wm__reset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
   background: none;
   border: 1px solid var(--color-surface-border);
   border-radius: var(--radius-sm);

@@ -159,3 +159,135 @@ describe('useDesignSystemStore — compiler wiring', () => {
     expect(store.schema.colors.primary).not.toBe('#123456')
   })
 })
+
+describe('useDesignSystemStore — import provenance', () => {
+  const PROVENANCE = {
+    repoFullName: 'octocat/hello-world',
+    branch: 'main',
+    commitSha: 'abc1234',
+    importSessionId: 'sess-1',
+    signals: [],
+    usedFallback: true,
+    unparseableLayers: ['theme.extend.colors....preset'],
+    states: {
+      colors: { primary: 'extracted', surface: 'inferred', muted: 'defaulted' },
+      'darkMode.colors': { surface: 'inferred' },
+      'borders.width': { thin: 'inferred' },
+    },
+    scannedAt: 0,
+  } as const
+
+  function imported() {
+    const store = useDesignSystemStore()
+    store.applyImport(structuredClone(defaultSchema), structuredClone(PROVENANCE) as never)
+    return store
+  }
+
+  it('reports a token state per group, including nested groups', () => {
+    const store = imported()
+    expect(store.tokenStateFor('colors', 'primary')).toBe('extracted')
+    expect(store.tokenStateFor('colors', 'surface')).toBe('inferred')
+    expect(store.tokenStateFor('darkMode.colors', 'surface')).toBe('inferred')
+    expect(store.tokenStateFor('borders.width', 'thin')).toBe('inferred')
+    expect(store.tokenStateFor('colors', 'nothing-imported')).toBeNull()
+  })
+
+  it('counts what still wants a human glance', () => {
+    const store = imported()
+    expect(store.pendingReview).toEqual({ inferred: 3, defaulted: 1, total: 4 })
+  })
+
+  it('clears a flag when the token is edited — an edit IS the review', () => {
+    const store = imported()
+    store.setPath(['colors', 'surface'], '#123456')
+    expect(store.tokenStateFor('colors', 'surface')).toBeNull()
+    expect(store.pendingReview.total).toBe(3)
+  })
+
+  it('resolves the longest matching group, never the shorter prefix', () => {
+    const store = imported()
+    store.setPath(['darkMode', 'colors', 'surface'], '#000000')
+    expect(store.tokenStateFor('darkMode.colors', 'surface')).toBeNull()
+    // The light-mode token of the same name is untouched.
+    expect(store.tokenStateFor('colors', 'surface')).toBe('inferred')
+  })
+
+  it('clears a flag via updateToken and removeToken too', () => {
+    const store = imported()
+    store.updateToken('colors', 'surface', '#111111')
+    expect(store.tokenStateFor('colors', 'surface')).toBeNull()
+    store.removeToken('colors', 'muted')
+    expect(store.tokenStateFor('colors', 'muted')).toBeNull()
+  })
+
+  it('leaves untouched tokens flagged', () => {
+    const store = imported()
+    store.setPath(['colors', 'surface'], '#123456')
+    expect(store.tokenStateFor('colors', 'muted')).toBe('defaulted')
+  })
+
+  it('never reintroduces a cleared flag', () => {
+    const store = imported()
+    store.setPath(['colors', 'surface'], '#123456')
+    store.setPath(['colors', 'surface'], '#654321')
+    expect(store.tokenStateFor('colors', 'surface')).toBeNull()
+  })
+
+  it('keeps provenance per workspace', () => {
+    const store = imported()
+    const importedId = store.activeWorkspaceId
+    const freshId = store.createWorkspace('Hand-authored')
+    expect(store.importProvenance).toBeNull()
+
+    store.switchWorkspace(importedId)
+    expect(store.importProvenance?.repoFullName).toBe('octocat/hello-world')
+
+    store.switchWorkspace(freshId)
+    expect(store.importProvenance).toBeNull()
+  })
+
+  it('resetting a workspace forgets the import', () => {
+    const store = imported()
+    store.resetWorkspace()
+    expect(store.importProvenance).toBeNull()
+    expect(store.pendingReview.total).toBe(0)
+  })
+
+  it('dismissing an import keeps the schema it produced', () => {
+    const store = imported()
+    store.setPath(['colors', 'brand'], '#C8813D')
+    store.dismissImport()
+    expect(store.importProvenance).toBeNull()
+    expect(store.schema.colors.brand).toBe('#C8813D')
+  })
+})
+
+describe('applyImport — reactive inputs', () => {
+  it('accepts values read out of a ref, not just plain objects', async () => {
+    // The dialog reads the scan result out of a ref, so what reaches applyImport
+    // is a Vue reactive proxy. structuredClone throws DataCloneError on one, and
+    // the whole populate step silently failed because of it.
+    const { ref } = await import('vue')
+    const store = useDesignSystemStore()
+    const held = ref({
+      schema: structuredClone(defaultSchema),
+      provenance: {
+        repoFullName: 'acme/storefront',
+        branch: 'main',
+        commitSha: 'abc1234',
+        importSessionId: 'sess-1',
+        signals: [],
+        usedFallback: false,
+        unparseableLayers: [],
+        states: { colors: { primary: 'inferred' } },
+        scannedAt: 0,
+      },
+    })
+
+    expect(() =>
+      store.applyImport(held.value.schema, held.value.provenance as never),
+    ).not.toThrow()
+    expect(store.importProvenance?.repoFullName).toBe('acme/storefront')
+    expect(store.tokenStateFor('colors', 'primary')).toBe('inferred')
+  })
+})

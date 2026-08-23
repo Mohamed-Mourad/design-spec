@@ -4,9 +4,26 @@ import { storeToRefs } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import FrameworkSelector from '@/components/layout/FrameworkSelector.vue'
 import WorkspaceMenu from '@/components/layout/WorkspaceMenu.vue'
+import ImportBadge from '@/components/import/ImportBadge.vue'
+import { downloadBundle } from '@/utils/exportBundle'
 
 const store = useDesignSystemStore()
-const { schema, canUndo, canRedo } = storeToRefs(store)
+const { schema, canUndo, canRedo, outputFiles } = storeToRefs(store)
+
+const exporting = ref(false)
+const exportError = ref<string | null>(null)
+
+async function exportBundle() {
+  exporting.value = true
+  exportError.value = null
+  try {
+    await downloadBundle(schema.value, outputFiles.value)
+  } catch (e) {
+    exportError.value = e instanceof Error ? e.message : 'Export failed.'
+  } finally {
+    exporting.value = false
+  }
+}
 
 const editingName = ref(false)
 const nameInput = ref<HTMLInputElement | null>(null)
@@ -46,6 +63,8 @@ function commitName(e: Event) {
       </button>
     </div>
 
+    <ImportBadge />
+
     <div class="header__actions">
       <FrameworkSelector />
       <button
@@ -64,8 +83,14 @@ function commitName(e: Event) {
       >
         ↪
       </button>
-      <button class="header__export-btn" title="Export bundle">
-        Export
+      <button
+        class="header__export-btn"
+        data-testid="export-zip"
+        :disabled="exporting"
+        :title="exportError ?? 'Download design-spec.schema.json, DESIGN.md, SKILL.md and the framework outputs'"
+        @click="exportBundle"
+      >
+        {{ exporting ? 'Zipping…' : 'Export' }}
       </button>
     </div>
   </header>

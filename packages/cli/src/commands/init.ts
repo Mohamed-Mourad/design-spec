@@ -1,9 +1,13 @@
-// commands/init.ts — the flagship first-run: detect → synthesize → compile.
+// commands/init.ts — the flagship first-run: detect → scan → synthesize → compile.
 //
 // Branded banner → animated task list (detect, scan, synthesize, compile,
 // agent rules) → boxed summary of what was created and what to do next. Writes
 // design-spec.schema.json, DESIGN.md, SKILL.md, framework outputs, and injects
 // the managed block into agent rule files (never clobbering developer rules).
+//
+// Extraction runs through `@design-spec/compiler`'s shared engine — the same one
+// the cloud retrofit uses — plus the one thing only the CLI may do: evaluate the
+// project's own Tailwind config locally for byte-exact values.
 //
 // --yes runs fully non-interactive (CI-safe). Existing schema is preserved
 // unless --force.
@@ -15,16 +19,19 @@ import { basename, join, relative } from 'node:path'
 import { action } from '../run.js'
 import { findSchema, SCHEMA_FILE, saveSchema } from '../project.js'
 import { CliError, ExitCode } from '../errors.js'
-import { detectFramework, type Framework } from '../framework.js'
+import type { Framework } from '../framework.js'
+import { collectImportFiles } from '../scan.js'
 import { scanTailwind } from '../scanners/tailwind.js'
-import { scanCssFiles } from '../scanners/cssVars.js'
-import { scanFlutter } from '../scanners/flutter.js'
 import { synthesizeSchema } from '../synthesize.js'
 import { emit } from '../emit.js'
 import { injectAgentRules, type RuleInjection } from '../agentRules.js'
 import { splashContext } from '../branding.js'
-import type { ColorValue, DesignSystemSchema, DimensionValue } from '@design-spec/compiler'
-import { glob } from 'node:fs/promises'
+import type {
+  DesignSystemSchema,
+  ExtractionSummary,
+  ImportFile,
+  ResolvedTokens,
+} from '@design-spec/compiler'
 import * as ui from '../ui.js'
 
 interface InitFlags {
@@ -38,9 +45,12 @@ interface InitFlags {
 
 interface InitCtx {
   root: string
+  files: ImportFile[]
+  paths: string[]
+  resolved: ResolvedTokens
   frameworks: Framework[]
   signals: string[]
-  scanned: { colors: Record<string, ColorValue>; spacing: Record<string, DimensionValue>; rounded: Record<string, DimensionValue> }
+  summary: ExtractionSummary
   schema: DesignSystemSchema
   written: string[]
   rules: RuleInjection[]
@@ -65,6 +75,17 @@ function exportOverrides(flags: InitFlags): Partial<DesignSystemSchema['export']
   if (flags.prefix !== undefined) o.cssVariablePrefix = flags.prefix
   if (flags.fontLoading) o.fontLoading = flags.fontLoading as DesignSystemSchema['export']['fontLoading']
   return o
+}
+
+function requestedFrameworks(flags: InitFlags): Framework[] | undefined {
+  if (!flags.frameworks) return undefined
+  const list = flags.frameworks.split(',').map((s) => s.trim()).filter(Boolean) as Framework[]
+  return list.length ? list : undefined
+}
+
+/** "12 extracted · 5 inferred · 40 defaulted" — what to verify, at a glance. */
+function summaryLine(s: ExtractionSummary): string {
+  return `Tokens: ${s.extracted} extracted · ${s.inferred} inferred · ${s.defaulted} from defaults`
 }
 
 export function registerInit(program: Command): void {
@@ -102,39 +123,47 @@ export function registerInit(program: Command): void {
             {
               title: 'Detecting framework',
               task: async (c) => {
-                const det = await detectFramework(root)
-                c.frameworks = flags.frameworks
-                  ? (flags.frameworks.split(',').map((s) => s.trim()).filter(Boolean) as Framework[])
-                  : det.frameworks
-                c.signals = det.signals
+                const collected = await collectImportFiles(root)
+                c.files = collected.files
+                c.paths = collected.paths
               },
             },
             {
               title: 'Scanning existing tokens',
               task: async (c) => {
+                // The byte-exact layer: evaluating the project's own config is
+                // legal here (the developer's machine), never server-side.
                 const tw = await scanTailwind(root)
-                const cssFiles: string[] = []
-                for await (const f of glob('**/*.{css,scss}', { cwd: root })) {
-                  if (!/node_modules|dist|build/.test(f)) cssFiles.push(join(root, f))
+                c.resolved = {
+                  colors: tw.colors,
+                  spacing: tw.spacing,
+                  rounded: tw.rounded,
+                  screens: tw.screens,
+                  fontFamily: tw.fontFamily,
+                  fontSize: tw.fontSize,
+                  shadows: tw.shadows,
                 }
-                const css = await scanCssFiles(cssFiles.slice(0, 20))
-                const flutter = c.frameworks.includes('flutter') ? await scanFlutter(root) : { colors: {} }
-                c.scanned = {
-                  colors: { ...tw.colors, ...css.colors, ...flutter.colors },
-                  spacing: { ...tw.spacing },
-                  rounded: { ...tw.rounded },
-                }
+                if (tw.skipped) c.signals.push(`tailwind config: ${tw.skipped}`)
               },
             },
             {
               title: 'Synthesizing schema',
               task: async (c) => {
-                c.schema = synthesizeSchema({
+                const result = synthesizeSchema({
                   name: await projectName(root),
-                  frameworks: c.frameworks,
-                  scanned: c.scanned,
+                  frameworks: requestedFrameworks(flags),
+                  files: c.files,
+                  paths: c.paths,
+                  resolved: c.resolved,
                   exportOverrides: exportOverrides(flags),
                 })
+                c.schema = result.schema
+                c.frameworks = result.frameworks
+                c.summary = result.extraction.summary
+                c.signals.push(
+                  ...result.extraction.detection.signals,
+                  ...result.extraction.signals.map((s) => `${s.source}: ${s.message}`),
+                )
               },
             },
             {
@@ -151,7 +180,18 @@ export function registerInit(program: Command): void {
               },
             },
           ],
-          { root, frameworks: [], signals: [], scanned: { colors: {}, spacing: {}, rounded: {} }, schema: undefined as unknown as DesignSystemSchema, written: [], rules: [] },
+          {
+            root,
+            files: [],
+            paths: [],
+            resolved: {},
+            frameworks: [],
+            signals: [],
+            summary: { extracted: 0, inferred: 0, defaulted: 0 },
+            schema: undefined as unknown as DesignSystemSchema,
+            written: [],
+            rules: [],
+          },
         )
 
         ui.json({
@@ -160,11 +200,13 @@ export function registerInit(program: Command): void {
           frameworks: ctx.frameworks,
           written: ctx.written,
           rules: ctx.rules,
+          tokens: ctx.summary,
           signals: ctx.signals,
         })
 
         ui.box(ctx.schema.name, [
           `Frameworks: ${ctx.frameworks.join(', ')}`,
+          summaryLine(ctx.summary),
           '',
           'Created:',
           ...ctx.written.map((f) => `  • ${relative(root, join(root, f)) || f}`),

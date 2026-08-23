@@ -63,6 +63,44 @@ export {
 export type { Lab, Rgb } from './colorMatch.js'
 export { SCALE_GAP_FRACTION, SCALE_SNAP_CAP_PX, nearestScaleToken } from './scaleMatch.js'
 
+// Git Import / Retrofit extraction — static-only, no code evaluation. Shared by
+// the CLI (files off disk) and the web scanner (files harvested over the GitHub
+// Contents API), so both paths agree on what a repo's tokens are.
+export {
+  extractDesignSystem,
+  SEMANTIC_INFERENCE_MAX_DELTA_E,
+  SCALE_INFERENCE_TOLERANCE,
+} from './extract/index.js'
+export type { ExtractOptions, ResolvedTokens } from './extract/index.js'
+export { detectFramework } from './extract/detectFramework.js'
+export { normalizeColor, isColorValue } from './extract/color.js'
+export { parseStaticConfigObject } from './extract/staticJs.js'
+export type { JsValue, StaticParseResult } from './extract/staticJs.js'
+export { extractTailwindConfig, liftTailwindTheme } from './extract/tailwindConfig.js'
+export type { TailwindExtraction, TailwindTheme } from './extract/tailwindConfig.js'
+export {
+  extractCssCustomProps,
+  scanCssRules,
+  parseDeclarations,
+  classifyCssVar,
+  tokenKeyFor,
+  toDimension,
+} from './extract/cssCustomProps.js'
+export type { CssVarExtraction, CssVarGroup, CssRule } from './extract/cssCustomProps.js'
+export { parseFlutterColors } from './extract/flutterTheme.js'
+export type {
+  TokenState,
+  TokenStateMap,
+  ImportFile,
+  ImportFileKind,
+  ImportInput,
+  ImportExtraction,
+  ExtractionSignal,
+  ExtractionSummary,
+  SignalKind,
+  FrameworkDetection,
+} from './extract/types.js'
+
 // MCP semantic routing resolvers
 export {
   get_component_tokens,

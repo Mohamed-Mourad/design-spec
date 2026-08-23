@@ -9,6 +9,10 @@ async function initProject(dir: string): Promise<void> {
   await runCli(['init', '--yes'], dir)
 }
 
+// The seeded project's only declared color. init lifts it verbatim and infers it
+// into the `primary` semantic slot, so this is the hex `fix` can snap onto.
+const BRAND = '#FF5733'
+
 describe('compile / lint / status', () => {
   let dir: string
   beforeEach(async () => {
@@ -73,7 +77,7 @@ describe('fix', () => {
 
   it('rewrites an arbitrary Tailwind class to a token class in place', async () => {
     const file = join(dir, 'src', 'Hero.tsx')
-    await writeFile(file, 'export const Hero = () => <div className="text-[#2563EB]">hi</div>\n')
+    await writeFile(file, `export const Hero = () => <div className="text-[${BRAND}]">hi</div>\n`)
     const r = await runCli(['fix'], dir)
     expect(r.code).toBe(0)
     expect(await readFile(file, 'utf8')).toContain('text-primary')
@@ -81,7 +85,7 @@ describe('fix', () => {
 
   it('--dry-run/--plan previews the change without writing', async () => {
     const file = join(dir, 'src', 'Hero.tsx')
-    const original = 'const c = "#2563EB"\n'
+    const original = `const c = "${BRAND}"\n`
     await writeFile(file, original)
     const r = await runCli(['fix', '--dry-run', '--json'], dir)
     expect(r.code).toBe(0)
@@ -99,7 +103,7 @@ describe('fix', () => {
 
     // a real drift file the fixer SHOULD touch
     const src = join(dir, 'src', 'Hero.tsx')
-    await writeFile(src, 'const c = "#2563EB"\n')
+    await writeFile(src, `const c = "${BRAND}"\n`)
 
     const r = await runCli(['fix', '--json'], dir)
     expect(r.code).toBe(0)

@@ -1,6 +1,7 @@
 import { ref, computed, watch, watchEffect } from 'vue'
 import { defineStore } from 'pinia'
 import { compileDesignMd, compileSkillMd, compileAll } from '@design-spec/compiler'
+import type { ExtractionSignal, TokenState, TokenStateMap } from '@design-spec/compiler'
 import type { DesignSystemSchema } from '@/types/schema'
 import type { FileOutput, Framework } from '@/types/compiler'
 import { defaultSchema } from '@/defaults/schema'
@@ -9,8 +10,27 @@ const LEGACY_KEY = 'dsa-schema-v1' // single-schema storage, pre-workspaces
 const WS_LIST_KEY = 'dsa-workspaces-v1'
 const WS_ACTIVE_KEY = 'dsa-active-workspace-v1'
 const wsSchemaKey = (id: string) => `dsa-ws-${id}`
+const wsImportKey = (id: string) => `dsa-ws-import-${id}`
 const HISTORY_LIMIT = 50
 const TRACE_LIMIT = 100
+
+/**
+ * Where a workspace's tokens came from, when it was populated by scanning a
+ * repository. Provenance is workspace state, not schema state: the exported
+ * schema is identical whether it was hand-authored or imported.
+ */
+export interface ImportProvenance {
+  repoFullName: string
+  branch: string
+  commitSha: string
+  importSessionId: string
+  /** What the scan found, skipped, and inferred — shown in the import report. */
+  signals: ExtractionSignal[]
+  usedFallback: boolean
+  unparseableLayers: string[]
+  states: TokenStateMap
+  scannedAt: number
+}
 
 export interface ActionEntry {
   ts: number
@@ -91,6 +111,9 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
 
   // ── Core state ──
   const schema = ref<DesignSystemSchema>(loadSchemaFor(wsInit.activeId))
+  const importProvenance = ref<ImportProvenance | null>(
+    readJson<ImportProvenance>(wsImportKey(wsInit.activeId)),
+  )
   const activeEditorTab = ref<string>('colors')
   // The component selected for editing (from the preview or the Components tab).
   const selectedComponent = ref<string | null>(null)
@@ -187,6 +210,86 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   const skillMd = computed<string>(() => compileSkillMd(schema.value))
   const outputFiles = computed<FileOutput[]>(() => compileAll(schema.value))
 
+  // ── Import provenance (Extracted / Verify / Review chips) ──
+
+  /**
+   * Groups are dotted so one flat map covers nested schema groups. Longest match
+   * wins, so `darkMode.colors` is never mistaken for `darkMode`.
+   */
+  function groupAndKeyFor(path: (string | number)[]): { group: string; key: string } | null {
+    const states = importProvenance.value?.states
+    if (!states || path.length < 2) return null
+    for (let depth = Math.min(path.length - 1, 3); depth >= 1; depth--) {
+      const group = path.slice(0, depth).join('.')
+      if (states[group]) return { group, key: String(path[depth]) }
+    }
+    return null
+  }
+
+  /** The provenance of one token, or null when this workspace was not imported. */
+  function tokenStateFor(group: string, key: string): TokenState | null {
+    return importProvenance.value?.states[group]?.[key] ?? null
+  }
+
+  /**
+   * Drop a token's flag. Called when the user edits or explicitly confirms it —
+   * a human has now looked at the value, which is exactly what Verify/Review
+   * were asking for. Never reintroduces a flag.
+   */
+  function clearTokenState(group: string, key: string) {
+    const states = importProvenance.value?.states
+    if (!states?.[group]?.[key]) return
+    delete states[group][key]
+    if (Object.keys(states[group]).length === 0) delete states[group]
+    persistImport()
+  }
+
+  /** Tokens still asking for a look: inferred (Verify) plus defaulted (Review). */
+  const pendingReview = computed(() => {
+    let inferred = 0
+    let defaulted = 0
+    for (const tokens of Object.values(importProvenance.value?.states ?? {})) {
+      for (const state of Object.values(tokens)) {
+        if (state === 'inferred') inferred++
+        else if (state === 'defaulted') defaulted++
+      }
+    }
+    return { inferred, defaulted, total: inferred + defaulted }
+  })
+
+  function persistImport() {
+    const key = wsImportKey(activeWorkspaceId.value)
+    if (importProvenance.value) localStorage.setItem(key, JSON.stringify(importProvenance.value))
+    else localStorage.removeItem(key)
+    // Reassign so computed consumers see the mutation.
+    importProvenance.value = importProvenance.value ? { ...importProvenance.value } : null
+  }
+
+  /**
+   * Replace the active workspace with a scanned schema and its provenance.
+   *
+   * This is the end of the import flow, and it never partially applies: the
+   * extractor always returns a complete schema, so there is no state where the
+   * workspace is left half-populated waiting for the user to fix something.
+   */
+  function applyImport(imported: DesignSystemSchema, provenance: ImportProvenance) {
+    logAction('applyImport', [provenance.repoFullName, provenance.branch])
+    // A JSON round-trip, not structuredClone: callers reasonably hand us values
+    // read out of a ref, and structuredClone throws DataCloneError on a Vue
+    // reactive proxy. Both shapes are plain JSON by contract.
+    schema.value = JSON.parse(JSON.stringify(imported)) as DesignSystemSchema
+    importProvenance.value = JSON.parse(JSON.stringify(provenance)) as ImportProvenance
+    persistImport()
+    selectedComponent.value = null
+    resetHistory()
+  }
+
+  /** Forget an import's provenance, keeping the schema it produced. */
+  function dismissImport() {
+    importProvenance.value = null
+    persistImport()
+  }
+
   // ── Persistence (per active workspace) ──
   watchEffect(() => {
     localStorage.setItem(wsSchemaKey(activeWorkspaceId.value), JSON.stringify(schema.value))
@@ -214,6 +317,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     persistActive() // flush current edits before loading another
     activeWorkspaceId.value = id
     schema.value = loadSchemaFor(id)
+    importProvenance.value = readJson<ImportProvenance>(wsImportKey(id))
     selectedComponent.value = null
     resetHistory()
   }
@@ -257,6 +361,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
 
   function deleteWorkspace(id: string) {
     localStorage.removeItem(wsSchemaKey(id))
+    localStorage.removeItem(wsImportKey(id))
     const remaining = workspaces.value.filter((w) => w.id !== id)
     if (remaining.length === 0) {
       // Never leave zero workspaces — recreate a fresh default.
@@ -265,6 +370,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
       localStorage.setItem(wsSchemaKey(nid), JSON.stringify(defaultSchema))
       activeWorkspaceId.value = nid
       schema.value = structuredClone(defaultSchema)
+      importProvenance.value = null
       selectedComponent.value = null
       resetHistory()
       return
@@ -273,6 +379,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     if (activeWorkspaceId.value === id) {
       activeWorkspaceId.value = remaining[0].id
       schema.value = loadSchemaFor(remaining[0].id)
+      importProvenance.value = readJson<ImportProvenance>(wsImportKey(remaining[0].id))
       selectedComponent.value = null
       resetHistory()
     }
@@ -282,16 +389,21 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
   function resetWorkspace() {
     logAction('resetWorkspace', [])
     schema.value = structuredClone(defaultSchema)
+    importProvenance.value = null
+    persistImport()
     selectedComponent.value = null
     resetHistory()
   }
 
   // ── Actions ──
+  // Every write clears the edited token's import flag: a human has now seen the
+  // value, which is precisely what Verify/Review were asking for.
   function updateToken(group: keyof DesignSystemSchema, key: string, value: unknown) {
     logAction('updateToken', [group, key])
     const target = schema.value[group]
     if (target !== null && typeof target === 'object' && !Array.isArray(target)) {
       ;(target as Record<string, unknown>)[key] = value
+      clearTokenState(String(group), key)
       snapshot()
     }
   }
@@ -310,6 +422,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     const target = schema.value[group]
     if (target !== null && typeof target === 'object' && !Array.isArray(target)) {
       delete (target as Record<string, unknown>)[key]
+      clearTokenState(String(group), key)
       snapshot()
     }
   }
@@ -338,6 +451,8 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     const parent = resolveParent(path, true)
     if (!parent) return
     parent[path[path.length - 1]] = value
+    const target = groupAndKeyFor(path)
+    if (target) clearTokenState(target.group, target.key)
     snapshot()
   }
 
@@ -348,6 +463,8 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     const parent = resolveParent(path)
     if (!parent) return
     delete parent[path[path.length - 1]]
+    const target = groupAndKeyFor(path)
+    if (target) clearTokenState(target.group, target.key)
     snapshot()
   }
 
@@ -392,6 +509,12 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     renameWorkspace,
     deleteWorkspace,
     resetWorkspace,
+    importProvenance,
+    pendingReview,
+    tokenStateFor,
+    clearTokenState,
+    applyImport,
+    dismissImport,
     activeEditorTab,
     selectedComponent,
     selectComponent,
