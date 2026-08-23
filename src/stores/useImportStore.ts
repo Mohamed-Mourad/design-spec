@@ -30,6 +30,7 @@ import {
   type GitHubRepo,
   type ImportScan,
   type PullRequestResult,
+  type PushResult,
   type ScanQuota,
 } from '@/utils/api'
 import { trackEvent } from '@/utils/telemetry'
@@ -70,6 +71,9 @@ export const useImportStore = defineStore('gitImport', () => {
   const selectedBranch = ref<string | null>(null)
   const result = ref<ScanResult | null>(null)
   const pullRequest = ref<PullRequestResult | null>(null)
+  const tokenPushResult = ref<PushResult | null>(null)
+  const tokenPushError = ref<string | null>(null)
+  const pushingTokens = ref(false)
 
   const available = computed(() => apiConfigured())
   const connected = computed(() => status.value?.connected === true)
@@ -265,6 +269,61 @@ export const useImportStore = defineStore('gitImport', () => {
     }
   }
 
+  /**
+   * The designer loop: push the workspace's compiled bundle back to the
+   * repository it was imported from, as a pull request.
+   *
+   * Kept on its own state rather than sharing the retrofit's, because the two
+   * run from different places — the retrofit from the import dialog, this from
+   * the workspace header, potentially long after — and one must never clear the
+   * other's result out from under the user.
+   *
+   * The session id comes from the caller because the workspace outlives this
+   * store's in-memory scan: provenance is persisted per workspace, so a designer
+   * can reload, edit for an hour, and still push to the repo they imported.
+   */
+  async function pushTokenUpdate(
+    sessionId: string,
+    files: { path: string; content: string }[],
+  ): Promise<PushResult | null> {
+    pushingTokens.value = true
+    tokenPushError.value = null
+    try {
+      const pushed = await api.pushTokens(sessionId, files)
+      tokenPushResult.value = pushed
+      trackEvent('github_token_push', { files: files.length, changed_tokens: pushed.changed_tokens })
+      return pushed
+    } catch (e) {
+      tokenPushError.value = pushFailure(e)
+      return null
+    } finally {
+      pushingTokens.value = false
+    }
+  }
+
+  /**
+   * Push failures are the one place where the raw contract message is not the
+   * best thing to show: each one has an obvious next move, and saying it is more
+   * useful than restating the status.
+   */
+  function pushFailure(e: unknown): string {
+    if (!(e instanceof ApiError)) {
+      return e instanceof Error ? e.message : 'Something went wrong.'
+    }
+    switch (e.status) {
+      case 409:
+        return 'The branch moved since this workspace was imported. Re-import it to push these edits.'
+      case 422:
+        return 'No token changes to push — the repository already has these values.'
+      case 403:
+        if (e.message === 'pro plan required') return 'Pushing a pull request needs a Pro Team plan.'
+        if (e.message === 'push access not granted') return 'Grant repository write access to push.'
+        return e.message
+      default:
+        return e.message
+    }
+  }
+
   /** The schema a completed scan produced, for the caller to apply. */
   const scannedSchema = computed<DesignSystemSchema | null>(
     () => (result.value?.extraction.schema as DesignSystemSchema | undefined) ?? null,
@@ -284,6 +343,9 @@ export const useImportStore = defineStore('gitImport', () => {
     selectedBranch,
     result,
     pullRequest,
+    tokenPushResult,
+    tokenPushError,
+    pushingTokens,
     available,
     connected,
     canPush,
@@ -296,6 +358,7 @@ export const useImportStore = defineStore('gitImport', () => {
     selectRepo,
     scan,
     pushRetrofit,
+    pushTokenUpdate,
     reset,
   }
 })

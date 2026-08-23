@@ -19,7 +19,7 @@ const { result, canPush, busy, pullRequest } = storeToRefs(imports)
 const files = computed(() => {
   const schema = result.value?.extraction.schema as DesignSystemSchema | undefined
   if (!schema) return []
-  return compileAll(schema).map((f) => ({ path: f.path, content: f.content }))
+  return compileAll(schema).map((f) => ({ path: f.filename, content: f.content }))
 })
 
 const askedForAccess = ref(false)

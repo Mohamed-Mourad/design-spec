@@ -55,7 +55,7 @@ function scanResponse(overrides: Record<string, unknown> = {}) {
 
 /** Route stubbed responses by URL suffix. */
 function stubFetch(routes: Record<string, { status: number; body: unknown }>) {
-  const fn = vi.fn(async (input: RequestInfo | URL) => {
+  const fn = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
     const url = String(input)
     const match = Object.keys(routes).find((suffix) => url.includes(suffix))
     if (!match) return new Response('{"error":"unrouted"}', { status: 404 })
@@ -231,6 +231,76 @@ describe('useImportStore', () => {
     expect(design.tokenStateFor('colors', 'brand')).toBe('extracted')
     expect(design.tokenStateFor('colors', 'border')).toBe('inferred')
     expect(design.pendingReview.total).toBeGreaterThan(0)
+  })
+
+  // ── the designer push ──────────────────────────────────────────────────────
+
+  const PUSHED = [{ path: 'design-spec.schema.json', content: '{}' }, { path: 'DESIGN.md', content: '# x' }]
+
+  it('pushes a token update and reports the pull request it opened', async () => {
+    const fetchMock = stubFetch({
+      '/github/push': {
+        status: 201,
+        body: {
+          pull_request_url: 'https://github.com/octocat/hello-world/pull/43',
+          pull_request_number: 43,
+          branch: 'design-spec/token-update-1787654321',
+          commit_sha: 'd4e5f67',
+          changed_tokens: 3,
+        },
+      },
+    })
+    const imports = useImportStore()
+
+    const pushed = await imports.pushTokenUpdate('sess-1', PUSHED)
+
+    expect(pushed?.pull_request_number).toBe(43)
+    expect(pushed?.changed_tokens).toBe(3)
+    expect(imports.tokenPushResult).toEqual(pushed)
+    expect(imports.tokenPushError).toBeNull()
+
+    // The session is the whole address: no repo, no branch, and above all no
+    // head branch travels from here.
+    const call = fetchMock.mock.calls.find(([url]) => String(url).includes('/github/push'))
+    const body = JSON.parse(String((call![1] as RequestInit).body))
+    expect(body).toEqual({ import_session_id: 'sess-1', files: PUSHED })
+  })
+
+  it.each([
+    [409, 'branch has moved', /Re-import it/],
+    [422, 'no changes to push', /No token changes/],
+    [403, 'pro plan required', /Pro Team plan/],
+    [403, 'push access not granted', /write access/],
+  ])('turns a %i push refusal into the next move', async (status, error, expected) => {
+    stubFetch({ '/github/push': { status, body: { error } } })
+    const imports = useImportStore()
+
+    const pushed = await imports.pushTokenUpdate('sess-1', PUSHED)
+
+    expect(pushed).toBeNull()
+    expect(imports.tokenPushError).toMatch(expected)
+    expect(imports.tokenPushResult).toBeNull()
+  })
+
+  it('keeps the retrofit and designer pushes on separate state', async () => {
+    stubFetch({
+      '/github/push': {
+        status: 201,
+        body: {
+          pull_request_url: 'https://github.com/octocat/hello-world/pull/43',
+          pull_request_number: 43,
+          branch: 'design-spec/token-update-1787654321',
+          commit_sha: 'd4e5f67',
+          changed_tokens: 1,
+        },
+      },
+    })
+    const imports = useImportStore()
+
+    await imports.pushTokenUpdate('sess-1', PUSHED)
+
+    expect(imports.tokenPushResult).not.toBeNull()
+    expect(imports.pullRequest).toBeNull()
   })
 
   it('stays inert when no backend is configured', async () => {
