@@ -464,3 +464,113 @@ describe('useFigmaStore — following a linked file', () => {
     }
   })
 })
+
+describe('useFigmaStore — staging a change back to Figma', () => {
+  const stagedBody = {
+    id: 'chg-1',
+    user_id: 'octocat',
+    file_key: 'abc123DEF456',
+    status: 'pending',
+    payload: { schema_name: 'Acme', changes: [{ path: 'colors.primary', new: '#FF0000' }] },
+    created_at: '2026-08-23T10:00:00Z',
+    updated_at: '2026-08-23T10:00:00Z',
+    resolved_at: null,
+  }
+
+  function stagingRoutes(over: Record<string, Route> = {}): Record<string, Route> {
+    return {
+      '/staging/': { status: 201, body: stagedBody },
+      ...proRoutes(),
+      ...over,
+    }
+  }
+
+  async function linked(over: Record<string, Route> = {}) {
+    stubFetch(stagingRoutes(over))
+    signIn()
+    const figma = useFigmaStore()
+    figma.rememberPat(PAT)
+    figma.fileInput = FILE_URL
+    await figma.init()
+    await figma.runImport()
+    figma.applyToWorkspace()
+    return figma
+  }
+
+  it('has nothing to stage until the workspace diverges from the file', async () => {
+    const figma = await linked()
+    expect(figma.pendingDelta.changes).toEqual([])
+    expect(figma.canStage).toBe(false)
+  })
+
+  it('stages what changed since the tokens came from Figma', async () => {
+    const design = useDesignSystemStore()
+    const figma = await linked()
+    design.updateToken('colors', 'brand-primary', '#FF0000')
+
+    expect(figma.pendingDelta.changes).toEqual([
+      { path: 'colors.brand-primary', old: '#3366E6', new: '#FF0000' },
+    ])
+    expect(figma.canStage).toBe(true)
+
+    const change = await figma.stageChanges()
+    expect(change?.status).toBe('pending')
+
+    const post = calls.find((c) => c.url.includes('/staging/') && c.init?.method === 'POST')
+    expect(post?.url).toBe(`${API}/api/v1/staging/octocat/abc123DEF456`)
+    const body = JSON.parse(String(post?.init?.body))
+    expect(body.schema_name).toBe(design.schema.name)
+    expect(body.changes).toEqual([{ path: 'colors.brand-primary', old: '#3366E6', new: '#FF0000' }])
+    expect(body.groups).toEqual(['colors'])
+  })
+
+  it('never sends the Figma token with a staged change', async () => {
+    const design = useDesignSystemStore()
+    const figma = await linked()
+    design.updateToken('colors', 'brand-primary', '#FF0000')
+    await figma.stageChanges()
+
+    const post = calls.find((c) => c.url.includes('/staging/') && c.init?.method === 'POST')
+    expect(JSON.stringify(post)).not.toContain(PAT)
+  })
+
+  it('does not queue the same change twice while it waits for approval', async () => {
+    const design = useDesignSystemStore()
+    const figma = await linked()
+    design.updateToken('colors', 'brand-primary', '#FF0000')
+    await figma.stageChanges()
+
+    expect(figma.pendingDelta.changes).toEqual([])
+    expect(figma.canStage).toBe(false)
+  })
+
+  it('needs Pro', async () => {
+    stubFetch(figmaRoutes())
+    const figma = useFigmaStore()
+    figma.rememberPat(PAT)
+    figma.fileInput = FILE_URL
+    await figma.init()
+    await figma.runImport()
+    figma.applyToWorkspace()
+
+    const design = useDesignSystemStore()
+    design.updateToken('colors', 'brand-primary', '#FF0000')
+    expect(figma.canStage).toBe(false)
+  })
+
+  it('says what to do when the queue is full', async () => {
+    const design = useDesignSystemStore()
+    const figma = await linked({ '/staging/': { status: 409, body: { error: 'too many changes already pending for this file' } } })
+    design.updateToken('colors', 'brand-primary', '#FF0000')
+
+    expect(await figma.stageChanges()).toBeNull()
+    expect(figma.stageError).toContain('waiting for approval')
+  })
+
+  it('reads the queue for the linked file', async () => {
+    const figma = await linked()
+    stubFetch(stagingRoutes({ '/staging/': { status: 200, body: { data: [stagedBody] } } }))
+    await figma.loadQueue()
+    expect(figma.queue).toHaveLength(1)
+  })
+})

@@ -12,7 +12,16 @@
 
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { api, ApiError, apiConfigured, githubLogin, sessionToken } from '@/utils/api'
+import { diffTokens, isEmptyDelta, type TokenDelta } from '@design-spec/compiler'
+import {
+  api,
+  ApiError,
+  apiConfigured,
+  githubLogin,
+  sessionToken,
+  staging,
+  type StagedChange,
+} from '@/utils/api'
 import { clearFigmaPat, figmaPat, setFigmaPat } from '@/utils/figma/pat'
 import { fetchFileMeta, FigmaError, importFromFigma } from '@/utils/figma/client'
 import { figmaFileKey, type FigmaImport, type FigmaMergeMode } from '@/utils/figma/map'
@@ -30,6 +39,16 @@ export interface FigmaLink {
 }
 
 const linkKey = (workspaceId: string) => `dsa-ws-figma-${workspaceId}`
+
+/**
+ * The workspace as it stood the moment Figma's tokens landed in it.
+ *
+ * Staging a change means answering "what have I changed since I took these
+ * tokens from the file", and that needs the before. Keeping it beside the link
+ * rather than inside it means the link stays a small record that is read on
+ * every badge render, while this is read only when something is staged.
+ */
+const baselineKey = (workspaceId: string) => `dsa-ws-figma-base-${workspaceId}`
 
 export const useFigmaStore = defineStore('figma', () => {
   const design = useDesignSystemStore()
@@ -53,6 +72,13 @@ export const useFigmaStore = defineStore('figma', () => {
   const changeAvailable = ref(false)
   const remoteVersion = ref<string | null>(null)
   let pollTimer: ReturnType<typeof setInterval> | undefined
+
+  /** The workspace as Figma left it — the "before" of anything staged back. */
+  const baseline = ref<unknown>(readBaseline(design.activeWorkspaceId))
+  const staging_ = ref(false)
+  const stageError = ref<string | null>(null)
+  const staged = ref<StagedChange | null>(null)
+  const queue = ref<StagedChange[]>([])
 
   const hasPat = computed(() => pat.value.trim().length > 0)
   const fileKey = computed(() => figmaFileKey(fileInput.value))
@@ -78,11 +104,34 @@ export const useFigmaStore = defineStore('figma', () => {
     }
   }
 
+  function readBaseline(workspaceId: string): unknown {
+    try {
+      const raw = localStorage.getItem(baselineKey(workspaceId))
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
+    }
+  }
+
+  function writeBaseline(schema: unknown): void {
+    baseline.value = schema
+    try {
+      const key = baselineKey(design.activeWorkspaceId)
+      if (schema) localStorage.setItem(key, JSON.stringify(schema))
+      else localStorage.removeItem(key)
+    } catch {
+      /* private mode — staging will simply have nothing to diff against */
+    }
+  }
+
   /** Re-read the link after a workspace switch; each workspace has its own file. */
   function syncWorkspace(): void {
     link.value = readLink(design.activeWorkspaceId)
+    baseline.value = readBaseline(design.activeWorkspaceId)
     changeAvailable.value = false
     remoteVersion.value = null
+    staged.value = null
+    stageError.value = null
   }
 
   // ── the token ──────────────────────────────────────────────────────────────
@@ -182,6 +231,10 @@ export const useFigmaStore = defineStore('figma', () => {
     })
     changeAvailable.value = false
     remoteVersion.value = meta.version
+    // The workspace now agrees with the file; that agreement is the "before"
+    // any future staged change is measured against.
+    writeBaseline(JSON.parse(JSON.stringify(design.schema)))
+    staged.value = null
     trackEvent('figma_import_apply', { mode: mergeMode.value, tokens: result.counts.tokens })
     return true
   }
@@ -191,7 +244,87 @@ export const useFigmaStore = defineStore('figma', () => {
     stopWatching()
     changeAvailable.value = false
     remoteVersion.value = null
+    staged.value = null
+    queue.value = []
+    writeBaseline(null)
     writeLink(null)
+  }
+
+  // ── staging back to Figma ──────────────────────────────────────────────────
+
+  /**
+   * What this workspace has changed since it took its tokens from the file.
+   *
+   * The diff runs against the shared `diffTokens` from @design-spec/compiler —
+   * the same function the plugin reads the result with and the backend mirrors
+   * for pull-request bodies. One definition of "changed", three readers.
+   */
+  const pendingDelta = computed<TokenDelta>(() => diffTokens(baseline.value, design.schema))
+
+  const canStage = computed(
+    () => isPro.value && link.value !== null && !isEmptyDelta(pendingDelta.value),
+  )
+
+  /**
+   * Queue the delta for a designer to approve inside Figma.
+   *
+   * Nothing here touches the file. The API stores an intent; the plugin renders
+   * it, a person decides, and the plugin — inside Figma's own context — is what
+   * writes to the canvas (architecture-plan.md §19.1).
+   */
+  async function stageChanges(): Promise<StagedChange | null> {
+    const current = link.value
+    const user = githubLogin()
+    if (!current || !user || isEmptyDelta(pendingDelta.value)) return null
+
+    staging_.value = true
+    stageError.value = null
+    try {
+      const change = await staging.stage(user, current.fileKey, {
+        schema_name: design.schema.name,
+        ...pendingDelta.value,
+      })
+      staged.value = change
+      // Move the baseline forward so a second click does not queue the same
+      // change again while the first is still waiting for a designer.
+      writeBaseline(JSON.parse(JSON.stringify(design.schema)))
+      trackEvent('figma_stage_change', { changes: pendingDelta.value.changes.length })
+      return change
+    } catch (e) {
+      stageError.value = stageFailure(e)
+      return null
+    } finally {
+      staging_.value = false
+    }
+  }
+
+  /** Read what is still waiting on a designer, for the button's own status. */
+  async function loadQueue(): Promise<void> {
+    const current = link.value
+    const user = githubLogin()
+    if (!current || !user || !apiConfigured() || !sessionToken()) return
+    try {
+      queue.value = (await staging.list(user, current.fileKey)).data
+    } catch {
+      /* the queue is a status line, not a feature — a failed read stays quiet */
+    }
+  }
+
+  function stageFailure(e: unknown): string {
+    if (!(e instanceof ApiError)) {
+      return e instanceof Error ? e.message : 'Something went wrong.'
+    }
+    switch (e.status) {
+      case 403:
+        return 'Staging a change for Figma approval needs a Pro Team plan.'
+      case 409:
+        return 'Too many changes are already waiting for approval in that file.'
+      case 413:
+      case 422:
+        return 'That is too big a change to stage in one go. Push part of it first.'
+      default:
+        return e.message
+    }
   }
 
   // ── change detection ───────────────────────────────────────────────────────
@@ -290,6 +423,12 @@ export const useFigmaStore = defineStore('figma', () => {
     link,
     changeAvailable,
     remoteVersion,
+    pendingDelta,
+    canStage,
+    staging: staging_,
+    stageError,
+    staged,
+    queue,
     hasPat,
     fileKey,
     canImport,
@@ -302,6 +441,8 @@ export const useFigmaStore = defineStore('figma', () => {
     runImport,
     applyToWorkspace,
     unlink,
+    stageChanges,
+    loadQueue,
     checkForChange,
     startWatching,
     stopWatching,
