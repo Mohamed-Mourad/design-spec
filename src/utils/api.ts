@@ -342,6 +342,86 @@ export const staging = {
     ),
 }
 
+// ── the feature board (mirrors docs/feature-requests-contract.md) ────────────
+
+export type FeatureStatus = 'open' | 'planned' | 'in-progress' | 'done' | 'declined'
+
+export interface FeatureRequest {
+  id: string
+  title: string
+  description: string
+  status: FeatureStatus
+  /** The sum of the weights cast, not the number of voters. */
+  vote_count: number
+  author: string
+  /** The caller's own vote, or null — including when there is no session. */
+  viewer_vote: { weight: number; created_at: string } | null
+  /** Only present on a similarity suggestion: cosine similarity in [0, 1]. */
+  similarity?: number
+  created_at: string
+  updated_at: string
+}
+
+export interface FeatureVote {
+  feature_request_id: string
+  weight: number
+  tier: 'free' | 'pro'
+  /** The feature's new total, so an optimistic update can settle against it. */
+  vote_count: number
+  created_at: string
+}
+
+/**
+ * The dedup probe's answer.
+ *
+ * `dedup_available: false` means suggestions could not be computed — either the
+ * deployment has no embedding provider or the provider failed. It is never a
+ * reason to block a submit; the form is simply shown without suggestions.
+ */
+export interface SimilarFeatures {
+  data: FeatureRequest[]
+  threshold: number
+  dedup_available: boolean
+}
+
+/**
+ * Read the board without a session.
+ *
+ * Uses `publicRequest` rather than `request` for the same reason `/p/{slug}`
+ * does: a stranger reading the roadmap has no session to attach, and a stale
+ * one must not be destroyed just because they opened it. The signed-in board
+ * goes through `request` so `viewer_vote` comes back filled in.
+ */
+export const features = {
+  board: (opts: { cursor?: string; status?: FeatureStatus; limit?: number } = {}) => {
+    const params = new URLSearchParams()
+    if (opts.cursor) params.set('cursor', opts.cursor)
+    if (opts.status) params.set('status', opts.status)
+    if (opts.limit) params.set('limit', String(opts.limit))
+    const qs = params.toString()
+    const path = `/feature-requests${qs ? `?${qs}` : ''}`
+    return sessionToken()
+      ? request<Collection<FeatureRequest>>(path)
+      : publicRequest<Collection<FeatureRequest>>(path)
+  },
+
+  similar: (q: string) =>
+    request<SimilarFeatures>(`/feature-requests/similar?q=${encodeURIComponent(q)}`),
+
+  file: (title: string, description: string) =>
+    request<FeatureRequest>('/feature-requests', {
+      method: 'POST',
+      body: { title, description },
+    }),
+
+  /**
+   * Cast a vote. Deliberately sends no body: the weight comes from the account's
+   * plan, resolved server-side, and the API rejects a body that carries one.
+   */
+  vote: (id: string) =>
+    request<FeatureVote>(`/feature-requests/${encodeURIComponent(id)}/votes`, { method: 'POST' }),
+}
+
 // ── the portfolio layer (mirrors docs/proposals-contract.md) ─────────────────
 
 export interface Proposal {
