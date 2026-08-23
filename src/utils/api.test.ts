@@ -19,7 +19,7 @@ const API = 'https://api.test'
 
 function stub(status: number, body: unknown) {
   const fn = vi.fn(
-    async () =>
+    async (_input: RequestInfo | URL, _init?: RequestInit) =>
       new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }),
   )
   vi.stubGlobal('fetch', fn)

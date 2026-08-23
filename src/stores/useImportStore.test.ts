@@ -55,7 +55,7 @@ function scanResponse(overrides: Record<string, unknown> = {}) {
 
 /** Route stubbed responses by URL suffix. */
 function stubFetch(routes: Record<string, { status: number; body: unknown }>) {
-  const fn = vi.fn(async (input: RequestInfo | URL) => {
+  const fn = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
     const url = String(input)
     const match = Object.keys(routes).find((suffix) => url.includes(suffix))
     if (!match) return new Response('{"error":"unrouted"}', { status: 404 })
