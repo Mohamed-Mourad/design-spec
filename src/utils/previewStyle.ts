@@ -125,3 +125,22 @@ export function resolveComponentStyle(
   }
   return { style, hidden }
 }
+
+/**
+ * The schema's tokens as CSS custom properties. Both the workspace center panel
+ * and the bento preview render through these, so a token edit moves every
+ * surface at once — and neither has to know how a shadow token serialises.
+ */
+export function schemaCssVars(schema: DesignSystemSchema, dark = false): Record<string, string> {
+  const vars: Record<string, string> = {}
+  const overrides = dark ? schema.darkMode.colors : {}
+  for (const [k, v] of Object.entries(schema.colors)) {
+    vars[`--color-${k}`] = (overrides[k] as string | undefined) ?? v
+  }
+  for (const [k, v] of Object.entries(schema.spacing)) vars[`--spacing-${k}`] = String(v)
+  for (const [k, v] of Object.entries(schema.rounded)) vars[`--rounded-${k}`] = String(v)
+  for (const [k, v] of Object.entries(schema.shadows)) {
+    vars[`--shadow-${k}`] = Array.isArray(v.value) ? v.value.join(', ') : v.value
+  }
+  return vars
+}
