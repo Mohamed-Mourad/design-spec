@@ -1,6 +1,7 @@
 import { computed } from 'vue'
 import type { CSSProperties } from 'vue'
 import { storeToRefs } from 'pinia'
+import { orderBreakpoints } from '@design-spec/compiler'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import { groupStyle as toGroupStyle, refToVar, resolveComponentStyle } from '@/utils/previewStyle'
 
@@ -74,8 +75,21 @@ export function usePreviewKit() {
     return v === undefined || v === null ? fallback : (v as T)
   }
 
+  /**
+   * Whether the viewport reaches the blueprint's layout breakpoint — the first
+   * responsive override that carries a `layout` (e.g. Navbar `md`: links inline).
+   * Below it the preview renders the mobile-first base layout (collapsed menu,
+   * stacked table, bottom sheet). Editing that override moves the switch point.
+   */
+  function layoutReached(n: string): boolean {
+    const layers = orderBreakpoints(schema.value, bpOf(n)?.responsive).filter((l) => l.layer.layout)
+    if (layers.length === 0) return true
+    return layers.some((l) => l.minWidth !== null && viewportWidth.value >= parseFloat(l.minWidth))
+  }
+
   return {
     schema,
+    layoutReached,
     viewportWidth: computed(() => viewportWidth.value),
     bpOf,
     group,

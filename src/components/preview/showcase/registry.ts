@@ -9,6 +9,9 @@ import DropdownPreview from './DropdownPreview.vue'
 import RadioPreview from './RadioPreview.vue'
 import NavbarPreview from './NavbarPreview.vue'
 import SidebarPreview from './SidebarPreview.vue'
+import TabsPreview from './TabsPreview.vue'
+import BreadcrumbsPreview from './BreadcrumbsPreview.vue'
+import PaginationPreview from './PaginationPreview.vue'
 import GenericPreview from './GenericPreview.vue'
 
 // Blueprint name → its showcase renderer. Each renderer takes `PreviewProps`
@@ -26,6 +29,9 @@ const PREVIEWS: Record<string, Component> = {
   Radio: RadioPreview,
   Navbar: NavbarPreview,
   Sidebar: SidebarPreview,
+  Tabs: TabsPreview,
+  Breadcrumbs: BreadcrumbsPreview,
+  Pagination: PaginationPreview,
 }
 
 export function previewFor(name: string): Component {

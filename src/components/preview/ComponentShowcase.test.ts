@@ -51,13 +51,14 @@ describe('ComponentShowcase — responsive preview', () => {
   it('renders sidebar menu-item icons when the itemIcon group is enabled', () => {
     const store = useDesignSystemStore()
     expect(store.schema.componentBlueprints.Sidebar.tokens.itemIcon).toBeFalsy()
+    // Expanded (desktop): item icons appear only with the suggestion enabled.
     const before = mount(ComponentShowcase)
-    expect(before.get('[data-testid="preview-Sidebar"]').find('svg').exists()).toBe(false)
+    expect(before.get('[data-testid="preview-Sidebar"]').find('.showcase__side-item svg').exists()).toBe(false)
 
     store.setPath(['componentBlueprints', 'Sidebar', 'tokens', 'itemIcon'], { textColor: '{colors.primary}', size: '16px' })
     const after = mount(ComponentShowcase)
     const item = after.get('[data-testid="preview-Sidebar"]')
-    expect(item.find('svg').exists()).toBe(true)
+    expect(item.find('.showcase__side-item svg').exists()).toBe(true)
   })
 
   it('applies alert icon alignment + vertical separator from config', () => {

@@ -141,6 +141,8 @@ function styleFor(name: string, vr: VariantRender): CSSProperties {
   flex-direction: column;
   gap: 6px;
   align-items: flex-start;
+  min-width: 0;
+  max-width: 100%;
 }
 .showcase__variant-label {
   font-family: var(--font-sans);
