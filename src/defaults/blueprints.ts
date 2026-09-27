@@ -1,9 +1,13 @@
+import { tier2Blueprints } from '@design-spec/compiler'
 import type { ComponentBlueprint } from '@/types/schema'
 
 // Tier 1 component blueprints, pre-loaded into the default schema. Each carries
 // base style tokens (referenced via {token} so edits cascade) plus, where it
 // matters, mobile-first responsive overrides. These drive SKILL.md, the code
 // stubs, and the live showcase.
+//
+// Tier 2 (Navbar, Sidebar, Tabs, Table, Drawer, …) ships from the compiler so
+// the CLI and the golden tests read the same copy; it is appended after Tier 1.
 
 export const tier1Blueprints: Record<string, ComponentBlueprint> = {
   Button: {
@@ -289,58 +293,7 @@ export const tier1Blueprints: Record<string, ComponentBlueprint> = {
     },
     examples: [{ label: 'Selected', props: { checked: true, label: 'Option A' } }],
   },
-
-  Navbar: {
-    name: 'Navbar',
-    description: 'Top navigation bar with brand, links, and actions.',
-    category: 'navigation',
-    variants: ['default'],
-    sizes: [],
-    states: ['default'],
-    anatomy: ['root', 'brand', 'links', 'actions'],
-    props: {
-      sticky: { type: 'boolean', default: true },
-    },
-    tokens: {
-      base: {
-        backgroundColor: '{colors.surface-default}',
-        textColor: '{colors.on-surface}',
-        borderColor: '{colors.surface-border}',
-        borderWidth: '1px',
-        paddingX: '{spacing.lg}',
-        paddingY: '{spacing.sm}',
-        shadow: '{shadows.sm}',
-      },
-    },
-    examples: [{ label: 'Default', props: { sticky: true } }],
-  },
-
-  Sidebar: {
-    name: 'Sidebar',
-    description: 'Vertical navigation. One-level (flat) or multilevel (nested groups).',
-    category: 'navigation',
-    variants: ['one-level', 'multilevel'],
-    sizes: [],
-    states: ['default'],
-    anatomy: ['root', 'item', 'group', 'sub-item'],
-    props: {
-      collapsed: { type: 'boolean', default: false },
-    },
-    tokens: {
-      base: {
-        backgroundColor: '{colors.surface-default}',
-        textColor: '{colors.on-surface}',
-        borderColor: '{colors.surface-border}',
-        borderWidth: '1px',
-        paddingX: '{spacing.sm}',
-        paddingY: '{spacing.sm}',
-        rounded: '{rounded.md}',
-        width: '220px',
-      },
-    },
-    examples: [
-      { label: 'One level', props: {} },
-      { label: 'Multilevel', props: {} },
-    ],
-  },
 }
+
+/** Every default blueprint, in showcase order: Tier 1 then Tier 2. */
+export const defaultBlueprints: Record<string, ComponentBlueprint> = { ...tier1Blueprints, ...tier2Blueprints }

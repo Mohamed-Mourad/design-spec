@@ -305,3 +305,31 @@ describe('applyImport — reactive inputs', () => {
     expect(store.tokenStateFor('colors', 'primary')).toBe('inferred')
   })
 })
+
+describe('useDesignSystemStore — Tier 2 on an existing workspace', () => {
+  it('a workspace saved before Tier 2 gains it on load, and keeps the user edits', () => {
+    // Pre-Tier-2 save: Tier 1 + the old Navbar/Sidebar, customized.
+    const stored = structuredClone(defaultSchema) as unknown as {
+      colors: Record<string, string>
+      componentBlueprints: Record<string, { tokens: Record<string, Record<string, unknown>>; responsive?: unknown }>
+    }
+    for (const n of ['Tabs', 'Breadcrumbs', 'Pagination', 'Accordion', 'Progress', 'EmptyState', 'ErrorState', 'Table', 'Drawer']) {
+      delete stored.componentBlueprints[n]
+    }
+    delete stored.componentBlueprints.Navbar.responsive
+    stored.componentBlueprints.Navbar.tokens.base.paddingX = '{spacing.xl}'
+    stored.componentBlueprints.Sidebar.tokens.base.backgroundColor = '{colors.surface-raised}'
+    stored.colors.primary = '#abcdef'
+    localStorage.setItem('dsa-schema-v1', JSON.stringify(stored))
+
+    const store = useDesignSystemStore()
+    const bps = store.schema.componentBlueprints
+    for (const n of ['Tabs', 'Table', 'Drawer', 'ErrorState']) expect(bps[n], n).toBeTruthy()
+    expect(bps.Navbar.tokens.base.paddingX).toBe('{spacing.xl}') // edit kept
+    expect(bps.Navbar.responsive?.md?.layout).toContain('collapse') // new default filled
+    expect(bps.Sidebar.tokens.base.backgroundColor).toBe('{colors.surface-raised}')
+    expect(bps.Sidebar.tokens.collapsed).toEqual({ width: '56px' })
+    expect(store.schema.colors.primary).toBe('#abcdef')
+    expect(store.skillMd).toContain('#### Drawer')
+  })
+})
