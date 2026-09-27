@@ -14,6 +14,10 @@ import BreadcrumbsPreview from './BreadcrumbsPreview.vue'
 import PaginationPreview from './PaginationPreview.vue'
 import AccordionPreview from './AccordionPreview.vue'
 import DrawerPreview from './DrawerPreview.vue'
+import ProgressPreview from './ProgressPreview.vue'
+import EmptyStatePreview from './EmptyStatePreview.vue'
+import ErrorStatePreview from './ErrorStatePreview.vue'
+import TablePreview from './TablePreview.vue'
 import GenericPreview from './GenericPreview.vue'
 
 // Blueprint name → its showcase renderer. Each renderer takes `PreviewProps`
@@ -36,6 +40,10 @@ const PREVIEWS: Record<string, Component> = {
   Pagination: PaginationPreview,
   Accordion: AccordionPreview,
   Drawer: DrawerPreview,
+  Progress: ProgressPreview,
+  EmptyState: EmptyStatePreview,
+  ErrorState: ErrorStatePreview,
+  Table: TablePreview,
 }
 
 export function previewFor(name: string): Component {
