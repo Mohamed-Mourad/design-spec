@@ -117,6 +117,54 @@ describe('golden — compileAll', () => {
   })
 })
 
+describe('golden — Flutter stack', () => {
+  const flutter = (naming: 'prefixed-class' | 'snake_const' | 'raw') => ({
+    ...defaultSchema,
+    darkMode: { enabled: true, colors: { primary: '#60A5FA' as const } },
+    export: { ...defaultSchema.export, frameworks: ['flutter' as const], flutterNaming: naming },
+  })
+
+  it('flutter file set: lib/theme + lib/widgets, no web artifacts', () => {
+    const names = compileAll(flutter('prefixed-class')).map((f) => f.filename)
+    expect(names).toEqual([
+      'DESIGN.md',
+      'SKILL.md',
+      'lib/theme/app_colors.dart',
+      'lib/theme/app_typography.dart',
+      'lib/theme/app_spacing.dart',
+      'lib/theme/app_theme.dart',
+      'lib/widgets/Button/button.dart',
+      'lib/widgets/Input/input.dart',
+    ])
+  })
+
+  it('flutter ships alongside every web stack without collisions', () => {
+    const all = {
+      ...defaultSchema,
+      export: { ...defaultSchema.export, frameworks: ['react-tailwind', 'react-css', 'vue-tailwind', 'vue-css', 'flutter'] as const },
+    }
+    const names = compileAll(all).map((f) => f.filename)
+    expect(new Set(names).size).toBe(names.length)
+    expect(names).toContain('lib/theme/app_theme.dart')
+    expect(names).toContain('components/vue-css/Button.vue')
+  })
+
+  it.each(['prefixed-class', 'snake_const', 'raw'] as const)('SKILL.md Flutter section (%s)', (naming) => {
+    const md = compileSkillMd(flutter(naming))
+    const section = md.slice(md.indexOf('### Flutter'), md.indexOf('## Components'))
+    expect(section).toContain('LayoutBuilder')
+    expect(section).toContain('darkTheme: AppTheme.dark')
+    expect(section).toMatchSnapshot()
+  })
+
+  it('SKILL.md shows identifiers in the configured naming mode', () => {
+    expect(compileSkillMd(flutter('prefixed-class'))).toContain('color `AppColors.primary`')
+    expect(compileSkillMd(flutter('snake_const'))).toContain('color `c_primary`')
+    expect(compileSkillMd(flutter('raw'))).toContain('breakpoint constants (e.g. `kBreakpointTablet`)')
+    expect(compileSkillMd({ ...flutter('raw'), darkMode: { enabled: false, colors: {} } })).not.toContain('darkTheme')
+  })
+})
+
 describe('golden — React+CSS components', () => {
   it('default schema (.tsx + .css)', () => {
     expect(compileReactCssComponents(defaultSchema)).toMatchSnapshot()

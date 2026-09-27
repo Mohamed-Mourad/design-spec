@@ -31,6 +31,12 @@ export { compileReactCssComponents } from './components/reactCss.js'
 export { compileVueTailwindComponents } from './components/vueTailwind.js'
 export { compileAll } from './compile.js'
 
+// Flutter stack: lib/theme/*.dart + lib/widgets stubs, named per export.flutterNaming
+export { compileFlutter, compileFlutterTokens } from './flutter/index.js'
+export { compileFlutterWidgets } from './flutter/widgets.js'
+export { flutterRef, flutterRefForPath, dartIdent } from './flutter/naming.js'
+export type { FlutterNaming, FlutterGroup } from './flutter/naming.js'
+
 // Responsive cascade resolution + validation
 export {
   resolveResponsive,

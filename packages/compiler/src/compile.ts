@@ -14,6 +14,7 @@ import { compileReactComponents } from './components/react.js'
 import { compileVueComponents } from './components/vue.js'
 import { compileReactCssComponents } from './components/reactCss.js'
 import { compileVueTailwindComponents } from './components/vueTailwind.js'
+import { compileFlutter } from './flutter/index.js'
 
 /** Compile all outputs for a schema, deduplicated by filename (first wins). */
 export function compileAll(schema: DesignSystemSchema): FileOutput[] {
@@ -29,7 +30,7 @@ export function compileAll(schema: DesignSystemSchema): FileOutput[] {
     else if (framework === 'react-css') outputs.push(...compileVue(schema), ...compileReactCssComponents(schema))
     else if (framework === 'vue-tailwind') outputs.push(...compileTailwind(schema), ...compileVueTailwindComponents(schema))
     else if (framework === 'vue-css') outputs.push(...compileVue(schema), ...compileVueComponents(schema))
-    // flutter: Phase 10
+    else if (framework === 'flutter') outputs.push(...compileFlutter(schema))
   }
 
   // Dedup by filename (e.g. tailwind + vue both emit tokens.css) — first wins.

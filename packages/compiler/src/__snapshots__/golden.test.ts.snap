@@ -390,6 +390,45 @@ A single-line text field with label, helper text, and error states.
 "
 `;
 
+exports[`golden — Flutter stack > SKILL.md Flutter section (prefixed-class) 1`] = `
+"### Flutter
+
+- Tokens live in \`lib/theme/\` (\`app_colors.dart\`, \`app_typography.dart\`, \`app_spacing.dart\`, \`app_theme.dart\`) as static members of namespace classes (\`AppColors\`, \`AppTypography\`, \`AppSpacing\`, \`AppRadius\`, \`AppBorders\`, \`AppShadows\`, \`AppBreakpoints\`).
+- Reference them by name, e.g. color \`AppColors.primary\`, text style \`AppTypography.headlineLg\`, spacing \`AppSpacing.base\`.
+- Never write \`Color(0xFF...)\` inline — reference the token constant. Inline colors are drift and are auto-fixed to the constant.
+- Install the theme once: \`MaterialApp(theme: AppTheme.light, darkTheme: AppTheme.dark)\`. For colors that must follow light/dark, read \`Theme.of(context).colorScheme\` rather than a light-mode constant.
+- Responsive layout uses \`LayoutBuilder\` and compares \`constraints.maxWidth\` to the breakpoint constants (e.g. \`AppBreakpoints.tablet\`) — no media queries.
+- Component stubs live in \`lib/widgets/{ComponentName}/{component_name}.dart\`; add behavior there without re-styling them.
+
+"
+`;
+
+exports[`golden — Flutter stack > SKILL.md Flutter section (raw) 1`] = `
+"### Flutter
+
+- Tokens live in \`lib/theme/\` (\`app_colors.dart\`, \`app_typography.dart\`, \`app_spacing.dart\`, \`app_theme.dart\`) as top-level \`k\`-prefixed constants (\`kColor…\`, \`kText…\`, \`kSpacing…\`, \`kRadius…\`, \`kBreakpoint…\`).
+- Reference them by name, e.g. color \`kColorPrimary\`, text style \`kTextHeadlineLg\`, spacing \`kSpacingBase\`.
+- Never write \`Color(0xFF...)\` inline — reference the token constant. Inline colors are drift and are auto-fixed to the constant.
+- Install the theme once: \`MaterialApp(theme: AppTheme.light, darkTheme: AppTheme.dark)\`. For colors that must follow light/dark, read \`Theme.of(context).colorScheme\` rather than a light-mode constant.
+- Responsive layout uses \`LayoutBuilder\` and compares \`constraints.maxWidth\` to the breakpoint constants (e.g. \`kBreakpointTablet\`) — no media queries.
+- Component stubs live in \`lib/widgets/{ComponentName}/{component_name}.dart\`; add behavior there without re-styling them.
+
+"
+`;
+
+exports[`golden — Flutter stack > SKILL.md Flutter section (snake_const) 1`] = `
+"### Flutter
+
+- Tokens live in \`lib/theme/\` (\`app_colors.dart\`, \`app_typography.dart\`, \`app_spacing.dart\`, \`app_theme.dart\`) as top-level group-prefixed constants (\`c_\`, \`t_\`, \`s_\`, \`r_\`, \`bw_\`, \`sh_\`, \`bp_\`).
+- Reference them by name, e.g. color \`c_primary\`, text style \`t_headline_lg\`, spacing \`s_base\`.
+- Never write \`Color(0xFF...)\` inline — reference the token constant. Inline colors are drift and are auto-fixed to the constant.
+- Install the theme once: \`MaterialApp(theme: AppTheme.light, darkTheme: AppTheme.dark)\`. For colors that must follow light/dark, read \`Theme.of(context).colorScheme\` rather than a light-mode constant.
+- Responsive layout uses \`LayoutBuilder\` and compares \`constraints.maxWidth\` to the breakpoint constants (e.g. \`bp_tablet\`) — no media queries.
+- Component stubs live in \`lib/widgets/{ComponentName}/{component_name}.dart\`; add behavior there without re-styling them.
+
+"
+`;
+
 exports[`golden — React components > default schema 1`] = `
 [
   {

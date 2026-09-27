@@ -7,6 +7,33 @@
 import type { DesignSystemSchema } from './types/schema.js'
 import type { ComponentBlueprint } from './types/schema.js'
 import { orderBreakpoints, type BreakpointLayer } from './resolveResponsive.js'
+import { flutterRef, type FlutterGroup } from './flutter/naming.js'
+
+const FLUTTER_MODE: Record<DesignSystemSchema['export']['flutterNaming'], string> = {
+  'prefixed-class': 'static members of namespace classes (`AppColors`, `AppTypography`, `AppSpacing`, `AppRadius`, `AppBorders`, `AppShadows`, `AppBreakpoints`)',
+  snake_const: 'top-level group-prefixed constants (`c_`, `t_`, `s_`, `r_`, `bw_`, `sh_`, `bp_`)',
+  raw: 'top-level `k`-prefixed constants (`kColor…`, `kText…`, `kSpacing…`, `kRadius…`, `kBreakpoint…`)',
+}
+
+/** Flutter usage, with identifiers shown in the configured `export.flutterNaming` mode. */
+function flutterSection(schema: DesignSystemSchema): string {
+  const naming = schema.export.flutterNaming
+  const eg = (group: FlutterGroup, tokens: Record<string, unknown>) => {
+    const name = Object.keys(tokens)[0]
+    return name === undefined ? '—' : `\`${flutterRef(naming, group, name)}\``
+  }
+  const darkTheme = schema.darkMode?.enabled ? ', darkTheme: AppTheme.dark' : ''
+  return [
+    '### Flutter',
+    '',
+    `- Tokens live in \`lib/theme/\` (\`app_colors.dart\`, \`app_typography.dart\`, \`app_spacing.dart\`, \`app_theme.dart\`) as ${FLUTTER_MODE[naming]}.`,
+    `- Reference them by name, e.g. color ${eg('colors', schema.colors)}, text style ${eg('typography', schema.typography)}, spacing ${eg('spacing', schema.spacing)}.`,
+    '- Never write `Color(0xFF...)` inline — reference the token constant. Inline colors are drift and are auto-fixed to the constant.',
+    `- Install the theme once: \`MaterialApp(theme: AppTheme.light${darkTheme})\`. For colors that must follow light/dark, read \`Theme.of(context).colorScheme\` rather than a light-mode constant.`,
+    `- Responsive layout uses \`LayoutBuilder\` and compares \`constraints.maxWidth\` to the breakpoint constants (e.g. ${eg('breakpoints', schema.breakpoints)}) — no media queries.`,
+    '- Component stubs live in `lib/widgets/{ComponentName}/{component_name}.dart`; add behavior there without re-styling them.',
+  ].join('\n')
+}
 
 /** Mobile-first list of a blueprint's per-breakpoint token overrides, or '' if none. */
 function responsiveSnippet(schema: DesignSystemSchema, bp: ComponentBlueprint): string {
@@ -62,12 +89,7 @@ function frameworkSection(framework: string, schema: DesignSystemSchema): string
         '- Never hard-code hex in `<style>` blocks — reference the variable.',
       ].join('\n')
     case 'flutter':
-      return [
-        '### Flutter',
-        '',
-        '- Reference tokens via the generated `AppColors` / `AppTheme` classes.',
-        '- Never write `Color(0xFF...)` inline — reference the token constant.',
-      ].join('\n')
+      return flutterSection(schema)
     default:
       return ''
   }
