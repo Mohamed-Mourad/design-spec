@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { runCli, tmpProject, cleanup, seedReactTailwind } from './helpers'
@@ -182,6 +182,30 @@ describe('config', () => {
     const schema = JSON.parse(await readFile(join(dir, 'design-spec.schema.json'), 'utf8'))
     expect(schema.export.cssVariablePrefix).toBe('ds-')
     expect(await readFile(join(dir, 'tokens.css'), 'utf8')).toContain('--ds-color-primary')
+  })
+
+  it('--flutter-naming picks the Dart identifiers, and fix rewrites drift to them', async () => {
+    const r = await runCli(['config', '--frameworks', 'flutter', '--flutter-naming', 'raw', '--json'], dir)
+    expect(r.code).toBe(0)
+    expect(JSON.parse(r.stdout).export.flutterNaming).toBe('raw')
+    const colors = await readFile(join(dir, 'lib', 'theme', 'app_colors.dart'), 'utf8')
+    expect(colors).toContain('const Color kColorPrimary = ')
+
+    // A hand-written widget with an inline Color literal is drift → the raw const.
+    const hex = colors.match(/kColorPrimary = Color\(0xFF([0-9A-F]{6})\)/)![1]
+    const src = join(dir, 'lib', 'screens', 'home.dart')
+    await mkdir(join(dir, 'lib', 'screens'), { recursive: true })
+    await writeFile(src, `final c = Color(0xFF${hex});\n`)
+    const fixed = await runCli(['fix', '--json'], dir)
+    expect(fixed.code).toBe(0)
+    expect(await readFile(src, 'utf8')).toBe('final c = kColorPrimary;\n')
+    // The generated theme file is a token definition, never rewritten.
+    expect(await readFile(join(dir, 'lib', 'theme', 'app_colors.dart'), 'utf8')).toBe(colors)
+  })
+
+  it('--list includes flutterNaming', async () => {
+    const r = await runCli(['config', '--list', '--json'], dir)
+    expect(JSON.parse(r.stdout).export.flutterNaming).toBe('prefixed-class')
   })
 
   it('non-TTY config without flags keeps current values (never hangs)', async () => {

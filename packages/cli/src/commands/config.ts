@@ -19,6 +19,7 @@ import type { DesignSystemSchema, ExportConfig } from '@design-spec/compiler'
 
 const NAMING: ExportConfig['webNamingConvention'][] = ['kebab-case', 'camelCase', 'snake_case', 'SCREAMING_SNAKE']
 const FRAMEWORKS: ExportConfig['frameworks'] = ['react-tailwind', 'react-css', 'vue-tailwind', 'vue-css', 'flutter']
+const FLUTTER_NAMING: ExportConfig['flutterNaming'][] = ['prefixed-class', 'snake_const', 'raw']
 const FONT_LOADING: ExportConfig['fontLoading'][] = ['auto', 'manual']
 
 interface ConfigFlags {
@@ -26,6 +27,7 @@ interface ConfigFlags {
   list?: boolean
   frameworks?: string
   naming?: string
+  flutterNaming?: string
   prefix?: string
   fontLoading?: string
 }
@@ -37,6 +39,9 @@ function applyFlags(cfg: ExportConfig, flags: ConfigFlags): ExportConfig {
     if (fws.length) next.frameworks = fws
   }
   if (flags.naming && (NAMING as string[]).includes(flags.naming)) next.webNamingConvention = flags.naming as ExportConfig['webNamingConvention']
+  if (flags.flutterNaming && (FLUTTER_NAMING as string[]).includes(flags.flutterNaming)) {
+    next.flutterNaming = flags.flutterNaming as ExportConfig['flutterNaming']
+  }
   if (flags.prefix !== undefined) next.cssVariablePrefix = flags.prefix
   if (flags.fontLoading && (FONT_LOADING as string[]).includes(flags.fontLoading)) next.fontLoading = flags.fontLoading as ExportConfig['fontLoading']
   return next
@@ -58,6 +63,19 @@ async function survey(cfg: ExportConfig): Promise<ExportConfig> {
     default: cfg.webNamingConvention,
     theme,
   })) as ExportConfig['webNamingConvention']
+  // Only asked when Flutter is a target — it names the Dart identifiers.
+  const flutterNaming = frameworks.includes('flutter')
+    ? ((await select({
+        message: 'Flutter identifier naming',
+        choices: [
+          { value: 'prefixed-class', name: 'prefixed-class  (AppColors.primary)' },
+          { value: 'snake_const', name: 'snake_const     (c_primary)' },
+          { value: 'raw', name: 'raw             (kColorPrimary)' },
+        ],
+        default: cfg.flutterNaming,
+        theme,
+      })) as ExportConfig['flutterNaming'])
+    : cfg.flutterNaming
   const cssVariablePrefix = await input({ message: 'CSS variable prefix (blank for none)', default: cfg.cssVariablePrefix, theme })
   const fontLoading = (await select({
     message: 'Font loading',
@@ -65,7 +83,7 @@ async function survey(cfg: ExportConfig): Promise<ExportConfig> {
     default: cfg.fontLoading,
     theme,
   })) as ExportConfig['fontLoading']
-  return { ...cfg, frameworks: frameworks.length ? frameworks : cfg.frameworks, webNamingConvention, cssVariablePrefix, fontLoading }
+  return { ...cfg, frameworks: frameworks.length ? frameworks : cfg.frameworks, webNamingConvention, flutterNaming, cssVariablePrefix, fontLoading }
 }
 
 async function persist(schema: DesignSystemSchema, nextExport: ExportConfig, path: string, root: string): Promise<void> {
@@ -82,6 +100,7 @@ export function registerConfig(program: Command): void {
     .option('-y, --yes', 'accept current/flag values without prompting', false)
     .option('--frameworks <list>', 'comma-separated: react-tailwind,react-css,vue-tailwind,vue-css,flutter')
     .option('--naming <convention>', `one of: ${NAMING.join(', ')}`)
+    .option('--flutter-naming <mode>', `Dart identifiers, one of: ${FLUTTER_NAMING.join(', ')}`)
     .option('--prefix <prefix>', 'CSS variable prefix')
     .option('--font-loading <mode>', 'auto | manual')
     .addHelpText('after', '\nExamples:\n  $ design-spec config\n  $ design-spec config --list\n  $ design-spec config set cssVariablePrefix ds-')
@@ -98,6 +117,7 @@ export function registerConfig(program: Command): void {
             [
               ['frameworks', current.frameworks.join(', ')],
               ['webNamingConvention', current.webNamingConvention],
+              ['flutterNaming', current.flutterNaming],
               ['cssVariablePrefix', current.cssVariablePrefix || '(none)'],
               ['tailwindClassPrefix', current.tailwindClassPrefix || '(none)'],
               ['fontLoading', current.fontLoading],
@@ -106,7 +126,7 @@ export function registerConfig(program: Command): void {
           return
         }
 
-        const hasFlagOverrides = Boolean(flags.frameworks || flags.naming || flags.prefix !== undefined || flags.fontLoading)
+        const hasFlagOverrides = Boolean(flags.frameworks || flags.naming || flags.flutterNaming || flags.prefix !== undefined || flags.fontLoading)
         const interactive = Boolean(process.stdout.isTTY) && !flags.yes && !hasFlagOverrides && !ui.uiMode().json
 
         const next = interactive ? await survey(current) : applyFlags(current, flags)
