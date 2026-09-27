@@ -44,3 +44,11 @@ describe('resolveComponentStyle', () => {
     expect(resolveComponentStyle(schema, bp, 768).hidden).toBe(true)
   })
 })
+
+describe('typography fallback', () => {
+  it('gives an unloaded font family a generic fallback', () => {
+    const bp = defaultSchema.componentBlueprints.Button
+    const { style } = resolveComponentStyle(defaultSchema, bp, Number.POSITIVE_INFINITY)
+    expect(style.fontFamily).toBe('"Inter", sans-serif')
+  })
+})

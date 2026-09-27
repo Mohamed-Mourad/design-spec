@@ -27,7 +27,11 @@ function applyTypography(schema: DesignSystemSchema, ref: unknown, style: CSSPro
   const m = ref.match(/^\{typography\.(.+)\}$/)
   const tok = m ? schema.typography[m[1]] : undefined
   if (!tok) return
-  style.fontFamily = tok.fontFamily
+  // The preview doesn't load the schema's web fonts, so give the family a
+  // generic fallback — a bare "Inter" would otherwise render in the browser's
+  // default serif.
+  const generic = /mono|code/i.test(`${m![1]} ${tok.fontFamily}`) ? 'monospace' : 'sans-serif'
+  style.fontFamily = tok.fontFamily.includes(',') ? tok.fontFamily : `"${tok.fontFamily}", ${generic}`
   style.fontSize = String(tok.fontSize)
   style.fontWeight = tok.fontWeight
   style.lineHeight = String(tok.lineHeight)
