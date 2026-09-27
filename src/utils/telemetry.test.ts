@@ -21,7 +21,7 @@ describe('captureUserReport — report_kind tagging', () => {
 
     expect(beacon).toHaveBeenCalledOnce()
     const [url, body] = beacon.mock.calls[0] as [string, string]
-    expect(url).toContain('/telemetry/error')
+    expect(url).toBe('https://api.test/api/v1/telemetry/error')
     const payload = JSON.parse(body)
     expect(payload.report_kind).toBe('behavior')
     expect(payload.user_reported).toBe(true)
@@ -40,5 +40,28 @@ describe('captureUserReport — report_kind tagging', () => {
     const payload = JSON.parse((beacon.mock.calls[0] as [string, string])[1])
     expect(payload.report_kind).toBe('error')
     expect(payload.message).toBe('save failed')
+  })
+})
+
+describe('trackEvent', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    vi.stubEnv('VITE_API_URL', 'https://api.test')
+  })
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  it('posts to the versioned event endpoint', async () => {
+    const beacon = vi.fn((_url: string, _body: string) => true)
+    vi.stubGlobal('navigator', { sendBeacon: beacon })
+    const { trackEvent } = await import('./telemetry')
+
+    trackEvent('bundle_export', { files: 3 })
+
+    const [url, body] = beacon.mock.calls[0] as [string, string]
+    expect(url).toBe('https://api.test/api/v1/telemetry/event')
+    expect(JSON.parse(body)).toMatchObject({ event: 'bundle_export', properties: { files: 3 } })
   })
 })

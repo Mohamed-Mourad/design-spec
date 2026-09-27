@@ -3,7 +3,7 @@ import { createPinia } from 'pinia'
 import { createHead } from '@unhead/vue/client'
 import router from '@/router'
 import App from '@/App.vue'
-import { captureError } from '@/utils/telemetry'
+import { captureError, trackEvent } from '@/utils/telemetry'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import '@/styles/main.css'
 
@@ -37,3 +37,7 @@ window.addEventListener('unhandledrejection', (e) => {
 })
 
 app.mount('#app')
+
+// One per page load. The only identity-free activity signal the admin's
+// monthly-active count has: distinct session ids over 30 days.
+trackEvent('session_start')

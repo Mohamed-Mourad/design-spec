@@ -9,6 +9,7 @@ import FigmaSyncBadge from '@/components/import/FigmaSyncBadge.vue'
 import PushTokensButton from '@/components/import/PushTokensButton.vue'
 import StageToFigmaButton from '@/components/import/StageToFigmaButton.vue'
 import { downloadBundle } from '@/utils/exportBundle'
+import { trackEvent } from '@/utils/telemetry'
 
 const store = useDesignSystemStore()
 const { schema, canUndo, canRedo, outputFiles } = storeToRefs(store)
@@ -21,6 +22,8 @@ async function exportBundle() {
   exportError.value = null
   try {
     await downloadBundle(schema.value, outputFiles.value)
+    // A count, never the files: feeds the admin's exports/day.
+    trackEvent('bundle_export', { files: outputFiles.value.length })
   } catch (e) {
     exportError.value = e instanceof Error ? e.message : 'Export failed.'
   } finally {

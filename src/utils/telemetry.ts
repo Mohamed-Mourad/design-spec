@@ -11,6 +11,10 @@ const SESSION_ID = (() => {
   return id
 })()
 
+// The ingestion endpoints live under the versioned API base like every other
+// route; see design-spec-backend/docs/telemetry-contract.md.
+const BASE = '/api/v1/telemetry'
+
 function post(path: string, body: unknown): void {
   if (!API_URL) {
     if (IS_DEV) console.debug('[telemetry]', path, body)
@@ -31,7 +35,7 @@ function post(path: string, body: unknown): void {
 }
 
 export function captureError(error: Error, context?: Record<string, unknown>): void {
-  post('/telemetry/error', {
+  post(`${BASE}/error`, {
     message: error.message,
     stack: error.stack,
     context,
@@ -58,7 +62,7 @@ export function captureUserReport(
 ): void {
   // Same telemetry stream as automatic errors; `report_kind` lets the backend
   // separate proactive behavior reports from post-crash reports.
-  post('/telemetry/error', {
+  post(`${BASE}/error`, {
     message: error?.message ?? (kind === 'behavior' ? 'User-reported behavior' : 'User-reported issue'),
     stack: error?.stack ?? null,
     user_message: userMessage,
@@ -72,7 +76,7 @@ export function captureUserReport(
 }
 
 export function trackEvent(event: string, properties?: Record<string, unknown>): void {
-  post('/telemetry/event', {
+  post(`${BASE}/event`, {
     event,
     properties,
     session_id: SESSION_ID,
