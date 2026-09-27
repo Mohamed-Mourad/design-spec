@@ -4,7 +4,7 @@ import { createRouter, createWebHistory, type Router } from 'vue-router'
 import { createHead } from '@unhead/vue/client'
 import ProposalView from '@/views/ProposalView.vue'
 import EmbedView from '@/views/EmbedView.vue'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 
 // The two public routes. Both read a schema they did not author, from an API
 // they reach without a session — so the tests drive `fetch` directly rather

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { bundleFiles, bundleName, packBundle, serializeSchema, SCHEMA_FILENAME } from '@/utils/exportBundle'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 
 // The ZIP is the Free tier's whole deliverable, so what it contains is a
 // contract: the committed schema in the CLI's canonical form, plus every file

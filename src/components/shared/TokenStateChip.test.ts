@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import TokenStateChip from '@/components/shared/TokenStateChip.vue'
 import TokenStateRow from '@/components/shared/TokenStateRow.vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 
 // The Verify/Review affordance. Two properties matter: it never blocks the
 // editor it sits beside, and it disappears once a human has looked.

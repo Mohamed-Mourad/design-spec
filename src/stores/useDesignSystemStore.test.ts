@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
+import { nextTick } from 'vue'
+import { setActivePinia, createPinia } from 'pinia'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema, extractDesignSystem } from '@design-spec/compiler'
 
 describe('useDesignSystemStore — compiler wiring', () => {
   it('emits real DESIGN.md/SKILL.md, not placeholders', () => {
@@ -331,5 +333,51 @@ describe('useDesignSystemStore — Tier 2 on an existing workspace', () => {
     expect(bps.Sidebar.tokens.collapsed).toEqual({ width: '56px' })
     expect(store.schema.colors.primary).toBe('#abcdef')
     expect(store.skillMd).toContain('#### Drawer')
+  })
+})
+
+describe('useDesignSystemStore — one default schema', () => {
+  /** A fresh page load: new Pinia, same localStorage. */
+  function reload() {
+    setActivePinia(createPinia())
+    return useDesignSystemStore()
+  }
+
+  it('a workspace saved on the default loads identically — no value changes, no new keys', () => {
+    // The pre-compiler-owned web default was byte-identical to today's
+    // `defaultSchema`, so a save of it must round-trip untouched.
+    const saved = JSON.parse(JSON.stringify(defaultSchema))
+    saved.colors.primary = '#abcdef' // and a user edit survives
+    localStorage.setItem('dsa-schema-v1', JSON.stringify(saved))
+
+    const store = useDesignSystemStore()
+    expect(JSON.parse(JSON.stringify(store.schema))).toEqual(saved)
+    expect(JSON.parse(JSON.stringify(reload().schema))).toEqual(saved)
+  })
+
+  it('a Git Import of a repo with no tokens lands on the product default and survives reload', async () => {
+    const extraction = extractDesignSystem({ repo: 'acme/empty', files: [], paths: [] })
+    expect(extraction.schema.colors).toEqual(defaultSchema.colors)
+    expect(Object.keys(extraction.schema.componentBlueprints)).toEqual(Object.keys(defaultSchema.componentBlueprints))
+    expect(Object.keys(extraction.schema.componentBlueprints)).toHaveLength(20)
+
+    const store = useDesignSystemStore()
+    store.applyImport(extraction.schema, {
+      repoFullName: 'acme/empty',
+      branch: 'main',
+      commitSha: 'abc1234',
+      importSessionId: 'sess-1',
+      signals: extraction.signals,
+      usedFallback: extraction.usedFallback,
+      unparseableLayers: extraction.unparseableLayers,
+      states: extraction.states,
+      scannedAt: 0,
+    } as never)
+    const imported = JSON.parse(JSON.stringify(store.schema))
+
+    await nextTick() // let the persistence watcher write the imported schema
+    // Reload runs deepFillMissing against the default — nothing is grafted on.
+    expect(JSON.parse(JSON.stringify(reload().schema))).toEqual(imported)
+    expect(imported.colors).toEqual(defaultSchema.colors)
   })
 })

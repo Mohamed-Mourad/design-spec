@@ -7,7 +7,7 @@ import {
   ShareLinkTooLargeError,
   MAX_HASH_LENGTH,
 } from '@/utils/shareLink'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 import type { DesignSystemSchema } from '@/types/schema'
 
 function toBase64Url(bytes: Uint8Array): string {

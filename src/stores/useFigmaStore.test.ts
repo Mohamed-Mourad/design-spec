@@ -3,7 +3,7 @@ import { useFigmaStore } from '@/stores/useFigmaStore'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import { setSession } from '@/utils/api'
 import { figmaPat } from '@/utils/figma/pat'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 
 // The Figma import flow with the network stubbed at `fetch`.
 //

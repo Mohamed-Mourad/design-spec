@@ -5,7 +5,7 @@ import { createHead } from '@unhead/vue/client'
 import PreviewView from '@/views/PreviewView.vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import { encodeSchemaHash } from '@/utils/shareLink'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 import type { DesignSystemSchema } from '@/types/schema'
 
 function newRouter(): Router {

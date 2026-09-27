@@ -6,7 +6,7 @@ import ImportReport from '@/components/import/ImportReport.vue'
 import RetrofitPushButton from '@/components/import/RetrofitPushButton.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 import { createHead } from '@unhead/vue/client'
 import type { ImportExtraction } from '@design-spec/compiler'
 

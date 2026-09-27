@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { refToVar, resolveComponentStyle } from '@/utils/previewStyle'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 import type { ComponentBlueprint, DesignSystemSchema } from '@/types/schema'
 
 describe('refToVar', () => {

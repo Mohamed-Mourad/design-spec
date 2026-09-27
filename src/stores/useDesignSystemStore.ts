@@ -1,10 +1,9 @@
 import { ref, computed, watch, watchEffect } from 'vue'
 import { defineStore } from 'pinia'
-import { compileDesignMd, compileSkillMd, compileAll } from '@design-spec/compiler'
+import { compileDesignMd, compileSkillMd, compileAll, defaultSchema } from '@design-spec/compiler'
 import type { ExtractionSignal, TokenState, TokenStateMap } from '@design-spec/compiler'
 import type { BentoLayoutConfig, DesignSystemSchema, WebPresentationConfig } from '@/types/schema'
 import type { FileOutput, Framework } from '@/types/compiler'
-import { defaultSchema } from '@/defaults/schema'
 import { applyFigmaImport as foldFigmaImport, type FigmaImport, type FigmaMergeMode } from '@/utils/figma/map'
 
 const LEGACY_KEY = 'dsa-schema-v1' // single-schema storage, pre-workspaces

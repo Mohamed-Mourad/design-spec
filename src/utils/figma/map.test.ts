@@ -9,7 +9,7 @@ import {
   tokenKeyFor,
 } from './map'
 import type { FigmaNode, FigmaStyleMeta, FigmaVariable, FigmaVariableCollection } from './types'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 import type { DesignSystemSchema } from '@/types/schema'
 
 const style = (over: Partial<FigmaStyleMeta>): FigmaStyleMeta => ({

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import BentoPreview from '@/components/preview/bento/BentoPreview.vue'
 import { defaultBentoLayout, resolveBentoLayout, BENTO_CELL_IDS } from '@/defaults/bento'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 import type { BentoLayoutConfig, DesignSystemSchema } from '@/types/schema'
 
 function schemaWith(patch: Partial<DesignSystemSchema> = {}): DesignSystemSchema {

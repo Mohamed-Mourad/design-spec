@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { renderOgImage, OG_WIDTH, OG_HEIGHT } from '@/utils/ogCanvas'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 
 /** A recording 2D context — jsdom ships no canvas implementation of its own. */
 function fakeContext() {

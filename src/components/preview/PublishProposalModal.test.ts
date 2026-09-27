@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import PublishProposalModal from '@/components/preview/PublishProposalModal.vue'
 import EmbedCodeModal from '@/components/preview/EmbedCodeModal.vue'
-import { defaultSchema } from '@/defaults/schema'
+import { defaultSchema } from '@design-spec/compiler'
 import type { DesignSystemSchema } from '@/types/schema'
 
 const API = 'http://api.test'
