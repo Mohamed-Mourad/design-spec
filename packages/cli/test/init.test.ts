@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { readFile, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { compileAll, defaultSchema } from '@design-spec/compiler'
 import { runCli, tmpProject, cleanup, seedReactTailwind } from './helpers'
 
 describe('design-spec init', () => {
@@ -81,5 +82,32 @@ describe('design-spec init', () => {
     // exactly one managed block
     expect(rules.match(/DESIGN-SPEC START/g)?.length).toBe(1)
     expect(rules).toContain('MY EXISTING RULE')
+  })
+  it('lifted tokens beat the default, and the brand fills the product primary slot', async () => {
+    await seedReactTailwind(dir)
+    await runCli(['init', '--yes', '--json'], dir)
+    const schema = JSON.parse(await readFile(join(dir, 'design-spec.schema.json'), 'utf8'))
+    expect(schema.colors.brand).toBe('#FF5733') // Extracted
+    expect(schema.colors.primary).toBe('#FF5733') // Inferred from the `brand` alias
+    expect(schema.colors['status-success']).toBe(defaultSchema.colors['status-success']) // Defaulted
+    expect(Object.keys(schema.componentBlueprints)).toEqual(Object.keys(defaultSchema.componentBlueprints))
+  })
+
+  it('an empty project starts on the product default — byte-identical to a fresh web workspace export', async () => {
+    expect((await runCli(['init', '--yes', '--json'], dir)).code).toBe(0)
+    expect((await runCli(['compile', '--json'], dir)).code).toBe(0)
+
+    const onDisk = await readFile(join(dir, 'design-spec.schema.json'), 'utf8')
+    const schema = JSON.parse(onDisk)
+    expect(Object.keys(schema.componentBlueprints)).toHaveLength(20)
+    expect(schema.colors).toEqual(defaultSchema.colors)
+
+    // A fresh workspace is `defaultSchema`; its ZIP is the schema (2-space,
+    // trailing newline) plus `compileAll`. Only the project name differs.
+    const workspace = { ...defaultSchema, name: schema.name, description: schema.description }
+    expect(onDisk).toBe(JSON.stringify(workspace, null, 2) + '\n')
+    const outputs = compileAll(workspace)
+    expect(outputs.filter((f) => f.filename.startsWith('components/react-tailwind/'))).toHaveLength(20)
+    for (const f of outputs) expect(await readFile(join(dir, f.filename), 'utf8'), f.filename).toBe(f.content)
   })
 })
