@@ -1,4 +1,5 @@
-// flutter/index.ts — the Flutter stack: Dart theme files for a Material 3 app.
+// flutter/index.ts — the Flutter stack: Dart theme files for a Material 3 app
+// plus a widget stub per component blueprint.
 //
 // Pure (schema) => FileOutput[], deterministic, fixed file order. Identifiers
 // follow `schema.export.flutterNaming` (see naming.ts).
@@ -9,6 +10,7 @@ import { compileFlutterColors } from './colors.js'
 import { compileFlutterTypography } from './typography.js'
 import { compileFlutterSpacing } from './spacing.js'
 import { compileFlutterTheme } from './theme.js'
+import { compileFlutterWidgets } from './widgets.js'
 
 /** The `lib/theme/*.dart` token files. */
 export function compileFlutterTokens(schema: DesignSystemSchema): FileOutput[] {
@@ -20,7 +22,7 @@ export function compileFlutterTokens(schema: DesignSystemSchema): FileOutput[] {
   ]
 }
 
-/** Every Flutter output: theme token files. */
+/** Every Flutter output: theme token files, then one widget stub per blueprint. */
 export function compileFlutter(schema: DesignSystemSchema): FileOutput[] {
-  return compileFlutterTokens(schema)
+  return [...compileFlutterTokens(schema), ...compileFlutterWidgets(schema)]
 }
