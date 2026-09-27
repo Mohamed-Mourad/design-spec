@@ -3,11 +3,11 @@
 
 import { describe, it, expect } from 'vitest'
 import fc from 'fast-check'
-import { defaultSchema } from './defaultSchema.js'
+import { minimalSchema } from './fixtures/minimal.fixture.js'
 import { detect } from './detect.js'
 import { fix } from './fix.js'
 
-const schema = defaultSchema
+const schema = minimalSchema
 const roundtrip = (src: string, target?: 'web' | 'flutter') =>
   fix(src, detect(src, schema), schema, target ? { target } : {})
 

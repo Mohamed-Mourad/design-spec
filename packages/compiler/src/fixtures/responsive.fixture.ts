@@ -3,16 +3,16 @@
 // DESIGN.md responsive tables. Excluded from the build (see tsconfig).
 
 import type { DesignSystemSchema } from '../types/schema.js'
-import { defaultSchema } from '../defaultSchema.js'
+import { minimalSchema } from './minimal.fixture.js'
 
-/** defaultSchema + a Button that grows its padding at tablet/desktop. */
+/** minimalSchema + a Button that grows its padding at tablet/desktop. */
 export const responsiveSchema: DesignSystemSchema = {
-  ...defaultSchema,
+  ...minimalSchema,
   name: 'Responsive Fixture',
   componentBlueprints: {
-    ...defaultSchema.componentBlueprints,
+    ...minimalSchema.componentBlueprints,
     Button: {
-      ...defaultSchema.componentBlueprints.Button,
+      ...minimalSchema.componentBlueprints.Button,
       responsive: {
         // Declared out of width order on purpose — the resolver must sort them.
         desktop: {
@@ -30,10 +30,10 @@ export const responsiveSchema: DesignSystemSchema = {
 
 /** A cascade with an undefined breakpoint name and a dangling ref — for validation. */
 export const invalidResponsiveSchema: DesignSystemSchema = {
-  ...defaultSchema,
+  ...minimalSchema,
   componentBlueprints: {
     Button: {
-      ...defaultSchema.componentBlueprints.Button,
+      ...minimalSchema.componentBlueprints.Button,
       responsive: {
         ultrawide: { tokens: { paddingX: '{spacing.nope}' } },
       },

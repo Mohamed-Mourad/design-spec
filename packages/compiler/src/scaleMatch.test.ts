@@ -8,15 +8,15 @@
 
 import { describe, it, expect } from 'vitest'
 import type { DesignSystemSchema } from './types/schema.js'
-import { defaultSchema } from './defaultSchema.js'
+import { minimalSchema } from './fixtures/minimal.fixture.js'
 import { nearestScaleToken, SCALE_GAP_FRACTION, SCALE_SNAP_CAP_PX } from './scaleMatch.js'
 
-const schema = defaultSchema
+const schema = minimalSchema
 // default spacing: base16 xs4 sm8 md16 lg24 xl40 2xl64 · rounded: none0 sm4 md8 lg12 full9999
 
 /** A schema with custom spacing and no rounded slots (isolates the spacing scale). */
 const withSpacing = (spacing: Record<string, string | number>): DesignSystemSchema => ({
-  ...defaultSchema,
+  ...minimalSchema,
   spacing,
   rounded: {},
 })

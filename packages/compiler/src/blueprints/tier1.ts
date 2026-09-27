@@ -1,13 +1,12 @@
-import { tier2Blueprints } from '@design-spec/compiler'
-import type { ComponentBlueprint } from '@/types/schema'
-
-// Tier 1 component blueprints, pre-loaded into the default schema. Each carries
-// base style tokens (referenced via {token} so edits cascade) plus, where it
-// matters, mobile-first responsive overrides. These drive SKILL.md, the code
-// stubs, and the live showcase.
+// blueprints/tier1.ts — Tier 1 ("MVP core") component blueprints.
 //
-// Tier 2 (Navbar, Sidebar, Tabs, Table, Drawer, …) ships from the compiler so
-// the CLI and the golden tests read the same copy; it is appended after Tier 1.
+// Plain data on the shared `ComponentBlueprint` contract. Each carries base
+// style tokens (referenced via {token} so edits cascade) plus, where it matters,
+// mobile-first responsive overrides. They drive SKILL.md, the code stubs, and
+// the live showcase, and are the first nine entries of `defaultSchema`'s
+// `componentBlueprints` (Tier 2 follows, see `tier2.ts`).
+
+import type { ComponentBlueprint } from '../types/schema.js'
 
 export const tier1Blueprints: Record<string, ComponentBlueprint> = {
   Button: {
@@ -294,6 +293,3 @@ export const tier1Blueprints: Record<string, ComponentBlueprint> = {
     examples: [{ label: 'Selected', props: { checked: true, label: 'Option A' } }],
   },
 }
-
-/** Every default blueprint, in showcase order: Tier 1 then Tier 2. */
-export const defaultBlueprints: Record<string, ComponentBlueprint> = { ...tier1Blueprints, ...tier2Blueprints }

@@ -4,10 +4,10 @@
 
 import { describe, it, expect } from 'vitest'
 import fc from 'fast-check'
-import { defaultSchema } from './defaultSchema.js'
+import { minimalSchema } from './fixtures/minimal.fixture.js'
 import { detect, nearestColorToken } from './detect.js'
 
-const schema = defaultSchema
+const schema = minimalSchema
 
 describe('detect — span exactness', () => {
   it('every drift column slices back to its `found` text', () => {

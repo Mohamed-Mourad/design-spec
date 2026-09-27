@@ -9,22 +9,22 @@
 
 import { describe, it, expect } from 'vitest'
 import type { DesignSystemSchema } from './types/schema.js'
-import { defaultSchema } from './defaultSchema.js'
+import { minimalSchema } from './fixtures/minimal.fixture.js'
 import { snapColor, snapSpatial, snapRef } from './snap.js'
 import { nearestColorToken, COLOR_DELTA_E_THRESHOLD } from './colorMatch.js'
 import { nearestScaleToken } from './scaleMatch.js'
 
-const schema = defaultSchema
+const schema = minimalSchema
 // default colors: primary #2563EB · surface #FFFFFF · error #DC2626 · border #E2E8F0 …
 // default spacing: base16 xs4 sm8 md16 lg24 xl40 2xl64 · rounded: none0 sm4 md8 lg12 full9999
 
 const withColors = (colors: Record<string, `#${string}`>): DesignSystemSchema => ({
-  ...defaultSchema,
+  ...minimalSchema,
   colors,
 })
 
 const withSpacing = (spacing: Record<string, string | number>): DesignSystemSchema => ({
-  ...defaultSchema,
+  ...minimalSchema,
   spacing,
   rounded: {},
 })
@@ -150,7 +150,7 @@ describe('snapSpatial — outside tolerance', () => {
   it('bypasses when two scales disagree on the value', () => {
     // spacing {a:10} and rounded {b:11}: one slot each, so both fall back to the
     // absolute cap and both match 10.5 — on different values.
-    const split: DesignSystemSchema = { ...defaultSchema, spacing: { a: 10 }, rounded: { b: '11px' } }
+    const split: DesignSystemSchema = { ...minimalSchema, spacing: { a: 10 }, rounded: { b: '11px' } }
     const snap = snapSpatial(split, 10.5)
     expect(snap.snapped).toBe(false)
     expect(snap.reason).toBe('ambiguous')

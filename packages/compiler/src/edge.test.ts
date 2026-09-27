@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest'
 import type { DesignSystemSchema, BreakpointLayer } from './index.js'
-import { defaultSchema } from './defaultSchema.js'
+import { minimalSchema } from './fixtures/minimal.fixture.js'
 import { compileSkillMd } from './skillMd.js'
 import { compileDesignMd } from './designMd.js'
 import { compileVueComponents } from './components/vue.js'
@@ -13,8 +13,8 @@ import { orderBreakpoints, resolveResponsive, validateResponsiveCascade } from '
 describe('skillMd — all framework sections', () => {
   it('renders react, vue, and flutter sections', () => {
     const schema: DesignSystemSchema = {
-      ...defaultSchema,
-      export: { ...defaultSchema.export, frameworks: ['react-tailwind', 'vue-css', 'flutter'] },
+      ...minimalSchema,
+      export: { ...minimalSchema.export, frameworks: ['react-tailwind', 'vue-css', 'flutter'] },
     }
     const md = compileSkillMd(schema)
     expect(md).toContain('### React + Tailwind')
@@ -24,8 +24,8 @@ describe('skillMd — all framework sections', () => {
 
   it('handles a schema with no frameworks', () => {
     const schema: DesignSystemSchema = {
-      ...defaultSchema,
-      export: { ...defaultSchema.export, frameworks: [] },
+      ...minimalSchema,
+      export: { ...minimalSchema.export, frameworks: [] },
     }
     expect(compileSkillMd(schema)).toContain('_No frameworks configured._')
   })
@@ -33,8 +33,8 @@ describe('skillMd — all framework sections', () => {
 
 describe('designMd — optional token branches', () => {
   const schema: DesignSystemSchema = {
-    ...defaultSchema,
-    overview: { ...defaultSchema.overview, moodKeywords: [] },
+    ...minimalSchema,
+    overview: { ...minimalSchema.overview, moodKeywords: [] },
     typography: {
       'display-x': {
         fontFamily: 'Space Grotesk',
@@ -66,16 +66,16 @@ describe('responsive — visibility, notes, unknown breakpoints', () => {
     mystery: { tokens: { paddingX: '{spacing.lg}' }, notes: 'custom bp' }, // not in schema.breakpoints
     tablet: { visibleAt: false, layout: 'hidden on tablet' },
   }
-  const base = defaultSchema.componentBlueprints.Button.tokens.base
+  const base = minimalSchema.componentBlueprints.Button.tokens.base
 
   it('orders unknown breakpoints last (null min-width)', () => {
-    const ordered = orderBreakpoints(defaultSchema, responsive)
+    const ordered = orderBreakpoints(minimalSchema, responsive)
     expect(ordered[ordered.length - 1].name).toBe('mystery')
     expect(ordered[ordered.length - 1].minWidth).toBeNull()
   })
 
   it('resolveResponsive carries visibleAt + notes', () => {
-    const resolved = resolveResponsive(defaultSchema, base, responsive)
+    const resolved = resolveResponsive(minimalSchema, base, responsive)
     const tablet = resolved.breakpoints.find((b) => b.name === 'tablet')!
     expect(tablet.visibleAt).toBe(false)
     const mystery = resolved.breakpoints.find((b) => b.name === 'mystery')!
@@ -84,9 +84,9 @@ describe('responsive — visibility, notes, unknown breakpoints', () => {
 
   it('designMd shows hidden visibility and em-dash for unknown min-width', () => {
     const schema: DesignSystemSchema = {
-      ...defaultSchema,
+      ...minimalSchema,
       componentBlueprints: {
-        Button: { ...defaultSchema.componentBlueprints.Button, responsive },
+        Button: { ...minimalSchema.componentBlueprints.Button, responsive },
       },
     }
     const md = compileDesignMd(schema)
@@ -95,15 +95,15 @@ describe('responsive — visibility, notes, unknown breakpoints', () => {
   })
 
   it('validateResponsiveCascade flags the unknown breakpoint', () => {
-    const issues = validateResponsiveCascade(defaultSchema, base, responsive)
+    const issues = validateResponsiveCascade(minimalSchema, base, responsive)
     expect(issues.some((i) => i.kind === 'unknown-breakpoint' && i.breakpoint === 'mystery')).toBe(true)
   })
 
   it('vue components skip @media for an unknown (null min-width) breakpoint', () => {
     const schema: DesignSystemSchema = {
-      ...defaultSchema,
+      ...minimalSchema,
       componentBlueprints: {
-        Button: { ...defaultSchema.componentBlueprints.Button, responsive: { mystery: { tokens: { paddingX: '{spacing.lg}' } } } },
+        Button: { ...minimalSchema.componentBlueprints.Button, responsive: { mystery: { tokens: { paddingX: '{spacing.lg}' } } } },
       },
     }
     const vue = compileVueComponents(schema).find((f) => f.filename === 'components/vue-css/Button.vue')!

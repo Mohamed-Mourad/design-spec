@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'vitest'
 import fc from 'fast-check'
-import { defaultSchema } from './defaultSchema.js'
+import { minimalSchema } from './fixtures/minimal.fixture.js'
 import {
   COLOR_DELTA_E_THRESHOLD,
   hexToLab,
@@ -14,7 +14,7 @@ import {
   nearestColorToken,
 } from './colorMatch.js'
 
-const schema = defaultSchema
+const schema = minimalSchema
 
 describe('CIELAB conversion', () => {
   it('maps the sRGB primaries near their reference L*a*b*', () => {

@@ -3,7 +3,7 @@
 
 import { describe, it, expect } from 'vitest'
 import type { DesignSystemSchema } from '../types/schema.js'
-import { defaultSchema } from '../defaultSchema.js'
+import { minimalSchema } from '../fixtures/minimal.fixture.js'
 import { FLUTTER_NAMINGS, flutterSchema, withNaming } from '../fixtures/flutter.fixture.js'
 import { compileFlutterTokens } from './index.js'
 import { dartIdent, flutterRef, flutterRefForPath, snake, pascalWords } from './naming.js'
@@ -144,7 +144,7 @@ describe('golden — Flutter theme files', () => {
     expect(on).toContain('seedColor: AppColorsDark.primary')
     expect(file(compileFlutterTokens(flutterSchema), 'app_colors.dart')).toContain('abstract final class AppColorsDark')
 
-    const off = compileFlutterTokens(defaultSchema)
+    const off = compileFlutterTokens(minimalSchema)
     expect(file(off, 'app_theme.dart')).not.toContain('ThemeData.dark')
     expect(file(off, 'app_colors.dart')).not.toContain('AppColorsDark')
   })
@@ -158,7 +158,7 @@ describe('golden — Flutter theme files', () => {
 
   it('survives edge schemas: no colors, no type scale, duplicate identifiers', () => {
     const edge: DesignSystemSchema = {
-      ...defaultSchema,
+      ...minimalSchema,
       colors: {},
       typography: { caption: { fontFamily: 'Inter', fontSize: '12px', fontWeight: 400, lineHeight: '1.4' } },
       spacing: { 'on-top': '4px', onTop: '8px', weird: '50%' },

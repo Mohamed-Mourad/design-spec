@@ -39,7 +39,7 @@ describe('serve (MCP)', () => {
   it('get_semantic_colors returns roles, never a whole-schema dump', async () => {
     const { client, server } = await connectedClient()
     const colors = JSON.parse(text(await client.callTool({ name: 'get_semantic_colors', arguments: {} })))
-    expect(colors.primary).toBe('#2563EB')
+    expect(colors.primary).toBe('#3B6EF5')
     expect(colors.componentBlueprints).toBeUndefined()
     await server.close()
   })

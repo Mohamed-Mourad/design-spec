@@ -2,7 +2,7 @@
 // (lib/widgets/{Name}/{name}.dart) across every `flutterNaming` mode.
 
 import { describe, it, expect } from 'vitest'
-import { defaultSchema } from '../defaultSchema.js'
+import { minimalSchema } from '../fixtures/minimal.fixture.js'
 import { FLUTTER_NAMINGS, flutterSchema, flutterEdgeSchema, withNaming } from '../fixtures/flutter.fixture.js'
 import { compileFlutterWidgets } from './widgets.js'
 
@@ -60,7 +60,7 @@ describe('Flutter widget responsiveness', () => {
   })
 
   it('emits a plain resolver when there is no cascade', () => {
-    const input = widget(defaultSchema, 'lib/widgets/Input/input.dart')
+    const input = widget(minimalSchema, 'lib/widgets/Input/input.dart')
     expect(input).toContain('static _InputTokens resolve(double width) {\n    return base;\n  }')
   })
 })

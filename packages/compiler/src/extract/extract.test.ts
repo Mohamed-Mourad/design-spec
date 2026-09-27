@@ -118,11 +118,11 @@ describe('extractDesignSystem — a statically clean config', () => {
 
   it('infers the semantic slots the repo does not name', () => {
     const colors = statesOf(out.states, 'colors')
-    // `brand` is the alias for `primary`; `danger` is the alias for `error`.
+    // `brand` is the alias for `primary`; `danger` is the alias for `status-error`.
     expect(out.schema.colors.primary).toBe('#C8813D')
     expect(colors.primary).toBe('inferred')
-    expect(out.schema.colors.error).toBe('#DC2626')
-    expect(colors.error).toBe('inferred')
+    expect(out.schema.colors['status-error']).toBe('#DC2626')
+    expect(colors['status-error']).toBe('inferred')
   })
 
   it('reads the font stack head, not the whole stack', () => {
@@ -213,6 +213,26 @@ describe('extractDesignSystem — CSS-variable projects', () => {
     expect(statesOf(out.states, 'colors').primary).toBe('extracted')
     expect(out.schema.rounded.base).toBe('0.5rem')
     expect(out.schema.darkMode.colors.background).toBe('#020817')
+  })
+
+  it('maps shadcn names onto the product slots the blueprints reference', () => {
+    const out = run(shadcnCssVars, 'ledger/ui')
+    const colors = statesOf(out.states, 'colors')
+    expect(out.schema.colors['surface-page']).toBe(out.schema.colors.background)
+    expect(colors['surface-page']).toBe('inferred')
+    expect(out.schema.colors['surface-default']).toBe(out.schema.colors.background)
+    expect(out.schema.colors['on-surface']).toBe(out.schema.colors.foreground)
+    expect(out.schema.colors['on-surface-muted']).toBe(out.schema.colors['muted-foreground'])
+    expect(out.schema.colors['status-error']).toBe(out.schema.colors.destructive)
+    expect(out.schema.colors['surface-border']).toBe(out.schema.colors.border)
+  })
+
+  it('an inferred slot follows its source into dark mode', () => {
+    const out = run(shadcnCssVars, 'ledger/ui')
+    // `surface-page` is taken from `background`, so the repo's dark
+    // `background` replaces the product default's dark `surface-page`.
+    expect(out.schema.darkMode.colors['surface-page']).toBe('#020817')
+    expect(out.schema.darkMode.colors['surface-page']).not.toBe(defaultSchema.darkMode.colors['surface-page'])
   })
 
   it('reads a Tailwind v4 @theme block with no config file', () => {

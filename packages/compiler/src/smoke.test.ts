@@ -45,7 +45,7 @@ describe('compileAll', () => {
 
 describe('detect + fix', () => {
   it('finds inline hex and resolves it to the nearest color token', () => {
-    const drifts = detect('const c = "#2563EB"', defaultSchema, 'a.ts')
+    const drifts = detect('const c = "#3B6EF5"', defaultSchema, 'a.ts')
     expect(drifts).toHaveLength(1)
     expect(drifts[0].kind).toBe('inline-hex')
     expect(drifts[0].nearestToken).toBe('colors.primary')
@@ -53,13 +53,13 @@ describe('detect + fix', () => {
   })
 
   it('rewrites an arbitrary Tailwind class to a token class', () => {
-    const src = '<div className="text-[#2563EB]" />'
+    const src = '<div className="text-[#3B6EF5]" />'
     const patched = fix(src, detect(src, defaultSchema, 'a.tsx'), defaultSchema)
     expect(patched).toBe('<div className="text-primary" />')
   })
 
   it('is idempotent — fix(fix(x)) === fix(x)', () => {
-    const src = 'a: #2563EB; b: text-[#475569];'
+    const src = 'a: #3B6EF5; b: text-[#475569];'
     const once = fix(src, detect(src, defaultSchema, 'a.css'), defaultSchema)
     const twice = fix(once, detect(once, defaultSchema, 'a.css'), defaultSchema)
     expect(twice).toBe(once)
@@ -81,7 +81,7 @@ describe('mcp resolvers', () => {
 
   it('get_component_tokens resolves token refs to concrete values', () => {
     const slice = get_component_tokens(defaultSchema, 'Button')!
-    expect(slice.tokens.base.backgroundColor).toBe('#2563EB')
+    expect(slice.tokens.base.backgroundColor).toBe('#3B6EF5')
   })
 
   it('get_component_tokens returns null for an unknown component', () => {
@@ -95,6 +95,6 @@ describe('mcp resolvers', () => {
   })
 
   it('get_semantic_colors returns roles', () => {
-    expect(get_semantic_colors(defaultSchema).primary).toBe('#2563EB')
+    expect(get_semantic_colors(defaultSchema).primary).toBe('#3B6EF5')
   })
 })

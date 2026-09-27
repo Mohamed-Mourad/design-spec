@@ -5,7 +5,7 @@ import { defaultSchema } from '@design-spec/compiler'
 import { run, createGit, generatedFilenames, BOT_NAME, BOT_EMAIL, type JanitorConfig } from '../src/index.js'
 import { setupFixture, pushCompeting, fakeGitHub, git, BRANCH, SCHEMA_FILE, type Fixture } from './helpers'
 
-const PRIMARY = '#2563EB' // === defaultSchema.colors.primary → fixable (ΔE 0)
+const PRIMARY = '#3B6EF5' // === defaultSchema.colors.primary → fixable (ΔE 0)
 const FAR = '#FF00FF' // magenta, no token within tolerance → advisory
 
 function configFor(work: string, opts: Partial<JanitorConfig> = {}): JanitorConfig {

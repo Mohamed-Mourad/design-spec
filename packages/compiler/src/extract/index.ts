@@ -127,12 +127,18 @@ const COLOR_ALIASES: Record<string, string[]> = {
   primary: ['primary', 'brand', 'accent', 'main', 'theme', 'action'],
   secondary: ['secondary', 'brand-secondary', 'accent-secondary', 'accent-2', 'alt'],
   neutral: ['neutral', 'foreground', 'fg', 'text', 'ink', 'black', 'gray-900', 'slate-900', 'zinc-900'],
-  surface: ['surface', 'background', 'bg', 'base', 'card', 'paper', 'canvas', 'white'],
+  'surface-page': ['background', 'bg', 'page', 'canvas', 'base'],
+  'surface-default': ['surface', 'card', 'paper', 'background', 'bg', 'white'],
+  'surface-raised': ['raised', 'elevated', 'popover'],
+  'surface-border': ['border', 'divider', 'outline', 'stroke', 'input', 'gray-200', 'slate-200', 'neutral-200'],
   'on-surface': ['on-surface', 'foreground', 'fg', 'text', 'body', 'ink', 'card-foreground'],
-  muted: ['muted', 'muted-foreground', 'subtle', 'secondary-foreground', 'gray-500', 'slate-500', 'neutral-500'],
-  border: ['border', 'divider', 'outline', 'stroke', 'input', 'gray-200', 'slate-200', 'neutral-200'],
-  error: ['error', 'danger', 'destructive', 'negative', 'red', 'red-500'],
-  success: ['success', 'positive', 'ok', 'green', 'green-500'],
+  'on-surface-muted': ['muted-foreground', 'muted', 'subtle', 'secondary-foreground', 'gray-500', 'slate-500', 'neutral-500'],
+  'on-primary': ['on-primary', 'primary-foreground'],
+  'status-error': ['error', 'danger', 'destructive', 'negative', 'red', 'red-500'],
+  'status-warning': ['warning', 'warn', 'caution', 'amber', 'yellow'],
+  'status-success': ['success', 'positive', 'ok', 'green', 'green-500'],
+  'status-info': ['info', 'information', 'notice'],
+  'interactive-focus-ring': ['focus-ring', 'focus', 'ring'],
 }
 
 /** Numeric palette steps to prefer when an alias matches a whole family. */
@@ -415,6 +421,10 @@ export function extractDesignSystem(input: ImportInput, opts: ExtractOptions = {
     const byName = aliasMatch(palette, aliases)
     if (byName) {
       colors.set(slot, palette[byName], 'inferred')
+      // The slot follows its source into dark mode too, so the base's dark
+      // surfaces never sit under a repo's own dark scheme.
+      const dark = darkColors.values()[byName]
+      if (dark !== undefined) darkColors.set(slot, dark, 'inferred')
       signals.push({
         kind: 'inferred',
         source: 'closest-match',

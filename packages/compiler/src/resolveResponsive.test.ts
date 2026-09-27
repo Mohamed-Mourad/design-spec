@@ -3,7 +3,7 @@
 
 import { describe, it, expect } from 'vitest'
 import fc from 'fast-check'
-import { defaultSchema } from './defaultSchema.js'
+import { minimalSchema } from './fixtures/minimal.fixture.js'
 import {
   resolveResponsive,
   validateResponsiveCascade,
@@ -13,7 +13,7 @@ import {
 } from './resolveResponsive.js'
 import { responsiveSchema, invalidResponsiveSchema } from './fixtures/responsive.fixture.js'
 
-const schema = defaultSchema
+const schema = minimalSchema
 const bpNames = Object.keys(schema.breakpoints)
 
 describe('mergeTokens', () => {

@@ -1,10 +1,15 @@
-// defaultSchema — the "Clean Professional" light baseline.
+// defaultSchema — the one product default.
 //
-// `design-spec init` synthesizes a project schema by detecting framework
-// signals and filling everything it cannot detect from this preset. It is also
-// the seed for a fresh web-app session. Deterministic, no runtime values.
+// A fresh web workspace, `design-spec init` (which fills everything it cannot
+// detect from here), Git Import (the implicit `extractDesignSystem` base) and
+// the golden tests all start from this schema, so a new CLI project and a new
+// workspace are identical before any edit. Carries the full palette the
+// blueprints reference (surface-* / on-surface-* / status-*), Tier 1 then
+// Tier 2 blueprints, and dark mode on. Deterministic, no runtime values.
 
 import type { DesignSystemSchema, ExportConfig } from './types/schema.js'
+import { tier1Blueprints } from './blueprints/tier1.js'
+import { tier2Blueprints } from './blueprints/tier2.js'
 
 export const defaultExportConfig: ExportConfig = {
   frameworks: ['react-tailwind'],
@@ -18,226 +23,378 @@ export const defaultExportConfig: ExportConfig = {
 
 export const defaultSchema: DesignSystemSchema = {
   version: 'alpha',
-  name: 'Clean Professional',
-  description: 'A neutral, high-contrast light baseline for product UI.',
+  name: 'My Design System',
+  description: 'A clean, modern design system for your next project.',
 
   overview: {
-    brandPersonality: 'Professional, calm, trustworthy.',
-    targetAudience: 'Product teams shipping web applications.',
-    aestheticDirection: 'Clean, spacious, high-contrast neutrals with a single accent.',
-    moodKeywords: ['professional', 'clean', 'modern', 'accessible'],
+    brandPersonality: 'Professional, clean, and approachable.',
+    targetAudience: 'Developers and product teams building modern web applications.',
+    aestheticDirection: 'Minimal and functional with a single blue accent. Generous whitespace, clear hierarchy.',
+    moodKeywords: ['clean', 'professional', 'modern', 'trustworthy'],
   },
 
   colors: {
-    primary: '#2563EB',
-    secondary: '#475569',
-    neutral: '#0F172A',
-    surface: '#FFFFFF',
+    primary: '#3B6EF5',
+    'primary-dim': '#2A55D4',
+    'primary-glow': '#5C8BFF',
+    secondary: '#64748B',
+    neutral: '#94A3B8',
+
+    'surface-page': '#F8FAFC',
+    'surface-default': '#FFFFFF',
+    'surface-raised': '#F1F5F9',
+    'surface-overlay': '#E2E8F0',
+    'surface-sunken': '#F0F4F8',
+    'surface-border': '#E2E8F0',
+    'surface-border-subtle': '#F1F5F9',
+
     'on-surface': '#0F172A',
-    muted: '#64748B',
-    border: '#E2E8F0',
-    error: '#DC2626',
-    success: '#16A34A',
+    'on-surface-muted': '#475569',
+    'on-surface-subtle': '#94A3B8',
+    'on-primary': '#FFFFFF',
+
+    'status-error': '#EF4444',
+    'status-warning': '#F59E0B',
+    'status-success': '#10B981',
+    'status-info': '#3B82F6',
+
+    // Soft status backgrounds — tinted surfaces for alerts/badges.
+    'status-error-surface': '#FEF2F2',
+    'status-warning-surface': '#FFFBEB',
+    'status-success-surface': '#ECFDF5',
+    'status-info-surface': '#EFF6FF',
+
+    'interactive-focus-ring': '#3B6EF5',
   },
 
   typography: {
-    'headline-lg': { fontFamily: 'Inter', fontSize: '32px', fontWeight: 700, lineHeight: 1.15, letterSpacing: '-0.02em' },
-    'headline-md': { fontFamily: 'Inter', fontSize: '24px', fontWeight: 600, lineHeight: 1.2 },
-    'body-lg': { fontFamily: 'Inter', fontSize: '18px', fontWeight: 400, lineHeight: 1.6 },
-    'body-md': { fontFamily: 'Inter', fontSize: '16px', fontWeight: 400, lineHeight: 1.6 },
-    'body-sm': { fontFamily: 'Inter', fontSize: '14px', fontWeight: 400, lineHeight: 1.5 },
-    'label-md': { fontFamily: 'Inter', fontSize: '14px', fontWeight: 500, lineHeight: 1.2 },
+    'display-lg': {
+      fontFamily: 'Inter',
+      fontSize: '56px',
+      fontWeight: 700,
+      lineHeight: 1.05,
+      letterSpacing: '-0.02em',
+    },
+    'display-md': {
+      fontFamily: 'Inter',
+      fontSize: '40px',
+      fontWeight: 700,
+      lineHeight: 1.1,
+      letterSpacing: '-0.015em',
+    },
+    'headline-lg': {
+      fontFamily: 'Inter',
+      fontSize: '32px',
+      fontWeight: 600,
+      lineHeight: 1.2,
+      letterSpacing: '-0.01em',
+    },
+    'headline-md': {
+      fontFamily: 'Inter',
+      fontSize: '24px',
+      fontWeight: 600,
+      lineHeight: 1.25,
+      letterSpacing: '-0.005em',
+    },
+    'headline-sm': {
+      fontFamily: 'Inter',
+      fontSize: '18px',
+      fontWeight: 600,
+      lineHeight: 1.3,
+    },
+    'body-lg': {
+      fontFamily: 'Inter',
+      fontSize: '16px',
+      fontWeight: 400,
+      lineHeight: 1.65,
+    },
+    'body-md': {
+      fontFamily: 'Inter',
+      fontSize: '14px',
+      fontWeight: 400,
+      lineHeight: 1.55,
+    },
+    'body-sm': {
+      fontFamily: 'Inter',
+      fontSize: '13px',
+      fontWeight: 400,
+      lineHeight: 1.5,
+    },
+    'label-lg': {
+      fontFamily: 'Inter',
+      fontSize: '13px',
+      fontWeight: 500,
+      lineHeight: 1,
+    },
+    'label-md': {
+      fontFamily: 'Inter',
+      fontSize: '12px',
+      fontWeight: 500,
+      lineHeight: 1,
+      letterSpacing: '0.02em',
+    },
+    'label-sm': {
+      fontFamily: 'Inter',
+      fontSize: '11px',
+      fontWeight: 600,
+      lineHeight: 1,
+      letterSpacing: '0.06em',
+    },
+    overline: {
+      fontFamily: 'Inter',
+      fontSize: '11px',
+      fontWeight: 600,
+      lineHeight: 1,
+      letterSpacing: '0.12em',
+      textTransform: 'uppercase',
+    },
+    'code-md': {
+      fontFamily: 'JetBrains Mono',
+      fontSize: '13px',
+      fontWeight: 400,
+      lineHeight: 1.65,
+    },
+    'code-sm': {
+      fontFamily: 'JetBrains Mono',
+      fontSize: '12px',
+      fontWeight: 400,
+      lineHeight: 1.5,
+    },
   },
 
   spacing: {
-    base: '16px',
+    base: '4px',
     xs: '4px',
     sm: '8px',
     md: '16px',
     lg: '24px',
-    xl: '40px',
-    '2xl': '64px',
+    xl: '32px',
+    '2xl': '48px',
+    '3xl': '64px',
+    '4xl': '96px',
+    gutter: '24px',
+    margin: '32px',
   },
 
   rounded: {
-    none: 0,
+    none: '0px',
+    xs: '2px',
     sm: '4px',
-    md: '8px',
-    lg: '12px',
+    md: '6px',
+    lg: '10px',
+    xl: '16px',
+    '2xl': '24px',
     full: '9999px',
   },
 
   shadows: {
-    sm: { value: '0 1px 2px 0 rgba(15, 23, 42, 0.05)' },
-    md: { value: '0 4px 6px -1px rgba(15, 23, 42, 0.1)' },
-    lg: { value: '0 10px 15px -3px rgba(15, 23, 42, 0.1)' },
+    none: { value: 'none' },
+    xs: { value: '0 1px 2px rgba(0,0,0,0.05)' },
+    sm: { value: ['0 1px 3px rgba(0,0,0,0.10)', '0 1px 2px rgba(0,0,0,0.06)'] },
+    md: { value: ['0 4px 6px -1px rgba(0,0,0,0.10)', '0 2px 4px -2px rgba(0,0,0,0.10)'] },
+    lg: { value: ['0 10px 15px -3px rgba(0,0,0,0.10)', '0 4px 6px -4px rgba(0,0,0,0.10)'] },
+    xl: { value: ['0 20px 25px -5px rgba(0,0,0,0.10)', '0 8px 10px -6px rgba(0,0,0,0.10)'] },
+    inner: { value: 'inset 0 2px 4px rgba(0,0,0,0.06)', inset: true },
   },
 
   borders: {
-    width: { thin: '1px', thick: '2px' },
-    color: { default: '{colors.border}', strong: '{colors.neutral}' },
+    width: {
+      none: '0px',
+      sm: '1px',
+      md: '2px',
+      lg: '4px',
+    },
+    color: {
+      default: '{colors.surface-border}',
+      strong: '{colors.on-surface-muted}',
+      focus: '{colors.interactive-focus-ring}',
+      error: '{colors.status-error}',
+    },
   },
 
   transitions: {
-    duration: { fast: '120ms', base: '200ms', slow: '320ms' },
-    easing: { standard: 'cubic-bezier(0.4, 0, 0.2, 1)', emphasized: 'cubic-bezier(0.2, 0, 0, 1)' },
-    reducedMotion: true,
+    duration: {
+      instant: '0ms',
+      fast: '100ms',
+      normal: '200ms',
+      slow: '350ms',
+      xslow: '500ms',
+    },
+    easing: {
+      linear: 'linear',
+      'ease-out': 'cubic-bezier(0, 0, 0.2, 1)',
+      'ease-in': 'cubic-bezier(0.4, 0, 1, 1)',
+      'ease-in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
+      spring: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+    },
+    reducedMotion: false,
   },
 
   breakpoints: {
-    tablet: '768px',
-    desktop: '1024px',
-    wide: '1280px',
+    xs: '320px',
+    sm: '640px',
+    md: '768px',
+    lg: '1024px',
+    xl: '1280px',
+    '2xl': '1536px',
   },
 
   zIndex: {
+    below: -1,
     base: 0,
-    dropdown: 1000,
-    sticky: 1100,
-    overlay: 1300,
-    modal: 1400,
-    toast: 1600,
+    raised: 10,
+    dropdown: 100,
+    sticky: 200,
+    overlay: 300,
+    modal: 400,
+    toast: 500,
+    tooltip: 600,
   },
 
   opacity: {
-    disabled: 0.4,
+    0: 0,
+    disabled: 0.38,
     muted: 0.6,
+    secondary: 0.75,
+    hover: 0.88,
     full: 1,
   },
 
   icons: {
     library: 'lucide',
-    size: { sm: '16px', md: '20px', lg: '24px' },
+    size: {
+      xs: '12px',
+      sm: '16px',
+      md: '20px',
+      lg: '24px',
+      xl: '32px',
+      '2xl': '48px',
+    },
   },
 
   layout: {
-    grid: { columns: 12, gutter: '{spacing.lg}', margin: '{spacing.xl}' },
-    container: { maxWidth: '1200px', paddingX: '{spacing.lg}' },
+    grid: {
+      columns: 12,
+      gutter: '{spacing.md}',
+      margin: '{spacing.lg}',
+    },
+    container: {
+      maxWidth: '1280px',
+      paddingX: '{spacing.lg}',
+    },
   },
 
   components: {
     'button-primary': {
       backgroundColor: '{colors.primary}',
-      textColor: '{colors.surface}',
+      textColor: '{colors.on-primary}',
+      typography: '{typography.label-lg}',
       rounded: '{rounded.md}',
-      paddingX: '{spacing.md}',
-      paddingY: '{spacing.sm}',
-      typography: '{typography.label-md}',
+      paddingX: '16px',
+      paddingY: '8px',
     },
     'button-primary-hover': {
-      backgroundColor: '#1D4ED8',
+      backgroundColor: '{colors.primary-glow}',
+    },
+    'button-primary-active': {
+      backgroundColor: '{colors.primary-dim}',
     },
     'button-secondary': {
-      backgroundColor: '{colors.surface}',
-      textColor: '{colors.primary}',
-      borderColor: '{colors.border}',
-      borderWidth: '{borders.width.thin}',
-      rounded: '{rounded.md}',
-      paddingX: '{spacing.md}',
-      paddingY: '{spacing.sm}',
-      typography: '{typography.label-md}',
-    },
-    'input-default': {
-      backgroundColor: '{colors.surface}',
+      backgroundColor: '{colors.surface-raised}',
       textColor: '{colors.on-surface}',
-      borderColor: '{colors.border}',
-      borderWidth: '{borders.width.thin}',
+      borderColor: '{colors.surface-border}',
+      borderWidth: '1px',
+      typography: '{typography.label-lg}',
       rounded: '{rounded.md}',
-      paddingX: '{spacing.md}',
-      paddingY: '{spacing.sm}',
+      paddingX: '16px',
+      paddingY: '8px',
+    },
+    'button-ghost': {
+      textColor: '{colors.on-surface-muted}',
+      typography: '{typography.label-lg}',
+      rounded: '{rounded.md}',
+      paddingX: '12px',
+      paddingY: '8px',
+    },
+    input: {
+      backgroundColor: '{colors.surface-sunken}',
+      textColor: '{colors.on-surface}',
+      borderColor: '{colors.surface-border}',
+      borderWidth: '1px',
+      rounded: '{rounded.md}',
+      padding: '10px',
       typography: '{typography.body-md}',
     },
+    'input-focus': {
+      borderColor: '{colors.interactive-focus-ring}',
+    },
+    'input-error': {
+      borderColor: '{colors.status-error}',
+    },
+    card: {
+      backgroundColor: '{colors.surface-raised}',
+      rounded: '{rounded.lg}',
+      padding: '{spacing.lg}',
+      shadow: '{shadows.sm}',
+      borderColor: '{colors.surface-border-subtle}',
+      borderWidth: '1px',
+    },
+    modal: {
+      backgroundColor: '{colors.surface-overlay}',
+      rounded: '{rounded.xl}',
+      padding: '{spacing.xl}',
+      shadow: '{shadows.xl}',
+    },
+    badge: {
+      backgroundColor: '{colors.surface-overlay}',
+      textColor: '{colors.on-surface-muted}',
+      rounded: '{rounded.full}',
+      paddingX: '8px',
+      paddingY: '3px',
+      typography: '{typography.label-sm}',
+    },
+    tooltip: {
+      backgroundColor: '{colors.surface-overlay}',
+      textColor: '{colors.on-surface}',
+      rounded: '{rounded.sm}',
+      padding: '8px',
+      shadow: '{shadows.lg}',
+    },
   },
 
-  componentBlueprints: {
-    Button: {
-      name: 'Button',
-      description: 'A clickable action trigger. Primary drives the single most important action per view.',
-      category: 'action',
-      variants: ['primary', 'secondary'],
-      sizes: ['sm', 'md', 'lg'],
-      states: ['default', 'hover', 'focus', 'disabled', 'loading'],
-      anatomy: ['root', 'label', 'icon', 'spinner'],
-      props: {
-        variant: { type: 'enum', values: ['primary', 'secondary'], default: 'primary' },
-        size: { type: 'enum', values: ['sm', 'md', 'lg'], default: 'md' },
-        disabled: { type: 'boolean', default: false },
-        loading: { type: 'boolean', default: false },
-        children: { type: 'slot', description: 'Button label content.' },
-      },
-      tokens: {
-        base: {
-          backgroundColor: '{colors.primary}',
-          textColor: '{colors.surface}',
-          rounded: '{rounded.md}',
-          paddingX: '{spacing.md}',
-          paddingY: '{spacing.sm}',
-          typography: '{typography.label-md}',
-        },
-        secondary: {
-          backgroundColor: '{colors.surface}',
-          textColor: '{colors.primary}',
-          borderColor: '{colors.border}',
-          borderWidth: '{borders.width.thin}',
-        },
-      },
-      examples: [
-        { label: 'Primary action', props: { variant: 'primary', children: 'Save changes' } },
-        { label: 'Secondary action', props: { variant: 'secondary', children: 'Cancel' } },
-      ],
-      dosDonts: {
-        dos: ['Use one primary button per view.', 'Show a spinner in the loading state.'],
-        donts: ["Don't use inline hex — reference color tokens."],
-      },
-    },
-    Input: {
-      name: 'Input',
-      description: 'A single-line text field with label, helper text, and error states.',
-      category: 'form',
-      variants: ['default'],
-      sizes: ['md'],
-      states: ['default', 'focus', 'disabled', 'error'],
-      anatomy: ['root', 'label', 'field', 'helper'],
-      props: {
-        label: { type: 'string' },
-        placeholder: { type: 'string' },
-        disabled: { type: 'boolean', default: false },
-        error: { type: 'string', description: 'Error message; switches the field to its error state.' },
-      },
-      tokens: {
-        base: {
-          backgroundColor: '{colors.surface}',
-          textColor: '{colors.on-surface}',
-          borderColor: '{colors.border}',
-          borderWidth: '{borders.width.thin}',
-          rounded: '{rounded.md}',
-          paddingX: '{spacing.md}',
-          paddingY: '{spacing.sm}',
-          typography: '{typography.body-md}',
-        },
-      },
-      examples: [{ label: 'Email field', props: { label: 'Email', placeholder: 'you@example.com' } }],
-    },
-  },
+  componentBlueprints: { ...tier1Blueprints, ...tier2Blueprints },
 
   prose: {
-    overview:
-      'Clean Professional favors clarity over decoration: generous whitespace, high-contrast neutrals, and a single confident accent for action.',
-    colors:
-      'A high-contrast neutral foundation with a single blue accent reserved for primary action and focus.',
-    typography: 'Inter across the board; weight and size carry hierarchy, not color.',
-    layout: 'A 12-column grid on a strict 8px spacing rhythm; content caps at 1200px.',
-    elevation: 'Depth comes from subtle, tight shadows on raised surfaces rather than heavy drop shadows.',
-    shapes: 'Soft 8px corners on interactive elements; pills only for badges and avatars.',
-    dosDonts: [
-      'Do reserve the primary color for the single most important action per screen.',
-      'Do maintain WCAG AA contrast (4.5:1 for body text).',
-      "Don't mix more than two font weights in one view.",
-      "Don't hard-code hex values — reference tokens.",
-    ],
+    overview: '',
+    colors: '',
+    typography: '',
+    layout: '',
+    elevation: '',
+    shapes: '',
+    dosDonts: [],
   },
 
-  darkMode: { enabled: false, colors: {} },
+  darkMode: {
+    enabled: true,
+    // Color overrides applied in dark mode; keys not listed inherit the light value.
+    colors: {
+      'surface-page': '#0F1115',
+      'surface-default': '#161A21',
+      'surface-raised': '#1E232C',
+      'surface-overlay': '#272D38',
+      'surface-sunken': '#0B0D11',
+      'surface-border': '#2C333F',
+      'surface-border-subtle': '#1E232C',
+      'on-surface': '#E6E9EF',
+      'on-surface-muted': '#9AA3B2',
+      'on-surface-subtle': '#5C6370',
+      // Darker, desaturated status tints that read on a dark surface.
+      'status-error-surface': '#2A1719',
+      'status-warning-surface': '#2A2113',
+      'status-success-surface': '#15251D',
+      'status-info-surface': '#16263A',
+    },
+  },
 
   export: defaultExportConfig,
 }

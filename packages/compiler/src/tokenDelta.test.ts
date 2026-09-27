@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defaultSchema } from './defaultSchema.js'
+import { minimalSchema } from './fixtures/minimal.fixture.js'
 import {
   changesByGroup,
   diffTokens,
@@ -10,7 +10,7 @@ import {
 import type { DesignSystemSchema } from './types/schema.js'
 
 function clone(): DesignSystemSchema {
-  return JSON.parse(JSON.stringify(defaultSchema)) as DesignSystemSchema
+  return JSON.parse(JSON.stringify(minimalSchema)) as DesignSystemSchema
 }
 
 describe('diffTokens', () => {
@@ -117,10 +117,10 @@ describe('diffTokens', () => {
   it('renders numeric and boolean leaves as literals', () => {
     const next = clone()
     next.opacity.disabled = 0.5
-    next.transitions.reducedMotion = !defaultSchema.transitions.reducedMotion
+    next.transitions.reducedMotion = !minimalSchema.transitions.reducedMotion
     const paths = Object.fromEntries(diffTokens(clone(), next).changes.map((c) => [c.path, c.new]))
     expect(paths['opacity.disabled']).toBe('0.5')
-    expect(paths['transitions.reducedMotion']).toBe(String(!defaultSchema.transitions.reducedMotion))
+    expect(paths['transitions.reducedMotion']).toBe(String(!minimalSchema.transitions.reducedMotion))
   })
 })
 
@@ -146,7 +146,7 @@ describe('changesByGroup', () => {
 describe('TOKEN_GROUPS', () => {
   it('names only groups the default schema actually has', () => {
     for (const group of TOKEN_GROUPS) {
-      expect(defaultSchema).toHaveProperty(group)
+      expect(minimalSchema).toHaveProperty(group)
     }
   })
 })

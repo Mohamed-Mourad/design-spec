@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest'
 import fc from 'fast-check'
 import { defaultSchema } from './defaultSchema.js'
 import { get_component_tokens, get_layout_system, get_semantic_colors } from './mcp/route.js'
-import { tier2Schema } from './fixtures/tier2.fixture.js'
+import { minimalSchema } from './fixtures/minimal.fixture.js'
 
 const schema = defaultSchema
 const componentNames = Object.keys(schema.componentBlueprints)
@@ -26,7 +26,7 @@ describe('get_component_tokens — slice isolation', () => {
 
   it('resolves token refs to concrete values (no {ref} leaks through)', () => {
     const slice = get_component_tokens(schema, 'Button')!
-    expect(slice.tokens.base.backgroundColor).toBe('#2563EB')
+    expect(slice.tokens.base.backgroundColor).toBe('#3B6EF5')
     expect(JSON.stringify(slice)).not.toMatch(/"\{[^}]+\}"/)
   })
 
@@ -78,10 +78,10 @@ describe('get_semantic_colors — role-only slice', () => {
   it('returns semantic roles and drops numeric scale steps', () => {
     const scaled = {
       ...schema,
-      colors: { ...schema.colors, 'primary-60': '#3B6EF5', 'primary-70': '#1D4ED8' },
+      colors: { ...schema.colors, 'primary-60': '#5C8BFF', 'primary-70': '#2A55D4' },
     }
     const roles = get_semantic_colors(scaled)
-    expect(roles.primary).toBe('#2563EB')
+    expect(roles.primary).toBe('#3B6EF5')
     expect(roles['primary-60']).toBeUndefined()
     expect(roles['primary-70']).toBeUndefined()
   })
@@ -104,19 +104,19 @@ describe('get_component_tokens — Tier 2 names and aliases', () => {
     ['tab', 'Tabs'],
     ['collapse', 'Accordion'],
   ])('%s → %s, exact (no note)', (query, component) => {
-    const slice = get_component_tokens(tier2Schema, query)!
+    const slice = get_component_tokens(defaultSchema, query)!
     expect(slice.component).toBe(component)
     expect(slice.note).toBeUndefined()
   })
 
   it('returns the compound-part sub-groups resolved', () => {
-    const slice = get_component_tokens(tier2Schema, 'tabs')!
+    const slice = get_component_tokens(defaultSchema, 'tabs')!
     expect(slice.tokens.indicator.backgroundColor).toBe('#3B6EF5')
     expect(JSON.stringify(slice)).not.toMatch(/"\{[^}]+\}"/)
   })
 
   it('an alias never resolves to a component the schema lacks', () => {
-    // The compiler default schema has only Button + Input.
-    expect(get_component_tokens(defaultSchema, 'sheet')).toBeNull()
+    // The minimal fixture has only Button + Input.
+    expect(get_component_tokens(minimalSchema, 'sheet')).toBeNull()
   })
 })
