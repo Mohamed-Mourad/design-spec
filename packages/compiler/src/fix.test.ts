@@ -92,6 +92,18 @@ describe('fix — safety', () => {
     expect(roundtrip('Color(0xFF2563EB)', 'flutter')).toBe('AppColors.primary')
   })
 
+  it.each([
+    ['prefixed-class', 'AppColors.onSurface'],
+    ['snake_const', 'c_on_surface'],
+    ['raw', 'kColorOnSurface'],
+  ] as const)('rewrites flutter colors per export.flutterNaming (%s) to a valid Dart identifier', (naming, ref) => {
+    const named = { ...schema, colors: { 'on-surface': '#0F172A' as const }, export: { ...schema.export, flutterNaming: naming } }
+    const src = 'Color(0xFF0F172A); final c = "#0F172A";'
+    const once = fix(src, detect(src, named), named, { target: 'flutter' })
+    expect(once).toBe(`${ref}; final c = "${ref}";`)
+    expect(fix(once, detect(once, named), named, { target: 'flutter' })).toBe(once)
+  })
+
   it('leaves an unmapped hex untouched', () => {
     expect(roundtrip('color: #ABCDEF;')).toBe('color: #ABCDEF;')
   })

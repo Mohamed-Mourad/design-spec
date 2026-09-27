@@ -10,15 +10,17 @@
 // untouched and never auto-committed.
 //
 // Idempotent: fix(fix(x)) === fix(x), because the rewritten forms (`var(--…)`,
-// `text-primary`, `AppColors.…`) contain no raw values left to match. This
-// single pipeline (detect → fix) powers local `design-spec fix` and the hosted
-// CI Drift-Janitor — same drift in, same rewrite out, no second source of truth.
+// `text-primary`, `AppColors.…` / `c_…` / `kColor…`) contain no raw values
+// left to match. This single pipeline (detect → fix) powers local
+// `design-spec fix` and the hosted CI Drift-Janitor — same drift in, same
+// rewrite out, no second source of truth.
 
 import type { DesignSystemSchema } from './types/schema.js'
 import type { Drift } from './detect.js'
+import { flutterRefForPath } from './flutter/naming.js'
 
 export interface FixOptions {
-  /** Output dialect. Web → CSS vars / Tailwind classes. Flutter → AppColors. */
+  /** Output dialect. Web → CSS vars / Tailwind classes. Flutter → the lib/theme identifier for `export.flutterNaming`. */
   target?: 'web' | 'flutter'
 }
 
@@ -32,8 +34,14 @@ function classUtility(found: string): string {
   return found.slice(0, found.indexOf('-['))
 }
 
-function flutterClass(group: string): string {
-  return group === 'colors' ? 'AppColors' : 'AppTokens'
+/**
+ * The Dart identifier for a token, exactly as the Flutter compiler declares it
+ * (`AppColors.onSurface` / `c_on_surface` / `kColorOnSurface`), so a fixed
+ * file compiles against the generated lib/theme. A path with no Flutter declaration
+ * is left as found rather than pointed at an identifier that doesn't exist.
+ */
+function flutterToken(path: string, schema: DesignSystemSchema, found: string): string {
+  return flutterRefForPath(schema.export.flutterNaming ?? 'prefixed-class', path) ?? found
 }
 
 /** Render the replacement string for one fixable drift. */
@@ -48,9 +56,9 @@ function replacement(drift: Drift, schema: DesignSystemSchema, target: 'web' | '
       // text-[#2563EB] → text-primary (utility prefix preserved)
       return `${classUtility(drift.found)}-${name}`
     case 'flutter-color':
-      return `${flutterClass(group)}.${name}`
+      return flutterToken(path, schema, drift.found)
     case 'inline-hex':
-      return target === 'flutter' ? `${flutterClass(group)}.${name}` : `var(--${p}${group === 'colors' ? 'color' : group}-${name})`
+      return target === 'flutter' ? flutterToken(path, schema, drift.found) : `var(--${p}${group === 'colors' ? 'color' : group}-${name})`
     case 'raw-px':
       return `var(--${p}${group}-${name})`
     default:
