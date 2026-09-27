@@ -1,0 +1,38 @@
+/* Shared by the per-component showcase previews (Card, Alert, Navbar, …).
+   Every value is a design-system var, so token edits repaint live. */
+.showcase__sep {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid currentColor;
+  opacity: 0.2;
+  margin: var(--spacing-xs) 0;
+}
+.showcase__x {
+  display: inline-flex;
+  background: none;
+  border: none;
+  color: currentColor;
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 0;
+}
+.showcase__x:hover {
+  opacity: 1;
+}
+.showcase__actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+.showcase__btn {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.showcase button[data-testid],
+.showcase input[data-testid] {
+  cursor: pointer;
+  border: 0;
+}

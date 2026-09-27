@@ -85,6 +85,15 @@ function applyProp(schema: DesignSystemSchema, prop: string, value: unknown, sty
   }
 }
 
+/** One token group (e.g. a compound part like Tabs `indicator`) as inline CSS. */
+export function groupStyle(schema: DesignSystemSchema, group: Record<string, unknown> | undefined): CSSProperties {
+  const style: CSSProperties = {}
+  for (const [prop, value] of Object.entries(group ?? {})) {
+    if (prop !== 'responsive') applyProp(schema, prop, value, style)
+  }
+  return style
+}
+
 /**
  * Resolve a blueprint's render style at `width` px (Infinity = fit). Cascade:
  * base tokens → the named variant's overrides → each responsive override whose
