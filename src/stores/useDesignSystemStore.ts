@@ -527,6 +527,12 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     snapshot()
   }
 
+  function updateFlutterNaming(naming: DesignSystemSchema['export']['flutterNaming']) {
+    logAction('updateFlutterNaming', [naming])
+    schema.value.export.flutterNaming = naming
+    snapshot()
+  }
+
   function loadPreset(preset: DesignSystemSchema) {
     logAction('loadPreset', [preset.name])
     // A JSON round-trip rather than structuredClone, for the same reason
@@ -592,6 +598,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     updateBentoLayout,
     updatePresentation,
     updateFrameworks,
+    updateFlutterNaming,
     loadPreset,
     importFromJson,
     reset,

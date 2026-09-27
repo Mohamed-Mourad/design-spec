@@ -19,6 +19,20 @@ describe('useDesignSystemStore — compiler wiring', () => {
     expect(store.outputFiles.some((f) => f.filename === 'tokens.css')).toBe(true)
   })
 
+  it('emits Dart in the chosen naming convention when Flutter is selected', () => {
+    const store = useDesignSystemStore()
+    store.updateFrameworks(['flutter'])
+    const colors = () => store.outputFiles.find((f) => f.filename === 'lib/theme/app_colors.dart')!
+    expect(colors().language).toBe('dart')
+    expect(colors().content).toContain('abstract final class AppColors')
+    expect(store.outputFiles.some((f) => f.filename === 'lib/widgets/Button/button.dart')).toBe(true)
+
+    store.updateFlutterNaming('raw')
+    expect(colors().content).toContain('const Color kColorPrimary')
+    store.undo()
+    expect(store.schema.export.flutterNaming).toBe('prefixed-class')
+  })
+
   it('setPath creates intermediate objects for a responsive override', () => {
     const store = useDesignSystemStore()
     store.setPath(['componentBlueprints', 'Button', 'responsive', 'md', 'tokens', 'paddingX'], '{spacing.lg}')

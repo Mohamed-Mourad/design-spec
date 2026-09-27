@@ -6,7 +6,7 @@ import type { HighlighterCore } from 'shiki/core'
 // the bundle doesn't pull Shiki's full language set.
 
 const THEME = 'github-dark'
-const LANGS = ['markdown', 'javascript', 'typescript', 'tsx', 'css', 'vue', 'json'] as const
+const LANGS = ['markdown', 'javascript', 'typescript', 'tsx', 'css', 'vue', 'json', 'dart'] as const
 
 let instance: HighlighterCore | null = null
 let loading: Promise<HighlighterCore> | null = null
@@ -22,7 +22,7 @@ async function ensure(): Promise<HighlighterCore> {
     loading = (async () => {
       const { createHighlighterCore } = await import('shiki/core')
       const { createJavaScriptRegexEngine } = await import('shiki/engine/javascript')
-      const [md, js, ts, tsx, css, vue, json, theme] = await Promise.all([
+      const [md, js, ts, tsx, css, vue, json, dart, theme] = await Promise.all([
         import('shiki/langs/markdown.mjs'),
         import('shiki/langs/javascript.mjs'),
         import('shiki/langs/typescript.mjs'),
@@ -30,11 +30,12 @@ async function ensure(): Promise<HighlighterCore> {
         import('shiki/langs/css.mjs'),
         import('shiki/langs/vue.mjs'),
         import('shiki/langs/json.mjs'),
+        import('shiki/langs/dart.mjs'),
         import('shiki/themes/github-dark.mjs'),
       ])
       return createHighlighterCore({
         themes: [theme.default],
-        langs: [md.default, js.default, ts.default, tsx.default, css.default, vue.default, json.default],
+        langs: [md.default, js.default, ts.default, tsx.default, css.default, vue.default, json.default, dart.default],
         engine: createJavaScriptRegexEngine(),
       })
     })()
