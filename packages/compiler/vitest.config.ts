@@ -27,6 +27,7 @@ export default defineConfig({
         'src/components/shared.ts',
         'src/components/react.ts',
         'src/components/vue.ts',
+        'src/flutter/*.ts',
       ],
       thresholds: {
         lines: 90,
