@@ -5,7 +5,7 @@
 
 import type { DesignSystemSchema, ComponentBlueprint } from '../types/schema.js'
 import type { FileOutput } from '../types/compiler.js'
-import { pascal } from './shared.js'
+import { pascal, objKey } from './shared.js'
 import { elementFor, propLines } from './react.js'
 import { kebab, cssRuleBlocks } from './vue.js'
 
@@ -33,13 +33,13 @@ function compileTsx(bp: ComponentBlueprint): FileOutput {
 
   lines.push(`export interface ${Name}Props extends ${el.attrs} {`)
   if (multiVariant) lines.push(`  variant?: ${Name}Variant`)
-  lines.push(...propLines(bp.props))
+  lines.push(...propLines(bp.props, multiVariant))
   lines.push('}')
 
   // Semantic class names that the .css file styles via var(--token).
   if (multiVariant) {
     lines.push('', `const variants: Record<${Name}Variant, string> = {`)
-    for (const v of bp.variants) lines.push(`  ${v}: '${cls}--${v}',`)
+    for (const v of bp.variants) lines.push(`  ${objKey(v)}: '${cls}--${v}',`)
     lines.push('}')
   }
 

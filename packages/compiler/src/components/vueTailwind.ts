@@ -5,7 +5,7 @@
 
 import type { DesignSystemSchema, ComponentBlueprint, PropDefinition } from '../types/schema.js'
 import type { FileOutput } from '../types/compiler.js'
-import { pascal } from './shared.js'
+import { pascal, objKey } from './shared.js'
 import { tailwindClasses } from './react.js'
 
 const HEADER = [
@@ -31,7 +31,7 @@ function compileOne(schema: DesignSystemSchema, bp: ComponentBlueprint): FileOut
 
   // ── <script setup> ──
   const propDefs = Object.entries(bp.props)
-    .filter(([name]) => name !== 'children')
+    .filter(([name]) => name !== 'children' && !(multiVariant && name === 'variant'))
     .map(([name, def]) => `  ${name}?: ${TS_TYPE[def.type](def)}`)
   if (multiVariant) propDefs.unshift(`  variant?: ${bp.variants.map((v) => `'${v}'`).join(' | ')}`)
 
@@ -40,7 +40,7 @@ function compileOne(schema: DesignSystemSchema, bp: ComponentBlueprint): FileOut
     script.push("import { computed } from 'vue'")
     script.push(`const props = withDefaults(defineProps<{`, ...propDefs, `}>(), { variant: '${bp.variants[0]}' })`)
     script.push('const variantClasses: Record<string, string> = {')
-    for (const v of bp.variants) script.push(`  ${v}: '${variants[v].join(' ')}',`)
+    for (const v of bp.variants) script.push(`  ${objKey(v)}: '${variants[v].join(' ')}',`)
     script.push('}')
     script.push(`const classes = computed(() => '${baseClass}' + ' ' + (variantClasses[props.variant ?? '${bp.variants[0]}'] ?? ''))`)
   } else if (propDefs.length) {

@@ -441,7 +441,6 @@ export type ButtonVariant = 'primary' | 'secondary'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
-  variant?: 'primary' | 'secondary'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
   loading?: boolean
@@ -498,7 +497,6 @@ export type ButtonVariant = 'primary' | 'secondary'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
-  variant?: 'primary' | 'secondary'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
   loading?: boolean
@@ -531,7 +529,6 @@ export type ButtonVariant = 'primary' | 'secondary'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
-  variant?: 'primary' | 'secondary'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
   loading?: boolean
@@ -880,7 +877,6 @@ exports[`golden — Vue components > default schema 1`] = `
 <script setup lang="ts">
 defineProps<{
   variant?: 'primary' | 'secondary'
-  variant?: 'primary' | 'secondary'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
   loading?: boolean
@@ -966,7 +962,6 @@ exports[`golden — Vue components > emits mobile-first @media blocks 1`] = `
 
 <script setup lang="ts">
 defineProps<{
-  variant?: 'primary' | 'secondary'
   variant?: 'primary' | 'secondary'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
@@ -1104,7 +1099,6 @@ exports[`golden — Vue+Tailwind components > default schema 1`] = `
 <script setup lang="ts">
 import { computed } from 'vue'
 const props = withDefaults(defineProps<{
-  variant?: 'primary' | 'secondary'
   variant?: 'primary' | 'secondary'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean

@@ -78,7 +78,7 @@ function compileOne(schema: DesignSystemSchema, bp: ComponentBlueprint): FileOut
 
   // ── <script setup> ──
   const propDefs = Object.entries(bp.props)
-    .filter(([name]) => name !== 'children')
+    .filter(([name]) => name !== 'children' && !(multiVariant && name === 'variant'))
     .map(([name, def]) => `  ${name}?: ${TS_TYPE[def.type](def)}`)
   if (multiVariant) propDefs.unshift(`  variant?: ${bp.variants.map((v) => `'${v}'`).join(' | ')}`)
 

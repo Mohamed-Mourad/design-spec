@@ -141,3 +141,8 @@ export function orderedProps(group: Record<string, unknown>): string[] {
 export function pascal(name: string): string {
   return name.replace(/(^|[-_\s]+)(\w)/g, (_, _sep, c: string) => c.toUpperCase())
 }
+
+/** An object-literal key: bare when it's a valid identifier, quoted otherwise (`'not-found'`). */
+export function objKey(key: string): string {
+  return /^[A-Za-z_$][\w$]*$/.test(key) ? key : `'${key}'`
+}

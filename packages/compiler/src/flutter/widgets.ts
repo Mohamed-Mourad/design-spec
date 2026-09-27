@@ -315,13 +315,15 @@ function compileOne(schema: DesignSystemSchema, bp: ComponentBlueprint): FileOut
       steps.push(`    // TODO: breakpoint "${l.name}" is not in schema.breakpoints — skipped.`)
       return
     }
-    const threshold = ctx.ref('breakpoints', l.name)
+    // Resolved lazily: a prose-only layer (just `layout`) emits no Dart, so it
+    // must not pull in the breakpoints import either.
+    const threshold = () => ctx.ref('breakpoints', l.name)
     const id = dartIdent(`at-${l.name}`)
     if (tokenArgs(ctx, bpGroups[i]).length) {
       bpConsts.push(...constDecl(id, bpGroups[i]))
-      steps.push(`    if (width >= ${threshold}) t = t.merge(${id});`)
+      steps.push(`    if (width >= ${threshold()}) t = t.merge(${id});`)
     }
-    if (l.layer.visibleAt !== undefined) visibility.push(`    if (width >= ${threshold}) visible = ${l.layer.visibleAt};`)
+    if (l.layer.visibleAt !== undefined) visibility.push(`    if (width >= ${threshold()}) visible = ${l.layer.visibleAt};`)
   })
   const resolveLines = steps.some((s) => s.includes('t.merge'))
     ? [`    var t = ${start};`, ...steps, '    return t;']
