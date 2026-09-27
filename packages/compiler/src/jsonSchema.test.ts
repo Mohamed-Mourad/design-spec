@@ -10,6 +10,7 @@ import Ajv2020 from 'ajv/dist/2020.js'
 import { designSpecJsonSchema } from './jsonSchema.js'
 import { defaultSchema } from './defaultSchema.js'
 import { responsiveSchema } from './fixtures/responsive.fixture.js'
+import { tier2Schema } from './fixtures/tier2.fixture.js'
 import { SCHEMA_JSON_PATH, serializeSchema } from './schemaFile.js'
 
 const ajv = new Ajv2020({ allErrors: true, strict: false })
@@ -18,6 +19,10 @@ const validate = ajv.compile(designSpecJsonSchema)
 describe('JSON Schema — round-trip', () => {
   it('validates the default schema', () => {
     expect(validate(defaultSchema)).toBe(true)
+  })
+
+  it('validates the Tier 2 fixture (every Tier 2 blueprint)', () => {
+    expect(validate(tier2Schema), JSON.stringify(validate.errors)).toBe(true)
   })
 
   it('validates the responsive fixture', () => {

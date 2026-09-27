@@ -16,6 +16,10 @@ import { compileReactCssComponents } from './components/reactCss.js'
 import { compileVueTailwindComponents } from './components/vueTailwind.js'
 import { compileAll } from './compile.js'
 import { responsiveSchema } from './fixtures/responsive.fixture.js'
+import { tier2Schema } from './fixtures/tier2.fixture.js'
+import { tier2Blueprints } from './blueprints/tier2.js'
+import { compileFlutterWidgets } from './flutter/widgets.js'
+import { refPath, getPath } from './tokenResolver.js'
 
 describe('golden — DESIGN.md', () => {
   it('default schema', () => {
@@ -195,5 +199,88 @@ describe('determinism', () => {
     expect(compileDesignMd(defaultSchema)).toBe(compileDesignMd(defaultSchema))
     expect(compileSkillMd(defaultSchema)).toBe(compileSkillMd(defaultSchema))
     expect(JSON.stringify(compileAll(defaultSchema))).toBe(JSON.stringify(compileAll(defaultSchema)))
+  })
+})
+
+describe('golden — Tier 2 components', () => {
+  const stacks = {
+    'react-tailwind': compileReactComponents,
+    'react-css': compileReactCssComponents,
+    'vue-css': compileVueComponents,
+    'vue-tailwind': compileVueTailwindComponents,
+    flutter: compileFlutterWidgets,
+  } as const
+  const names = Object.keys(tier2Blueprints)
+
+  it('ships the eleven Tier 2 blueprints', () => {
+    expect(names).toEqual([
+      'Navbar',
+      'Sidebar',
+      'Tabs',
+      'Breadcrumbs',
+      'Pagination',
+      'Accordion',
+      'Progress',
+      'EmptyState',
+      'ErrorState',
+      'Table',
+      'Drawer',
+    ])
+    for (const [key, bp] of Object.entries(tier2Blueprints)) expect(bp.name).toBe(key)
+  })
+
+  it('every token value is a ref that resolves, except bare dimensions', () => {
+    const walk = (v: unknown, at: string): void => {
+      if (v && typeof v === 'object') {
+        for (const [k, c] of Object.entries(v)) walk(c, `${at}.${k}`)
+        return
+      }
+      const path = refPath(v)
+      if (path !== null) {
+        expect(getPath(tier2Schema, path), `${at} → {${path}} dangles`).toBeDefined()
+      } else {
+        // Literals are only allowed for dimensions no token scale covers.
+        expect(String(v), `${at} is a raw literal`).toMatch(/^\d+px$|^(title|center|above)$/)
+      }
+    }
+    for (const bp of Object.values(tier2Blueprints)) {
+      walk(bp.tokens, `${bp.name}.tokens`)
+      for (const [b, layer] of Object.entries(bp.responsive ?? {})) walk(layer.tokens ?? {}, `${bp.name}.responsive.${b}`)
+    }
+  })
+
+  it.each(Object.keys(stacks) as Array<keyof typeof stacks>)('%s stubs', (stack) => {
+    const files = stacks[stack](tier2Schema)
+    // One file per blueprint (React+CSS adds a .css sibling).
+    expect(files.length).toBe(stack === 'react-css' ? names.length * 2 : names.length)
+    for (const f of files) expect(f.content).not.toMatch(/#[0-9a-fA-F]{6}\b/) // no raw hex
+    expect(files).toMatchSnapshot()
+  })
+
+  it('quotes hyphenated variant keys and declares `variant` once', () => {
+    const tsx = compileReactComponents(tier2Schema).find((f) => f.filename.endsWith('/ErrorState.tsx'))!.content
+    expect(tsx).toContain("  'not-found': 'bg-surface-raised',")
+    expect(tsx.match(/^\s+variant\?:/gm)).toHaveLength(1)
+  })
+
+  it('a prose-only breakpoint adds no Flutter import', () => {
+    const dart = compileFlutterWidgets(tier2Schema).find((f) => f.filename.endsWith('/breadcrumbs.dart'))!.content
+    expect(dart).not.toContain('app_spacing.dart')
+  })
+
+  it('DESIGN.md + SKILL.md carry every Tier 2 component and its responsive layout', () => {
+    const design = compileDesignMd(tier2Schema)
+    const skill = compileSkillMd(tier2Schema)
+    for (const n of names) {
+      expect(design).toContain(`### ${n}`)
+      expect(skill).toContain(`#### ${n}`)
+    }
+    expect(skill).toContain('below md each row stacks')
+    expect(design).toMatchSnapshot()
+    expect(skill).toMatchSnapshot()
+  })
+
+  it('is byte-stable', () => {
+    expect(JSON.stringify(compileAll(tier2Schema))).toBe(JSON.stringify(compileAll(tier2Schema)))
   })
 })

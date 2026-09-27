@@ -868,6 +868,2825 @@ export default {
 ]
 `;
 
+exports[`golden — Tier 2 components > DESIGN.md + SKILL.md carry every Tier 2 component and its responsive layout 1`] = `
+"---
+version: alpha
+name: Tier 2 Fixture
+description: A neutral, high-contrast light baseline for product UI.
+colors:
+  primary: "#3B6EF5"
+  surface-default: "#FFFFFF"
+  surface-raised: "#F1F5F9"
+  surface-overlay: "#E2E8F0"
+  surface-sunken: "#F0F4F8"
+  surface-border: "#E2E8F0"
+  surface-border-subtle: "#F1F5F9"
+  on-surface: "#0F172A"
+  on-surface-muted: "#475569"
+  on-surface-subtle: "#94A3B8"
+  on-primary: "#FFFFFF"
+  status-error: "#EF4444"
+  status-warning: "#F59E0B"
+  status-info: "#3B82F6"
+  status-error-surface: "#FEF2F2"
+  status-warning-surface: "#FFFBEB"
+  status-info-surface: "#EFF6FF"
+typography:
+  display-md:
+    fontFamily: Inter
+    fontSize: 40px
+    fontWeight: 700
+    lineHeight: 1.1
+  headline-sm:
+    fontFamily: Inter
+    fontSize: 20px
+    fontWeight: 600
+    lineHeight: 1.3
+  body-md:
+    fontFamily: Inter
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 1.5
+  body-sm:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: 400
+    lineHeight: 1.5
+  label-lg:
+    fontFamily: Inter
+    fontSize: 16px
+    fontWeight: 500
+    lineHeight: 1.25
+  label-md:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: 500
+    lineHeight: 1.25
+  label-sm:
+    fontFamily: Inter
+    fontSize: 12px
+    fontWeight: 500
+    lineHeight: 1.25
+spacing:
+  xs: 4px
+  sm: 8px
+  md: 16px
+  lg: 24px
+  xl: 32px
+  2xl: 48px
+rounded:
+  sm: 4px
+  md: 6px
+  lg: 10px
+  xl: 16px
+  full: 9999px
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.md}"
+    paddingX: "{spacing.md}"
+    paddingY: "{spacing.sm}"
+    typography: "{typography.label-md}"
+  button-primary-hover:
+    backgroundColor: "#1D4ED8"
+  button-secondary:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.primary}"
+    borderColor: "{colors.border}"
+    borderWidth: "{borders.width.thin}"
+    rounded: "{rounded.md}"
+    paddingX: "{spacing.md}"
+    paddingY: "{spacing.sm}"
+    typography: "{typography.label-md}"
+  input-default:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.on-surface}"
+    borderColor: "{colors.border}"
+    borderWidth: "{borders.width.thin}"
+    rounded: "{rounded.md}"
+    paddingX: "{spacing.md}"
+    paddingY: "{spacing.sm}"
+    typography: "{typography.body-md}"
+---
+
+# Tier 2 Fixture
+
+## Overview
+
+Clean Professional favors clarity over decoration: generous whitespace, high-contrast neutrals, and a single confident accent for action.
+**Personality:** Professional, calm, trustworthy.
+**Audience:** Product teams shipping web applications.
+**Direction:** Clean, spacious, high-contrast neutrals with a single accent.
+**Mood:** professional, clean, modern, accessible
+
+## Colors
+
+A high-contrast neutral foundation with a single blue accent reserved for primary action and focus.
+
+- **Primary (#3B6EF5):** primary color token.
+- **Surface Default (#FFFFFF):** surface-default color token.
+- **Surface Raised (#F1F5F9):** surface-raised color token.
+- **Surface Overlay (#E2E8F0):** surface-overlay color token.
+- **Surface Sunken (#F0F4F8):** surface-sunken color token.
+- **Surface Border (#E2E8F0):** surface-border color token.
+- **Surface Border Subtle (#F1F5F9):** surface-border-subtle color token.
+- **On Surface (#0F172A):** on-surface color token.
+- **On Surface Muted (#475569):** on-surface-muted color token.
+- **On Surface Subtle (#94A3B8):** on-surface-subtle color token.
+- **On Primary (#FFFFFF):** on-primary color token.
+- **Status Error (#EF4444):** status-error color token.
+- **Status Warning (#F59E0B):** status-warning color token.
+- **Status Info (#3B82F6):** status-info color token.
+- **Status Error Surface (#FEF2F2):** status-error-surface color token.
+- **Status Warning Surface (#FFFBEB):** status-warning-surface color token.
+- **Status Info Surface (#EFF6FF):** status-info-surface color token.
+
+## Typography
+
+Inter across the board; weight and size carry hierarchy, not color.
+
+- **Display Md:** Inter 40px/1.1, weight 700.
+- **Headline Sm:** Inter 20px/1.3, weight 600.
+- **Body Md:** Inter 16px/1.5, weight 400.
+- **Body Sm:** Inter 14px/1.5, weight 400.
+- **Label Lg:** Inter 16px/1.25, weight 500.
+- **Label Md:** Inter 14px/1.25, weight 500.
+- **Label Sm:** Inter 12px/1.25, weight 500.
+
+## Layout
+
+A 12-column grid on a strict 8px spacing rhythm; content caps at 1200px.
+
+A 12-column grid; content caps at 1200px.
+
+| Step | Value |
+|---|---|
+| xs | 4px |
+| sm | 8px |
+| md | 16px |
+| lg | 24px |
+| xl | 32px |
+| 2xl | 48px |
+
+## Elevation & Depth
+
+Depth comes from subtle, tight shadows on raised surfaces rather than heavy drop shadows.
+
+| Level | box-shadow |
+|---|---|
+| sm | \`0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)\` |
+| xl | \`0 20px 25px -5px rgba(0,0,0,0.10), 0 8px 10px -6px rgba(0,0,0,0.10)\` |
+
+## Shapes
+
+Soft 8px corners on interactive elements; pills only for badges and avatars.
+
+| Level | Radius |
+|---|---|
+| sm | 4px |
+| md | 6px |
+| lg | 10px |
+| xl | 16px |
+| full | 9999px |
+
+## Components
+
+### Navbar
+Top navigation bar with brand, links, and actions. Links collapse behind a menu toggle on small screens.
+**Variants:** default  
+**Sizes:** —  
+**States:** default, menu-open
+**Responsive**
+
+| Breakpoint | Min-width | Visibility | Layout | Overrides |
+|---|---|---|---|---|
+| md | 768px | visible | Links render inline and the menu toggle is hidden; below md the links collapse behind the toggle. | paddingX: {spacing.lg} |
+**Do**
+- Mark the current page link with aria-current="page"
+- Give the menu toggle aria-expanded + aria-controls
+**Don't**
+- Don't hide primary navigation on mobile without a toggle
+
+### Sidebar
+Vertical navigation. One-level (flat) or multilevel (nested, collapsible groups). Collapses to an icon rail on small screens.
+**Variants:** one-level, multilevel  
+**Sizes:** —  
+**States:** default, collapsed
+**Responsive**
+
+| Breakpoint | Min-width | Visibility | Layout | Overrides |
+|---|---|---|---|---|
+| md | 768px | visible | Expanded rail with labels; below md the sidebar collapses to an icon rail. | — |
+**Do**
+- Toggle nested groups with a button carrying aria-expanded
+- Keep labels available as tooltips or aria-label when collapsed
+**Don't**
+- Don't nest deeper than two levels
+
+### Tabs
+Switches between related panels in place. Line, pill, or contained; horizontal or vertical.
+**Variants:** line, pill, contained  
+**Sizes:** —  
+**States:** default, hover, selected, disabled
+**Responsive**
+
+| Breakpoint | Min-width | Visibility | Layout | Overrides |
+|---|---|---|---|---|
+| md | 768px | visible | Vertical orientation is honored; below md tabs are one horizontal row that scrolls. | — |
+**Do**
+- Use role="tablist" / "tab" / "tabpanel" with aria-selected and aria-controls
+- Move between tabs with the arrow keys
+**Don't**
+- Don't use tabs for sequential steps — use a stepper
+
+### Breadcrumbs
+Hierarchical trail to the current page, with a tokenized separator.
+**Variants:** default  
+**Sizes:** —  
+**States:** default, hover
+**Responsive**
+
+| Breakpoint | Min-width | Visibility | Layout | Overrides |
+|---|---|---|---|---|
+| md | 768px | visible | Full trail; below md the middle crumbs collapse to an ellipsis. | — |
+**Do**
+- Wrap in <nav aria-label="Breadcrumb"> and mark the last item aria-current="page"
+**Don't**
+- Don't link the current page
+
+### Pagination
+Numbered page links with previous / next controls.
+**Variants:** default  
+**Sizes:** sm, md  
+**States:** default, hover, current, disabled
+**Responsive**
+
+| Breakpoint | Min-width | Visibility | Layout | Overrides |
+|---|---|---|---|---|
+| md | 768px | visible | Numbered pages; below md only previous / next with "Page x of y". | — |
+**Do**
+- Wrap in <nav aria-label="Pagination">; mark the current page aria-current="page"
+- Give prev/next an aria-label
+**Don't**
+- Don't render more than 7 page slots — use an ellipsis
+
+### Accordion
+Stacked disclosure sections. Single or multiple open; height animates unless reduced motion is set.
+**Variants:** default  
+**Sizes:** —  
+**States:** collapsed, expanded, disabled
+**Do**
+- Make each trigger a <button> with aria-expanded and aria-controls
+- Respect prefers-reduced-motion
+**Don't**
+- Don't hide content a user must read to finish a task
+
+### Progress
+Progress bar. Determinate shows a value; indeterminate shows ongoing work with no known end.
+**Variants:** determinate, indeterminate  
+**Sizes:** sm, md  
+**States:** default, complete
+**Do**
+- Use role="progressbar" with aria-valuenow/min/max; omit aria-valuenow when indeterminate
+**Don't**
+- Don't animate the indeterminate bar when reduced motion is requested
+
+### EmptyState
+Placeholder for a view with no content yet: icon, title, description, and a next action.
+**Variants:** default  
+**Sizes:** —  
+**States:** default
+**Responsive**
+
+| Breakpoint | Min-width | Visibility | Layout | Overrides |
+|---|---|---|---|---|
+| md | 768px | visible | — | padding: {spacing.2xl} |
+**Do**
+- Explain why the view is empty and offer one clear next step
+**Don't**
+- Don't show an empty state while data is still loading — use a skeleton
+
+### ErrorState
+Full-view error: not found (404), server error (500), or no permission (403), with a recovery action.
+**Variants:** not-found, server-error, forbidden  
+**Sizes:** —  
+**States:** default
+**Responsive**
+
+| Breakpoint | Min-width | Visibility | Layout | Overrides |
+|---|---|---|---|---|
+| md | 768px | visible | — | padding: {spacing.2xl} |
+**Do**
+- Say what happened in plain words and offer a way out
+**Don't**
+- Don't show stack traces or internal error ids to end users
+
+### Table
+Tabular data with sortable headers, row selection, and a pagination slot. Rows stack into cards on small screens.
+**Variants:** default  
+**Sizes:** —  
+**States:** default, row-hover, row-selected, sorted
+**Responsive**
+
+| Breakpoint | Min-width | Visibility | Layout | Overrides |
+|---|---|---|---|---|
+| md | 768px | visible | Full table; below md each row stacks into a label / value card. | — |
+**Do**
+- Put aria-sort on the sorted header; make sort controls buttons
+- Label each row checkbox with the row name
+**Don't**
+- Don't use a table for layout
+
+### Drawer
+Panel that slides in from the left, right, or bottom over an overlay. Becomes a bottom sheet on small screens.
+**Variants:** default  
+**Sizes:** sm, md, lg  
+**States:** open, closed
+**Responsive**
+
+| Breakpoint | Min-width | Visibility | Layout | Overrides |
+|---|---|---|---|---|
+| md | 768px | visible | Side panel from the chosen edge; below md it renders as a bottom sheet. | — |
+**Do**
+- Use role="dialog" with an accessible name; move focus in on open and restore it on close
+- Close on Escape and overlay click
+**Don't**
+- Don't stack drawers
+
+## Do's and Don'ts
+
+- Do reserve the primary color for the single most important action per screen.
+- Do maintain WCAG AA contrast (4.5:1 for body text).
+- Don't mix more than two font weights in one view.
+- Don't hard-code hex values — reference tokens.
+"
+`;
+
+exports[`golden — Tier 2 components > DESIGN.md + SKILL.md carry every Tier 2 component and its responsive layout 2`] = `
+"# Tier 2 Fixture — Design System Skill
+
+This file tells an AI agent how to build UI that conforms to this design system.
+The normative source of truth is \`design-spec.schema.json\`; \`DESIGN.md\` carries the human rationale.
+
+## Golden rule
+
+Always reference design tokens. Never hard-code raw values (hex, px, \`Color(0xFF…)\`).
+Raw values are *drift* and are auto-rewritten to the nearest token by \`design-spec fix\` and the CI Drift-Janitor.
+
+## Getting context efficiently
+
+Run \`design-spec serve\` to expose this schema over MCP. Request only the slice you need:
+- \`get_component_tokens("Button")\` — tokens for one component.
+- \`get_layout_system()\` — grid, spacing, container, breakpoints.
+- \`get_semantic_colors()\` — semantic color roles (not the raw palette).
+
+## Frameworks
+
+### React + Tailwind
+
+- Reference tokens via Tailwind utilities, never inline hex. e.g. \`className="text-primary rounded-md"\`.
+- Token names map 1:1 to \`tailwind.config.js\` theme keys generated from the schema.
+- Never write \`text-[#...]\` arbitrary values — that is drift and will be auto-fixed.
+
+### React + CSS custom properties
+
+- Components reference semantic classes styled in their \`.css\` via \`var(--color-primary)\`.
+- Variables are emitted to \`tokens.css\` from the schema; import it once at the app root.
+- Never hard-code hex — reference the variable in the component CSS.
+
+### Vue + Tailwind
+
+- Reference tokens via Tailwind utilities in the template, never inline hex. e.g. \`class="text-primary rounded-md"\`.
+- Token names map 1:1 to \`tailwind.config.js\` theme keys generated from the schema.
+- Never write \`text-[#...]\` arbitrary values — that is drift and will be auto-fixed.
+
+### Vue + CSS custom properties
+
+- Reference tokens via CSS variables: \`color: var(--color-primary)\`.
+- Variables are emitted to \`tokens.css\` from the schema; import it once at the app root.
+- Never hard-code hex in \`<style>\` blocks — reference the variable.
+
+### Flutter
+
+- Tokens live in \`lib/theme/\` (\`app_colors.dart\`, \`app_typography.dart\`, \`app_spacing.dart\`, \`app_theme.dart\`) as static members of namespace classes (\`AppColors\`, \`AppTypography\`, \`AppSpacing\`, \`AppRadius\`, \`AppBorders\`, \`AppShadows\`, \`AppBreakpoints\`).
+- Reference them by name, e.g. color \`AppColors.primary\`, text style \`AppTypography.displayMd\`, spacing \`AppSpacing.xs\`.
+- Never write \`Color(0xFF...)\` inline — reference the token constant. Inline colors are drift and are auto-fixed to the constant.
+- Install the theme once: \`MaterialApp(theme: AppTheme.light)\`. For colors that must follow light/dark, read \`Theme.of(context).colorScheme\` rather than a light-mode constant.
+- Responsive layout uses \`LayoutBuilder\` and compares \`constraints.maxWidth\` to the breakpoint constants (e.g. \`AppBreakpoints.sm\`) — no media queries.
+- Component stubs live in \`lib/widgets/{ComponentName}/{component_name}.dart\`; add behavior there without re-styling them.
+
+## Components
+
+#### Navbar
+Top navigation bar with brand, links, and actions. Links collapse behind a menu toggle on small screens.
+- Anatomy: root › brand › links › actions › menu-toggle
+- Variants: default · Sizes: — · States: default, menu-open
+- Props:
+  - \`sticky\`: boolean
+  - \`brand\`: string — Brand name or logo alt text
+- Responsive (mobile-first; base applies until the breakpoint):
+  - ≥768px (md): paddingX: {spacing.lg} — Links render inline and the menu toggle is hidden; below md the links collapse behind the toggle.
+
+#### Sidebar
+Vertical navigation. One-level (flat) or multilevel (nested, collapsible groups). Collapses to an icon rail on small screens.
+- Anatomy: root › item › group › sub-item › collapse-toggle
+- Variants: one-level, multilevel · Sizes: — · States: default, collapsed
+- Props:
+  - \`collapsed\`: boolean
+  - \`collapsible\`: boolean — Show the collapse toggle
+- Responsive (mobile-first; base applies until the breakpoint):
+  - ≥768px (md): — — Expanded rail with labels; below md the sidebar collapses to an icon rail.
+
+#### Tabs
+Switches between related panels in place. Line, pill, or contained; horizontal or vertical.
+- Anatomy: root › tablist › tab › indicator › panel
+- Variants: line, pill, contained · Sizes: — · States: default, hover, selected, disabled
+- Props:
+  - \`variant\`: enum(line|pill|contained)
+  - \`orientation\`: enum(horizontal|vertical)
+  - \`children\`: slot — Tab list and panels
+- Responsive (mobile-first; base applies until the breakpoint):
+  - ≥768px (md): — — Vertical orientation is honored; below md tabs are one horizontal row that scrolls.
+
+#### Breadcrumbs
+Hierarchical trail to the current page, with a tokenized separator.
+- Anatomy: root › item › separator › current
+- Variants: default · Sizes: — · States: default, hover
+- Props:
+  - \`separator\`: enum(chevron|slash|dot)
+- Responsive (mobile-first; base applies until the breakpoint):
+  - ≥768px (md): — — Full trail; below md the middle crumbs collapse to an ellipsis.
+
+#### Pagination
+Numbered page links with previous / next controls.
+- Anatomy: root › prev › item › ellipsis › next
+- Variants: default · Sizes: sm, md · States: default, hover, current, disabled
+- Props:
+  - \`page\`: number — Current page (1-based)
+  - \`pageCount\`: number
+  - \`showPrevNext\`: boolean
+- Responsive (mobile-first; base applies until the breakpoint):
+  - ≥768px (md): — — Numbered pages; below md only previous / next with "Page x of y".
+
+#### Accordion
+Stacked disclosure sections. Single or multiple open; height animates unless reduced motion is set.
+- Anatomy: root › item › trigger › icon › content
+- Variants: default · Sizes: — · States: collapsed, expanded, disabled
+- Props:
+  - \`type\`: enum(single|multiple) — How many sections may be open at once
+  - \`children\`: slot — Accordion items
+
+#### Progress
+Progress bar. Determinate shows a value; indeterminate shows ongoing work with no known end.
+- Anatomy: root › track › fill › label
+- Variants: determinate, indeterminate · Sizes: sm, md · States: default, complete
+- Props:
+  - \`value\`: number
+  - \`max\`: number
+  - \`label\`: string — Accessible name
+
+#### EmptyState
+Placeholder for a view with no content yet: icon, title, description, and a next action.
+- Anatomy: root › icon › title › description › action
+- Variants: default · Sizes: — · States: default
+- Props:
+  - \`title\`: string
+  - \`description\`: string
+  - \`actionLabel\`: string
+- Responsive (mobile-first; base applies until the breakpoint):
+  - ≥768px (md): padding: {spacing.2xl}
+
+#### ErrorState
+Full-view error: not found (404), server error (500), or no permission (403), with a recovery action.
+- Anatomy: root › code › icon › title › description › action
+- Variants: not-found, server-error, forbidden · Sizes: — · States: default
+- Props:
+  - \`variant\`: enum(not-found|server-error|forbidden)
+  - \`actionLabel\`: string
+- Responsive (mobile-first; base applies until the breakpoint):
+  - ≥768px (md): padding: {spacing.2xl}
+
+#### Table
+Tabular data with sortable headers, row selection, and a pagination slot. Rows stack into cards on small screens.
+- Anatomy: root › header › header-cell › sort-icon › row › cell › select › pagination
+- Variants: default · Sizes: — · States: default, row-hover, row-selected, sorted
+- Props:
+  - \`sortable\`: boolean
+  - \`selectable\`: boolean
+  - \`pagination\`: slot — Pagination under the table
+- Responsive (mobile-first; base applies until the breakpoint):
+  - ≥768px (md): — — Full table; below md each row stacks into a label / value card.
+
+#### Drawer
+Panel that slides in from the left, right, or bottom over an overlay. Becomes a bottom sheet on small screens.
+- Anatomy: overlay › root › header › title › close › body › footer
+- Variants: default · Sizes: sm, md, lg · States: open, closed
+- Props:
+  - \`side\`: enum(left|right|bottom)
+  - \`open\`: boolean
+  - \`title\`: string
+  - \`children\`: slot — Drawer body
+- Responsive (mobile-first; base applies until the breakpoint):
+  - ≥768px (md): — — Side panel from the chosen edge; below md it renders as a bottom sheet.
+"
+`;
+
+exports[`golden — Tier 2 components > flutter stubs 1`] = `
+[
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+
+/// Top navigation bar with brand, links, and actions. Links collapse behind a menu toggle on small screens.
+class Navbar extends StatelessWidget {
+  const Navbar({
+    super.key,
+    this.sticky = true,
+    this.brand,
+  });
+
+  final bool sticky;
+  /// Brand name or logo alt text
+  final String? brand;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final t = _NavbarTokens.resolve(constraints.maxWidth);
+        final box = Container(
+          padding: EdgeInsets.symmetric(horizontal: t.paddingX ?? 0, vertical: t.paddingY ?? 0),
+          decoration: BoxDecoration(
+            color: t.backgroundColor,
+            border: t.borderColor == null ? null : Border.all(color: t.borderColor!, width: t.borderWidth ?? 1),
+            boxShadow: t.shadow,
+          ),
+          child: DefaultTextStyle.merge(style: TextStyle(color: t.textColor), child: const SizedBox.shrink()),
+        );
+        return box;
+      },
+    );
+  }
+}
+
+/// Navbar's design tokens: base, per-variant and per-breakpoint overrides.
+class _NavbarTokens {
+  const _NavbarTokens({this.backgroundColor, this.textColor, this.borderColor, this.borderWidth, this.shadow, this.paddingX, this.paddingY});
+
+  final Color? backgroundColor;
+  final Color? textColor;
+  final Color? borderColor;
+  final double? borderWidth;
+  final List<BoxShadow>? shadow;
+  final double? paddingX;
+  final double? paddingY;
+
+  _NavbarTokens merge(_NavbarTokens o) => _NavbarTokens(
+        backgroundColor: o.backgroundColor ?? backgroundColor,
+        textColor: o.textColor ?? textColor,
+        borderColor: o.borderColor ?? borderColor,
+        borderWidth: o.borderWidth ?? borderWidth,
+        shadow: o.shadow ?? shadow,
+        paddingX: o.paddingX ?? paddingX,
+        paddingY: o.paddingY ?? paddingY,
+      );
+
+  static const base = _NavbarTokens(
+    backgroundColor: AppColors.surfaceDefault,
+    textColor: AppColors.onSurface,
+    borderColor: AppColors.surfaceBorder,
+    borderWidth: 1,
+    shadow: AppShadows.sm,
+    paddingX: AppSpacing.md,
+    paddingY: AppSpacing.sm,
+  );
+  static const atMd = _NavbarTokens(
+    paddingX: AppSpacing.lg,
+  );
+
+  /// Mobile-first cascade: base, then each breakpoint the width reaches.
+  static _NavbarTokens resolve(double width) {
+    var t = base;
+    if (width >= AppBreakpoints.md) t = t.merge(atMd);
+    return t;
+  }
+}
+",
+    "filename": "lib/widgets/Navbar/navbar.dart",
+    "language": "dart",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+
+enum SidebarVariant { oneLevel, multilevel }
+
+/// Vertical navigation. One-level (flat) or multilevel (nested, collapsible groups). Collapses to an icon rail on small screens.
+class Sidebar extends StatelessWidget {
+  const Sidebar({
+    super.key,
+    this.variant = SidebarVariant.oneLevel,
+    this.collapsed = false,
+    this.collapsible = true,
+  });
+
+  final SidebarVariant variant;
+  final bool collapsed;
+  /// Show the collapse toggle
+  final bool collapsible;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final t = _SidebarTokens.resolve(variant, constraints.maxWidth);
+        final box = Container(
+          width: t.width,
+          padding: EdgeInsets.symmetric(horizontal: t.paddingX ?? 0, vertical: t.paddingY ?? 0),
+          decoration: BoxDecoration(
+            color: t.backgroundColor,
+            borderRadius: BorderRadius.circular(t.radius ?? 0),
+            border: t.borderColor == null ? null : Border.all(color: t.borderColor!, width: t.borderWidth ?? 1),
+          ),
+          child: DefaultTextStyle.merge(style: TextStyle(color: t.textColor), child: const SizedBox.shrink()),
+        );
+        return box;
+      },
+    );
+  }
+}
+
+/// Sidebar's design tokens: base, per-variant and per-breakpoint overrides.
+class _SidebarTokens {
+  const _SidebarTokens({this.backgroundColor, this.textColor, this.borderColor, this.borderWidth, this.radius, this.paddingX, this.paddingY, this.width});
+
+  final Color? backgroundColor;
+  final Color? textColor;
+  final Color? borderColor;
+  final double? borderWidth;
+  final double? radius;
+  final double? paddingX;
+  final double? paddingY;
+  final double? width;
+
+  _SidebarTokens merge(_SidebarTokens o) => _SidebarTokens(
+        backgroundColor: o.backgroundColor ?? backgroundColor,
+        textColor: o.textColor ?? textColor,
+        borderColor: o.borderColor ?? borderColor,
+        borderWidth: o.borderWidth ?? borderWidth,
+        radius: o.radius ?? radius,
+        paddingX: o.paddingX ?? paddingX,
+        paddingY: o.paddingY ?? paddingY,
+        width: o.width ?? width,
+      );
+
+  static const base = _SidebarTokens(
+    backgroundColor: AppColors.surfaceDefault,
+    textColor: AppColors.onSurface,
+    borderColor: AppColors.surfaceBorder,
+    borderWidth: 1,
+    radius: AppRadius.md,
+    paddingX: AppSpacing.sm,
+    paddingY: AppSpacing.sm,
+    width: 220,
+  );
+  static const variantOneLevel = _SidebarTokens();
+  static const variantMultilevel = _SidebarTokens();
+
+  /// Mobile-first cascade: base, then the variant, then each breakpoint the width reaches.
+  static _SidebarTokens resolve(SidebarVariant variant, double width) {
+    return base.merge(switch (variant) {
+      SidebarVariant.oneLevel => variantOneLevel,
+      SidebarVariant.multilevel => variantMultilevel,
+    });
+  }
+}
+",
+    "filename": "lib/widgets/Sidebar/sidebar.dart",
+    "language": "dart",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
+
+enum TabsVariant { line, pill, contained }
+
+enum TabsOrientation { horizontal, vertical }
+
+/// Switches between related panels in place. Line, pill, or contained; horizontal or vertical.
+class Tabs extends StatelessWidget {
+  const Tabs({
+    super.key,
+    this.variant = TabsVariant.line,
+    this.orientation = TabsOrientation.horizontal,
+    this.child,
+  });
+
+  final TabsVariant variant;
+  final TabsOrientation orientation;
+  /// Tab list and panels
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final t = _TabsTokens.resolve(variant, constraints.maxWidth);
+        final box = Container(
+          padding: EdgeInsets.symmetric(horizontal: t.padding ?? 0, vertical: t.padding ?? 0),
+          decoration: BoxDecoration(
+            color: t.backgroundColor,
+            borderRadius: BorderRadius.circular(t.radius ?? 0),
+            border: t.borderColor == null ? null : Border.all(color: t.borderColor!, width: t.borderWidth ?? 1),
+          ),
+          child: DefaultTextStyle.merge(style: (t.textStyle ?? const TextStyle()).copyWith(color: t.textColor), child: child ?? const SizedBox.shrink()),
+        );
+        return box;
+      },
+    );
+  }
+}
+
+/// Tabs's design tokens: base, per-variant and per-breakpoint overrides.
+class _TabsTokens {
+  const _TabsTokens({this.backgroundColor, this.textColor, this.textStyle, this.borderColor, this.borderWidth, this.radius, this.padding});
+
+  final Color? backgroundColor;
+  final Color? textColor;
+  final TextStyle? textStyle;
+  final Color? borderColor;
+  final double? borderWidth;
+  final double? radius;
+  final double? padding;
+
+  _TabsTokens merge(_TabsTokens o) => _TabsTokens(
+        backgroundColor: o.backgroundColor ?? backgroundColor,
+        textColor: o.textColor ?? textColor,
+        textStyle: o.textStyle ?? textStyle,
+        borderColor: o.borderColor ?? borderColor,
+        borderWidth: o.borderWidth ?? borderWidth,
+        radius: o.radius ?? radius,
+        padding: o.padding ?? padding,
+      );
+
+  static const base = _TabsTokens(
+    textColor: AppColors.onSurfaceMuted,
+    textStyle: AppTypography.labelMd,
+  );
+  static const variantLine = _TabsTokens(
+    borderColor: AppColors.surfaceBorder,
+    borderWidth: 1,
+  );
+  static const variantPill = _TabsTokens();
+  static const variantContained = _TabsTokens(
+    backgroundColor: AppColors.surfaceRaised,
+    radius: AppRadius.lg,
+    padding: AppSpacing.xs,
+  );
+
+  /// Mobile-first cascade: base, then the variant, then each breakpoint the width reaches.
+  static _TabsTokens resolve(TabsVariant variant, double width) {
+    return base.merge(switch (variant) {
+      TabsVariant.line => variantLine,
+      TabsVariant.pill => variantPill,
+      TabsVariant.contained => variantContained,
+    });
+  }
+}
+",
+    "filename": "lib/widgets/Tabs/tabs.dart",
+    "language": "dart",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_typography.dart';
+
+enum BreadcrumbsSeparator { chevron, slash, dot }
+
+/// Hierarchical trail to the current page, with a tokenized separator.
+class Breadcrumbs extends StatelessWidget {
+  const Breadcrumbs({
+    super.key,
+    this.separator = BreadcrumbsSeparator.chevron,
+  });
+
+  final BreadcrumbsSeparator separator;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final t = _BreadcrumbsTokens.resolve(constraints.maxWidth);
+        final box = Container(
+          child: DefaultTextStyle.merge(style: (t.textStyle ?? const TextStyle()).copyWith(color: t.textColor), child: const SizedBox.shrink()),
+        );
+        return box;
+      },
+    );
+  }
+}
+
+/// Breadcrumbs's design tokens: base, per-variant and per-breakpoint overrides.
+class _BreadcrumbsTokens {
+  const _BreadcrumbsTokens({this.textColor, this.textStyle});
+
+  final Color? textColor;
+  final TextStyle? textStyle;
+
+  _BreadcrumbsTokens merge(_BreadcrumbsTokens o) => _BreadcrumbsTokens(
+        textColor: o.textColor ?? textColor,
+        textStyle: o.textStyle ?? textStyle,
+      );
+
+  static const base = _BreadcrumbsTokens(
+    textColor: AppColors.onSurfaceMuted,
+    textStyle: AppTypography.bodySm,
+  );
+
+  /// Mobile-first cascade: base, then each breakpoint the width reaches.
+  static _BreadcrumbsTokens resolve(double width) {
+    return base;
+  }
+}
+",
+    "filename": "lib/widgets/Breadcrumbs/breadcrumbs.dart",
+    "language": "dart",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_typography.dart';
+
+/// Numbered page links with previous / next controls.
+class Pagination extends StatelessWidget {
+  const Pagination({
+    super.key,
+    this.page = 3,
+    this.pageCount = 10,
+    this.showPrevNext = true,
+  });
+
+  /// Current page (1-based)
+  final double page;
+  final double pageCount;
+  final bool showPrevNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final t = _PaginationTokens.resolve(constraints.maxWidth);
+        final box = Container(
+          child: DefaultTextStyle.merge(style: (t.textStyle ?? const TextStyle()).copyWith(color: t.textColor), child: const SizedBox.shrink()),
+        );
+        return box;
+      },
+    );
+  }
+}
+
+/// Pagination's design tokens: base, per-variant and per-breakpoint overrides.
+class _PaginationTokens {
+  const _PaginationTokens({this.textColor, this.textStyle});
+
+  final Color? textColor;
+  final TextStyle? textStyle;
+
+  _PaginationTokens merge(_PaginationTokens o) => _PaginationTokens(
+        textColor: o.textColor ?? textColor,
+        textStyle: o.textStyle ?? textStyle,
+      );
+
+  static const base = _PaginationTokens(
+    textColor: AppColors.onSurface,
+    textStyle: AppTypography.labelMd,
+  );
+
+  /// Mobile-first cascade: base, then each breakpoint the width reaches.
+  static _PaginationTokens resolve(double width) {
+    return base;
+  }
+}
+",
+    "filename": "lib/widgets/Pagination/pagination.dart",
+    "language": "dart",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+
+enum AccordionType { single, multiple }
+
+/// Stacked disclosure sections. Single or multiple open; height animates unless reduced motion is set.
+class Accordion extends StatelessWidget {
+  const Accordion({
+    super.key,
+    this.type = AccordionType.single,
+    this.child,
+  });
+
+  /// How many sections may be open at once
+  final AccordionType type;
+  /// Accordion items
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final t = _AccordionTokens.resolve(constraints.maxWidth);
+        final box = Container(
+          decoration: BoxDecoration(
+            color: t.backgroundColor,
+            borderRadius: BorderRadius.circular(t.radius ?? 0),
+            border: t.borderColor == null ? null : Border.all(color: t.borderColor!, width: t.borderWidth ?? 1),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+        return box;
+      },
+    );
+  }
+}
+
+/// Accordion's design tokens: base, per-variant and per-breakpoint overrides.
+class _AccordionTokens {
+  const _AccordionTokens({this.backgroundColor, this.borderColor, this.borderWidth, this.radius});
+
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final double? borderWidth;
+  final double? radius;
+
+  _AccordionTokens merge(_AccordionTokens o) => _AccordionTokens(
+        backgroundColor: o.backgroundColor ?? backgroundColor,
+        borderColor: o.borderColor ?? borderColor,
+        borderWidth: o.borderWidth ?? borderWidth,
+        radius: o.radius ?? radius,
+      );
+
+  static const base = _AccordionTokens(
+    backgroundColor: AppColors.surfaceDefault,
+    borderColor: AppColors.surfaceBorder,
+    borderWidth: 1,
+    radius: AppRadius.md,
+  );
+
+  /// Mobile-first cascade: base, then each breakpoint the width reaches.
+  static _AccordionTokens resolve(double width) {
+    return base;
+  }
+}
+",
+    "filename": "lib/widgets/Accordion/accordion.dart",
+    "language": "dart",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+
+enum ProgressVariant { determinate, indeterminate }
+
+/// Progress bar. Determinate shows a value; indeterminate shows ongoing work with no known end.
+class Progress extends StatelessWidget {
+  const Progress({
+    super.key,
+    this.variant = ProgressVariant.determinate,
+    this.value = 40,
+    this.max = 100,
+    this.label,
+  });
+
+  final ProgressVariant variant;
+  final double value;
+  final double max;
+  /// Accessible name
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final t = _ProgressTokens.resolve(variant, constraints.maxWidth);
+        final box = Container(
+          height: t.height,
+          decoration: BoxDecoration(
+            color: t.backgroundColor,
+            borderRadius: BorderRadius.circular(t.radius ?? 0),
+          ),
+          child: const SizedBox.shrink(),
+        );
+        return box;
+      },
+    );
+  }
+}
+
+/// Progress's design tokens: base, per-variant and per-breakpoint overrides.
+class _ProgressTokens {
+  const _ProgressTokens({this.backgroundColor, this.radius, this.height});
+
+  final Color? backgroundColor;
+  final double? radius;
+  final double? height;
+
+  _ProgressTokens merge(_ProgressTokens o) => _ProgressTokens(
+        backgroundColor: o.backgroundColor ?? backgroundColor,
+        radius: o.radius ?? radius,
+        height: o.height ?? height,
+      );
+
+  static const base = _ProgressTokens(
+    backgroundColor: AppColors.surfaceOverlay,
+    radius: AppRadius.full,
+    height: 8,
+  );
+  static const variantDeterminate = _ProgressTokens();
+  static const variantIndeterminate = _ProgressTokens();
+
+  /// Mobile-first cascade: base, then the variant, then each breakpoint the width reaches.
+  static _ProgressTokens resolve(ProgressVariant variant, double width) {
+    return base.merge(switch (variant) {
+      ProgressVariant.determinate => variantDeterminate,
+      ProgressVariant.indeterminate => variantIndeterminate,
+    });
+  }
+}
+",
+    "filename": "lib/widgets/Progress/progress.dart",
+    "language": "dart",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+
+/// Placeholder for a view with no content yet: icon, title, description, and a next action.
+class EmptyState extends StatelessWidget {
+  const EmptyState({
+    super.key,
+    this.title,
+    this.description,
+    this.actionLabel,
+  });
+
+  final String? title;
+  final String? description;
+  final String? actionLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final t = _EmptyStateTokens.resolve(constraints.maxWidth);
+        final box = Container(
+          padding: EdgeInsets.symmetric(horizontal: t.padding ?? 0, vertical: t.padding ?? 0),
+          decoration: BoxDecoration(
+            color: t.backgroundColor,
+            borderRadius: BorderRadius.circular(t.radius ?? 0),
+            border: t.borderColor == null ? null : Border.all(color: t.borderColor!, width: t.borderWidth ?? 1),
+          ),
+          child: DefaultTextStyle.merge(style: TextStyle(color: t.textColor), child: const SizedBox.shrink()),
+        );
+        return box;
+      },
+    );
+  }
+}
+
+/// EmptyState's design tokens: base, per-variant and per-breakpoint overrides.
+class _EmptyStateTokens {
+  const _EmptyStateTokens({this.backgroundColor, this.textColor, this.borderColor, this.borderWidth, this.radius, this.padding});
+
+  final Color? backgroundColor;
+  final Color? textColor;
+  final Color? borderColor;
+  final double? borderWidth;
+  final double? radius;
+  final double? padding;
+
+  _EmptyStateTokens merge(_EmptyStateTokens o) => _EmptyStateTokens(
+        backgroundColor: o.backgroundColor ?? backgroundColor,
+        textColor: o.textColor ?? textColor,
+        borderColor: o.borderColor ?? borderColor,
+        borderWidth: o.borderWidth ?? borderWidth,
+        radius: o.radius ?? radius,
+        padding: o.padding ?? padding,
+      );
+
+  static const base = _EmptyStateTokens(
+    backgroundColor: AppColors.surfaceDefault,
+    textColor: AppColors.onSurface,
+    borderColor: AppColors.surfaceBorder,
+    borderWidth: 1,
+    radius: AppRadius.lg,
+    padding: AppSpacing.lg,
+  );
+  static const atMd = _EmptyStateTokens(
+    padding: AppSpacing.x2xl,
+  );
+
+  /// Mobile-first cascade: base, then each breakpoint the width reaches.
+  static _EmptyStateTokens resolve(double width) {
+    var t = base;
+    if (width >= AppBreakpoints.md) t = t.merge(atMd);
+    return t;
+  }
+}
+",
+    "filename": "lib/widgets/EmptyState/empty_state.dart",
+    "language": "dart",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+
+enum ErrorStateVariant { notFound, serverError, forbidden }
+
+/// Full-view error: not found (404), server error (500), or no permission (403), with a recovery action.
+class ErrorState extends StatelessWidget {
+  const ErrorState({
+    super.key,
+    this.variant = ErrorStateVariant.notFound,
+    this.actionLabel,
+  });
+
+  final ErrorStateVariant variant;
+  final String? actionLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final t = _ErrorStateTokens.resolve(variant, constraints.maxWidth);
+        final box = Container(
+          padding: EdgeInsets.symmetric(horizontal: t.padding ?? 0, vertical: t.padding ?? 0),
+          decoration: BoxDecoration(
+            color: t.backgroundColor,
+            borderRadius: BorderRadius.circular(t.radius ?? 0),
+          ),
+          child: DefaultTextStyle.merge(style: TextStyle(color: t.textColor), child: const SizedBox.shrink()),
+        );
+        return box;
+      },
+    );
+  }
+}
+
+/// ErrorState's design tokens: base, per-variant and per-breakpoint overrides.
+class _ErrorStateTokens {
+  const _ErrorStateTokens({this.backgroundColor, this.textColor, this.radius, this.padding});
+
+  final Color? backgroundColor;
+  final Color? textColor;
+  final double? radius;
+  final double? padding;
+
+  _ErrorStateTokens merge(_ErrorStateTokens o) => _ErrorStateTokens(
+        backgroundColor: o.backgroundColor ?? backgroundColor,
+        textColor: o.textColor ?? textColor,
+        radius: o.radius ?? radius,
+        padding: o.padding ?? padding,
+      );
+
+  static const base = _ErrorStateTokens(
+    textColor: AppColors.onSurface,
+    radius: AppRadius.lg,
+    padding: AppSpacing.lg,
+  );
+  static const variantNotFound = _ErrorStateTokens(
+    backgroundColor: AppColors.surfaceRaised,
+  );
+  static const variantServerError = _ErrorStateTokens(
+    backgroundColor: AppColors.statusErrorSurface,
+  );
+  static const variantForbidden = _ErrorStateTokens(
+    backgroundColor: AppColors.statusWarningSurface,
+  );
+  static const atMd = _ErrorStateTokens(
+    padding: AppSpacing.x2xl,
+  );
+
+  /// Mobile-first cascade: base, then the variant, then each breakpoint the width reaches.
+  static _ErrorStateTokens resolve(ErrorStateVariant variant, double width) {
+    var t = base.merge(switch (variant) {
+      ErrorStateVariant.notFound => variantNotFound,
+      ErrorStateVariant.serverError => variantServerError,
+      ErrorStateVariant.forbidden => variantForbidden,
+    });
+    if (width >= AppBreakpoints.md) t = t.merge(atMd);
+    return t;
+  }
+}
+",
+    "filename": "lib/widgets/ErrorState/error_state.dart",
+    "language": "dart",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
+
+/// Tabular data with sortable headers, row selection, and a pagination slot. Rows stack into cards on small screens.
+class Table extends StatelessWidget {
+  const Table({
+    super.key,
+    this.sortable = true,
+    this.selectable = true,
+    this.pagination,
+  });
+
+  final bool sortable;
+  final bool selectable;
+  /// Pagination under the table
+  final Widget? pagination;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final t = _TableTokens.resolve(constraints.maxWidth);
+        final box = Container(
+          decoration: BoxDecoration(
+            color: t.backgroundColor,
+            borderRadius: BorderRadius.circular(t.radius ?? 0),
+            border: t.borderColor == null ? null : Border.all(color: t.borderColor!, width: t.borderWidth ?? 1),
+          ),
+          child: DefaultTextStyle.merge(style: (t.textStyle ?? const TextStyle()).copyWith(color: t.textColor), child: const SizedBox.shrink()),
+        );
+        return box;
+      },
+    );
+  }
+}
+
+/// Table's design tokens: base, per-variant and per-breakpoint overrides.
+class _TableTokens {
+  const _TableTokens({this.backgroundColor, this.textColor, this.textStyle, this.borderColor, this.borderWidth, this.radius});
+
+  final Color? backgroundColor;
+  final Color? textColor;
+  final TextStyle? textStyle;
+  final Color? borderColor;
+  final double? borderWidth;
+  final double? radius;
+
+  _TableTokens merge(_TableTokens o) => _TableTokens(
+        backgroundColor: o.backgroundColor ?? backgroundColor,
+        textColor: o.textColor ?? textColor,
+        textStyle: o.textStyle ?? textStyle,
+        borderColor: o.borderColor ?? borderColor,
+        borderWidth: o.borderWidth ?? borderWidth,
+        radius: o.radius ?? radius,
+      );
+
+  static const base = _TableTokens(
+    backgroundColor: AppColors.surfaceDefault,
+    textColor: AppColors.onSurface,
+    textStyle: AppTypography.bodySm,
+    borderColor: AppColors.surfaceBorder,
+    borderWidth: 1,
+    radius: AppRadius.lg,
+  );
+
+  /// Mobile-first cascade: base, then each breakpoint the width reaches.
+  static _TableTokens resolve(double width) {
+    return base;
+  }
+}
+",
+    "filename": "lib/widgets/Table/table.dart",
+    "language": "dart",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import 'package:flutter/material.dart';
+
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+
+enum DrawerSide { left, right, bottom }
+
+/// Panel that slides in from the left, right, or bottom over an overlay. Becomes a bottom sheet on small screens.
+class Drawer extends StatelessWidget {
+  const Drawer({
+    super.key,
+    this.side = DrawerSide.right,
+    this.open = false,
+    this.title,
+    this.child,
+  });
+
+  final DrawerSide side;
+  final bool open;
+  final String? title;
+  /// Drawer body
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final t = _DrawerTokens.resolve(constraints.maxWidth);
+        final box = Container(
+          width: t.width,
+          padding: EdgeInsets.symmetric(horizontal: t.padding ?? 0, vertical: t.padding ?? 0),
+          decoration: BoxDecoration(
+            color: t.backgroundColor,
+            boxShadow: t.shadow,
+          ),
+          child: DefaultTextStyle.merge(style: TextStyle(color: t.textColor), child: child ?? const SizedBox.shrink()),
+        );
+        return box;
+      },
+    );
+  }
+}
+
+/// Drawer's design tokens: base, per-variant and per-breakpoint overrides.
+class _DrawerTokens {
+  const _DrawerTokens({this.backgroundColor, this.textColor, this.shadow, this.padding, this.width});
+
+  final Color? backgroundColor;
+  final Color? textColor;
+  final List<BoxShadow>? shadow;
+  final double? padding;
+  final double? width;
+
+  _DrawerTokens merge(_DrawerTokens o) => _DrawerTokens(
+        backgroundColor: o.backgroundColor ?? backgroundColor,
+        textColor: o.textColor ?? textColor,
+        shadow: o.shadow ?? shadow,
+        padding: o.padding ?? padding,
+        width: o.width ?? width,
+      );
+
+  static const base = _DrawerTokens(
+    backgroundColor: AppColors.surfaceDefault,
+    textColor: AppColors.onSurface,
+    shadow: AppShadows.xl,
+    padding: AppSpacing.lg,
+    width: 320,
+  );
+
+  /// Mobile-first cascade: base, then each breakpoint the width reaches.
+  static _DrawerTokens resolve(double width) {
+    return base;
+  }
+}
+",
+    "filename": "lib/widgets/Drawer/drawer.dart",
+    "language": "dart",
+  },
+]
+`;
+
+exports[`golden — Tier 2 components > react-css stubs 1`] = `
+[
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+import './Navbar.css'
+
+export interface NavbarProps extends React.HTMLAttributes<HTMLDivElement> {
+  sticky?: boolean
+  brand?: string
+}
+
+export function Navbar({ className, ...props }: NavbarProps) {
+  const classes = ['navbar', className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-css/Navbar.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+
+.navbar {
+  background-color: var(--color-surface-default);
+  color: var(--color-on-surface);
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+  box-shadow: var(--shadow-sm);
+  padding-left: var(--spacing-md);
+  padding-right: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .navbar {
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+  }
+}
+",
+    "filename": "components/react-css/Navbar.css",
+    "language": "css",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+import './Sidebar.css'
+
+export type SidebarVariant = 'one-level' | 'multilevel'
+
+export interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: SidebarVariant
+  collapsed?: boolean
+  collapsible?: boolean
+}
+
+const variants: Record<SidebarVariant, string> = {
+  'one-level': 'sidebar--one-level',
+  multilevel: 'sidebar--multilevel',
+}
+
+export function Sidebar({ variant = 'one-level', className, ...props }: SidebarProps) {
+  const classes = ['sidebar', variants[variant], className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-css/Sidebar.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+
+.sidebar {
+  background-color: var(--color-surface-default);
+  color: var(--color-on-surface);
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+  border-radius: var(--rounded-md);
+  padding-left: var(--spacing-sm);
+  padding-right: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+  width: 220px;
+}
+",
+    "filename": "components/react-css/Sidebar.css",
+    "language": "css",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+import './Tabs.css'
+
+export type TabsVariant = 'line' | 'pill' | 'contained'
+
+export interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: TabsVariant
+  orientation?: 'horizontal' | 'vertical'
+}
+
+const variants: Record<TabsVariant, string> = {
+  line: 'tabs--line',
+  pill: 'tabs--pill',
+  contained: 'tabs--contained',
+}
+
+export function Tabs({ variant = 'line', children, className, ...props }: TabsProps) {
+  const classes = ['tabs', variants[variant], className].filter(Boolean).join(' ')
+  return <div className={classes} {...props}>{children}</div>
+}
+",
+    "filename": "components/react-css/Tabs.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+
+.tabs {
+  color: var(--color-on-surface-muted);
+  font-family: var(--font-label-md-family);
+  font-size: var(--font-label-md-size);
+  font-weight: var(--font-label-md-weight);
+  line-height: var(--font-label-md-line-height);
+}
+
+.tabs--line {
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+}
+
+.tabs--contained {
+  background-color: var(--color-surface-raised);
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-xs);
+}
+",
+    "filename": "components/react-css/Tabs.css",
+    "language": "css",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+import './Breadcrumbs.css'
+
+export interface BreadcrumbsProps extends React.HTMLAttributes<HTMLDivElement> {
+  separator?: 'chevron' | 'slash' | 'dot'
+}
+
+export function Breadcrumbs({ className, ...props }: BreadcrumbsProps) {
+  const classes = ['breadcrumbs', className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-css/Breadcrumbs.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+
+.breadcrumbs {
+  color: var(--color-on-surface-muted);
+  font-family: var(--font-body-sm-family);
+  font-size: var(--font-body-sm-size);
+  font-weight: var(--font-body-sm-weight);
+  line-height: var(--font-body-sm-line-height);
+}
+",
+    "filename": "components/react-css/Breadcrumbs.css",
+    "language": "css",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+import './Pagination.css'
+
+export interface PaginationProps extends React.HTMLAttributes<HTMLDivElement> {
+  page?: number
+  pageCount?: number
+  showPrevNext?: boolean
+}
+
+export function Pagination({ className, ...props }: PaginationProps) {
+  const classes = ['pagination', className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-css/Pagination.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+
+.pagination {
+  color: var(--color-on-surface);
+  font-family: var(--font-label-md-family);
+  font-size: var(--font-label-md-size);
+  font-weight: var(--font-label-md-weight);
+  line-height: var(--font-label-md-line-height);
+}
+",
+    "filename": "components/react-css/Pagination.css",
+    "language": "css",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+import './Accordion.css'
+
+export interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
+  type?: 'single' | 'multiple'
+}
+
+export function Accordion({ children, className, ...props }: AccordionProps) {
+  const classes = ['accordion', className].filter(Boolean).join(' ')
+  return <div className={classes} {...props}>{children}</div>
+}
+",
+    "filename": "components/react-css/Accordion.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+
+.accordion {
+  background-color: var(--color-surface-default);
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+  border-radius: var(--rounded-md);
+}
+",
+    "filename": "components/react-css/Accordion.css",
+    "language": "css",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+import './Progress.css'
+
+export type ProgressVariant = 'determinate' | 'indeterminate'
+
+export interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: ProgressVariant
+  value?: number
+  max?: number
+  label?: string
+}
+
+const variants: Record<ProgressVariant, string> = {
+  determinate: 'progress--determinate',
+  indeterminate: 'progress--indeterminate',
+}
+
+export function Progress({ variant = 'determinate', className, ...props }: ProgressProps) {
+  const classes = ['progress', variants[variant], className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-css/Progress.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+
+.progress {
+  background-color: var(--color-surface-overlay);
+  border-radius: var(--rounded-full);
+  height: 8px;
+}
+",
+    "filename": "components/react-css/Progress.css",
+    "language": "css",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+import './EmptyState.css'
+
+export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
+  title?: string
+  description?: string
+  actionLabel?: string
+}
+
+export function EmptyState({ className, ...props }: EmptyStateProps) {
+  const classes = ['empty-state', className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-css/EmptyState.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+
+.empty-state {
+  background-color: var(--color-surface-default);
+  color: var(--color-on-surface);
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+  .empty-state {
+    padding: var(--spacing-2xl);
+  }
+}
+",
+    "filename": "components/react-css/EmptyState.css",
+    "language": "css",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+import './ErrorState.css'
+
+export type ErrorStateVariant = 'not-found' | 'server-error' | 'forbidden'
+
+export interface ErrorStateProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: ErrorStateVariant
+  actionLabel?: string
+}
+
+const variants: Record<ErrorStateVariant, string> = {
+  'not-found': 'error-state--not-found',
+  'server-error': 'error-state--server-error',
+  forbidden: 'error-state--forbidden',
+}
+
+export function ErrorState({ variant = 'not-found', className, ...props }: ErrorStateProps) {
+  const classes = ['error-state', variants[variant], className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-css/ErrorState.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+
+.error-state {
+  color: var(--color-on-surface);
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-lg);
+}
+
+.error-state--not-found {
+  background-color: var(--color-surface-raised);
+}
+
+.error-state--server-error {
+  background-color: var(--color-status-error-surface);
+}
+
+.error-state--forbidden {
+  background-color: var(--color-status-warning-surface);
+}
+
+@media (min-width: 768px) {
+  .error-state {
+    padding: var(--spacing-2xl);
+  }
+}
+",
+    "filename": "components/react-css/ErrorState.css",
+    "language": "css",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+import './Table.css'
+
+export interface TableProps extends React.HTMLAttributes<HTMLDivElement> {
+  sortable?: boolean
+  selectable?: boolean
+  pagination?: React.ReactNode
+}
+
+export function Table({ className, ...props }: TableProps) {
+  const classes = ['table', className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-css/Table.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+
+.table {
+  background-color: var(--color-surface-default);
+  color: var(--color-on-surface);
+  font-family: var(--font-body-sm-family);
+  font-size: var(--font-body-sm-size);
+  font-weight: var(--font-body-sm-weight);
+  line-height: var(--font-body-sm-line-height);
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+  border-radius: var(--rounded-lg);
+}
+",
+    "filename": "components/react-css/Table.css",
+    "language": "css",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+import './Drawer.css'
+
+export interface DrawerProps extends React.HTMLAttributes<HTMLDivElement> {
+  side?: 'left' | 'right' | 'bottom'
+  open?: boolean
+  title?: string
+}
+
+export function Drawer({ children, className, ...props }: DrawerProps) {
+  const classes = ['drawer', className].filter(Boolean).join(' ')
+  return <div className={classes} {...props}>{children}</div>
+}
+",
+    "filename": "components/react-css/Drawer.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "/* Generated by design-spec — do not edit by hand. */
+/* Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. */
+
+.drawer {
+  background-color: var(--color-surface-default);
+  color: var(--color-on-surface);
+  box-shadow: var(--shadow-xl);
+  padding: var(--spacing-lg);
+  width: 320px;
+}
+",
+    "filename": "components/react-css/Drawer.css",
+    "language": "css",
+  },
+]
+`;
+
+exports[`golden — Tier 2 components > react-tailwind stubs 1`] = `
+[
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export interface NavbarProps extends React.HTMLAttributes<HTMLDivElement> {
+  sticky?: boolean
+  brand?: string
+}
+
+const base = 'bg-surface-default text-on-surface border-surface-border border-[1px] shadow-sm px-md py-sm md:px-lg'
+
+export function Navbar({ className, ...props }: NavbarProps) {
+  const classes = [base, className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-tailwind/Navbar.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export type SidebarVariant = 'one-level' | 'multilevel'
+
+export interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: SidebarVariant
+  collapsed?: boolean
+  collapsible?: boolean
+}
+
+const base = 'bg-surface-default text-on-surface border-surface-border border-[1px] rounded-md px-sm py-sm w-[220px]'
+
+const variants: Record<SidebarVariant, string> = {
+  'one-level': '',
+  multilevel: '',
+}
+
+export function Sidebar({ variant = 'one-level', className, ...props }: SidebarProps) {
+  const classes = [base, variants[variant], className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-tailwind/Sidebar.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export type TabsVariant = 'line' | 'pill' | 'contained'
+
+export interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: TabsVariant
+  orientation?: 'horizontal' | 'vertical'
+}
+
+const base = 'text-on-surface-muted text-label-md'
+
+const variants: Record<TabsVariant, string> = {
+  line: 'border-surface-border border-[1px]',
+  pill: '',
+  contained: 'bg-surface-raised rounded-lg p-xs',
+}
+
+export function Tabs({ variant = 'line', children, className, ...props }: TabsProps) {
+  const classes = [base, variants[variant], className].filter(Boolean).join(' ')
+  return <div className={classes} {...props}>{children}</div>
+}
+",
+    "filename": "components/react-tailwind/Tabs.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export interface BreadcrumbsProps extends React.HTMLAttributes<HTMLDivElement> {
+  separator?: 'chevron' | 'slash' | 'dot'
+}
+
+const base = 'text-on-surface-muted text-body-sm'
+
+export function Breadcrumbs({ className, ...props }: BreadcrumbsProps) {
+  const classes = [base, className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-tailwind/Breadcrumbs.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export interface PaginationProps extends React.HTMLAttributes<HTMLDivElement> {
+  page?: number
+  pageCount?: number
+  showPrevNext?: boolean
+}
+
+const base = 'text-on-surface text-label-md'
+
+export function Pagination({ className, ...props }: PaginationProps) {
+  const classes = [base, className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-tailwind/Pagination.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
+  type?: 'single' | 'multiple'
+}
+
+const base = 'bg-surface-default border-surface-border border-[1px] rounded-md'
+
+export function Accordion({ children, className, ...props }: AccordionProps) {
+  const classes = [base, className].filter(Boolean).join(' ')
+  return <div className={classes} {...props}>{children}</div>
+}
+",
+    "filename": "components/react-tailwind/Accordion.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export type ProgressVariant = 'determinate' | 'indeterminate'
+
+export interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: ProgressVariant
+  value?: number
+  max?: number
+  label?: string
+}
+
+const base = 'bg-surface-overlay rounded-full h-[8px]'
+
+const variants: Record<ProgressVariant, string> = {
+  determinate: '',
+  indeterminate: '',
+}
+
+export function Progress({ variant = 'determinate', className, ...props }: ProgressProps) {
+  const classes = [base, variants[variant], className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-tailwind/Progress.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
+  title?: string
+  description?: string
+  actionLabel?: string
+}
+
+const base = 'bg-surface-default text-on-surface border-surface-border border-[1px] rounded-lg p-lg md:p-2xl'
+
+export function EmptyState({ className, ...props }: EmptyStateProps) {
+  const classes = [base, className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-tailwind/EmptyState.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export type ErrorStateVariant = 'not-found' | 'server-error' | 'forbidden'
+
+export interface ErrorStateProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: ErrorStateVariant
+  actionLabel?: string
+}
+
+const base = 'text-on-surface rounded-lg p-lg md:p-2xl'
+
+const variants: Record<ErrorStateVariant, string> = {
+  'not-found': 'bg-surface-raised',
+  'server-error': 'bg-status-error-surface',
+  forbidden: 'bg-status-warning-surface',
+}
+
+export function ErrorState({ variant = 'not-found', className, ...props }: ErrorStateProps) {
+  const classes = [base, variants[variant], className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-tailwind/ErrorState.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export interface TableProps extends React.HTMLAttributes<HTMLDivElement> {
+  sortable?: boolean
+  selectable?: boolean
+  pagination?: React.ReactNode
+}
+
+const base = 'bg-surface-default text-on-surface text-body-sm border-surface-border border-[1px] rounded-lg'
+
+export function Table({ className, ...props }: TableProps) {
+  const classes = [base, className].filter(Boolean).join(' ')
+  return <div className={classes} {...props} />
+}
+",
+    "filename": "components/react-tailwind/Table.tsx",
+    "language": "tsx",
+  },
+  {
+    "content": "// Generated by design-spec — do not edit by hand.
+// Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate.
+
+import React from 'react'
+
+export interface DrawerProps extends React.HTMLAttributes<HTMLDivElement> {
+  side?: 'left' | 'right' | 'bottom'
+  open?: boolean
+  title?: string
+}
+
+const base = 'bg-surface-default text-on-surface shadow-xl p-lg w-[320px]'
+
+export function Drawer({ children, className, ...props }: DrawerProps) {
+  const classes = [base, className].filter(Boolean).join(' ')
+  return <div className={classes} {...props}>{children}</div>
+}
+",
+    "filename": "components/react-tailwind/Drawer.tsx",
+    "language": "tsx",
+  },
+]
+`;
+
+exports[`golden — Tier 2 components > vue-css stubs 1`] = `
+[
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  sticky?: boolean
+  brand?: string
+}>()
+</script>
+
+<template>
+  <div class="navbar">
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+.navbar {
+  background-color: var(--color-surface-default);
+  color: var(--color-on-surface);
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+  box-shadow: var(--shadow-sm);
+  padding-left: var(--spacing-md);
+  padding-right: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .navbar {
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+  }
+}
+</style>
+",
+    "filename": "components/vue-css/Navbar.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  variant?: 'one-level' | 'multilevel'
+  collapsed?: boolean
+  collapsible?: boolean
+}>()
+</script>
+
+<template>
+  <div class="sidebar" :class="variant ? \`sidebar--\${variant}\` : ''">
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+.sidebar {
+  background-color: var(--color-surface-default);
+  color: var(--color-on-surface);
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+  border-radius: var(--rounded-md);
+  padding-left: var(--spacing-sm);
+  padding-right: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+  width: 220px;
+}
+</style>
+",
+    "filename": "components/vue-css/Sidebar.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  variant?: 'line' | 'pill' | 'contained'
+  orientation?: 'horizontal' | 'vertical'
+}>()
+</script>
+
+<template>
+  <div class="tabs" :class="variant ? \`tabs--\${variant}\` : ''">
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+.tabs {
+  color: var(--color-on-surface-muted);
+  font-family: var(--font-label-md-family);
+  font-size: var(--font-label-md-size);
+  font-weight: var(--font-label-md-weight);
+  line-height: var(--font-label-md-line-height);
+}
+
+.tabs--line {
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+}
+
+.tabs--contained {
+  background-color: var(--color-surface-raised);
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-xs);
+}
+</style>
+",
+    "filename": "components/vue-css/Tabs.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  separator?: 'chevron' | 'slash' | 'dot'
+}>()
+</script>
+
+<template>
+  <div class="breadcrumbs">
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+.breadcrumbs {
+  color: var(--color-on-surface-muted);
+  font-family: var(--font-body-sm-family);
+  font-size: var(--font-body-sm-size);
+  font-weight: var(--font-body-sm-weight);
+  line-height: var(--font-body-sm-line-height);
+}
+</style>
+",
+    "filename": "components/vue-css/Breadcrumbs.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  page?: number
+  pageCount?: number
+  showPrevNext?: boolean
+}>()
+</script>
+
+<template>
+  <div class="pagination">
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+.pagination {
+  color: var(--color-on-surface);
+  font-family: var(--font-label-md-family);
+  font-size: var(--font-label-md-size);
+  font-weight: var(--font-label-md-weight);
+  line-height: var(--font-label-md-line-height);
+}
+</style>
+",
+    "filename": "components/vue-css/Pagination.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  type?: 'single' | 'multiple'
+}>()
+</script>
+
+<template>
+  <div class="accordion">
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+.accordion {
+  background-color: var(--color-surface-default);
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+  border-radius: var(--rounded-md);
+}
+</style>
+",
+    "filename": "components/vue-css/Accordion.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  variant?: 'determinate' | 'indeterminate'
+  value?: number
+  max?: number
+  label?: string
+}>()
+</script>
+
+<template>
+  <div class="progress" :class="variant ? \`progress--\${variant}\` : ''">
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+.progress {
+  background-color: var(--color-surface-overlay);
+  border-radius: var(--rounded-full);
+  height: 8px;
+}
+</style>
+",
+    "filename": "components/vue-css/Progress.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  title?: string
+  description?: string
+  actionLabel?: string
+}>()
+</script>
+
+<template>
+  <div class="empty-state">
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+.empty-state {
+  background-color: var(--color-surface-default);
+  color: var(--color-on-surface);
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+  .empty-state {
+    padding: var(--spacing-2xl);
+  }
+}
+</style>
+",
+    "filename": "components/vue-css/EmptyState.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  variant?: 'not-found' | 'server-error' | 'forbidden'
+  actionLabel?: string
+}>()
+</script>
+
+<template>
+  <div class="error-state" :class="variant ? \`error-state--\${variant}\` : ''">
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+.error-state {
+  color: var(--color-on-surface);
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-lg);
+}
+
+.error-state--not-found {
+  background-color: var(--color-surface-raised);
+}
+
+.error-state--server-error {
+  background-color: var(--color-status-error-surface);
+}
+
+.error-state--forbidden {
+  background-color: var(--color-status-warning-surface);
+}
+
+@media (min-width: 768px) {
+  .error-state {
+    padding: var(--spacing-2xl);
+  }
+}
+</style>
+",
+    "filename": "components/vue-css/ErrorState.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  sortable?: boolean
+  selectable?: boolean
+  pagination?: unknown
+}>()
+</script>
+
+<template>
+  <div class="table">
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+.table {
+  background-color: var(--color-surface-default);
+  color: var(--color-on-surface);
+  font-family: var(--font-body-sm-family);
+  font-size: var(--font-body-sm-size);
+  font-weight: var(--font-body-sm-weight);
+  line-height: var(--font-body-sm-line-height);
+  border-color: var(--color-surface-border);
+  border-width: 1px;
+  border-radius: var(--rounded-lg);
+}
+</style>
+",
+    "filename": "components/vue-css/Table.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  side?: 'left' | 'right' | 'bottom'
+  open?: boolean
+  title?: string
+}>()
+</script>
+
+<template>
+  <div class="drawer">
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+.drawer {
+  background-color: var(--color-surface-default);
+  color: var(--color-on-surface);
+  box-shadow: var(--shadow-xl);
+  padding: var(--spacing-lg);
+  width: 320px;
+}
+</style>
+",
+    "filename": "components/vue-css/Drawer.vue",
+    "language": "vue",
+  },
+]
+`;
+
+exports[`golden — Tier 2 components > vue-tailwind stubs 1`] = `
+[
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  sticky?: boolean
+  brand?: string
+}>()
+</script>
+
+<template>
+  <div class="bg-surface-default text-on-surface border-surface-border border-[1px] shadow-sm px-md py-sm md:px-lg">
+    <slot />
+  </div>
+</template>
+",
+    "filename": "components/vue-tailwind/Navbar.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+import { computed } from 'vue'
+const props = withDefaults(defineProps<{
+  variant?: 'one-level' | 'multilevel'
+  collapsed?: boolean
+  collapsible?: boolean
+}>(), { variant: 'one-level' })
+const variantClasses: Record<string, string> = {
+  'one-level': '',
+  multilevel: '',
+}
+const classes = computed(() => 'bg-surface-default text-on-surface border-surface-border border-[1px] rounded-md px-sm py-sm w-[220px]' + ' ' + (variantClasses[props.variant ?? 'one-level'] ?? ''))
+</script>
+
+<template>
+  <div :class="classes">
+    <slot />
+  </div>
+</template>
+",
+    "filename": "components/vue-tailwind/Sidebar.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+import { computed } from 'vue'
+const props = withDefaults(defineProps<{
+  variant?: 'line' | 'pill' | 'contained'
+  orientation?: 'horizontal' | 'vertical'
+}>(), { variant: 'line' })
+const variantClasses: Record<string, string> = {
+  line: 'border-surface-border border-[1px]',
+  pill: '',
+  contained: 'bg-surface-raised rounded-lg p-xs',
+}
+const classes = computed(() => 'text-on-surface-muted text-label-md' + ' ' + (variantClasses[props.variant ?? 'line'] ?? ''))
+</script>
+
+<template>
+  <div :class="classes">
+    <slot />
+  </div>
+</template>
+",
+    "filename": "components/vue-tailwind/Tabs.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  separator?: 'chevron' | 'slash' | 'dot'
+}>()
+</script>
+
+<template>
+  <div class="text-on-surface-muted text-body-sm">
+    <slot />
+  </div>
+</template>
+",
+    "filename": "components/vue-tailwind/Breadcrumbs.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  page?: number
+  pageCount?: number
+  showPrevNext?: boolean
+}>()
+</script>
+
+<template>
+  <div class="text-on-surface text-label-md">
+    <slot />
+  </div>
+</template>
+",
+    "filename": "components/vue-tailwind/Pagination.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  type?: 'single' | 'multiple'
+}>()
+</script>
+
+<template>
+  <div class="bg-surface-default border-surface-border border-[1px] rounded-md">
+    <slot />
+  </div>
+</template>
+",
+    "filename": "components/vue-tailwind/Accordion.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+import { computed } from 'vue'
+const props = withDefaults(defineProps<{
+  variant?: 'determinate' | 'indeterminate'
+  value?: number
+  max?: number
+  label?: string
+}>(), { variant: 'determinate' })
+const variantClasses: Record<string, string> = {
+  determinate: '',
+  indeterminate: '',
+}
+const classes = computed(() => 'bg-surface-overlay rounded-full h-[8px]' + ' ' + (variantClasses[props.variant ?? 'determinate'] ?? ''))
+</script>
+
+<template>
+  <div :class="classes">
+    <slot />
+  </div>
+</template>
+",
+    "filename": "components/vue-tailwind/Progress.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  title?: string
+  description?: string
+  actionLabel?: string
+}>()
+</script>
+
+<template>
+  <div class="bg-surface-default text-on-surface border-surface-border border-[1px] rounded-lg p-lg md:p-2xl">
+    <slot />
+  </div>
+</template>
+",
+    "filename": "components/vue-tailwind/EmptyState.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+import { computed } from 'vue'
+const props = withDefaults(defineProps<{
+  variant?: 'not-found' | 'server-error' | 'forbidden'
+  actionLabel?: string
+}>(), { variant: 'not-found' })
+const variantClasses: Record<string, string> = {
+  'not-found': 'bg-surface-raised',
+  'server-error': 'bg-status-error-surface',
+  forbidden: 'bg-status-warning-surface',
+}
+const classes = computed(() => 'text-on-surface rounded-lg p-lg md:p-2xl' + ' ' + (variantClasses[props.variant ?? 'not-found'] ?? ''))
+</script>
+
+<template>
+  <div :class="classes">
+    <slot />
+  </div>
+</template>
+",
+    "filename": "components/vue-tailwind/ErrorState.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  sortable?: boolean
+  selectable?: boolean
+  pagination?: unknown
+}>()
+</script>
+
+<template>
+  <div class="bg-surface-default text-on-surface text-body-sm border-surface-border border-[1px] rounded-lg">
+    <slot />
+  </div>
+</template>
+",
+    "filename": "components/vue-tailwind/Table.vue",
+    "language": "vue",
+  },
+  {
+    "content": "<!-- Generated by design-spec — do not edit by hand. -->
+<!-- Source of truth: design-spec.schema.json. Run \`design-spec compile\` to regenerate. -->
+
+<script setup lang="ts">
+defineProps<{
+  side?: 'left' | 'right' | 'bottom'
+  open?: boolean
+  title?: string
+}>()
+</script>
+
+<template>
+  <div class="bg-surface-default text-on-surface shadow-xl p-lg w-[320px]">
+    <slot />
+  </div>
+</template>
+",
+    "filename": "components/vue-tailwind/Drawer.vue",
+    "language": "vue",
+  },
+]
+`;
+
 exports[`golden — Vue components > default schema 1`] = `
 [
   {

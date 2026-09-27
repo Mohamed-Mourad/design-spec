@@ -14,6 +14,10 @@ export type { FileOutput } from './types/compiler.js'
 // Defaults
 export { defaultSchema, defaultExportConfig } from './defaultSchema.js'
 
+// Tier 2 component blueprints (Navbar, Sidebar, Tabs, …) — shared default data
+// the web workspace loads and the golden tests pin.
+export { tier2Blueprints } from './blueprints/tier2.js'
+
 // Authoritative JSON Schema (single source; repo-root design-spec.schema.json is generated from it)
 export { designSpecJsonSchema } from './jsonSchema.js'
 
