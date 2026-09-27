@@ -95,6 +95,25 @@ function removeBreakpointOverride(name: string) {
   store.removePath(['componentBlueprints', props.name, 'responsive', name])
 }
 const activeOverrides = computed(() => Object.keys(bp.value?.responsive ?? {}))
+// The prose layout note. On Navbar, Table, Drawer, … the breakpoint carrying it
+// is where the preview switches from the mobile-first base layout.
+function setResponsiveLayout(name: string, value: string) {
+  const v = value.trim()
+  if (v) store.setPath(['componentBlueprints', props.name, 'responsive', name, 'layout'], v)
+  else store.removePath(['componentBlueprints', props.name, 'responsive', name, 'layout'])
+}
+
+// ── Prop defaults — the previews render from them (orientation, side, …) ──
+function setPropDefault(name: string, def: PropDefinition, raw: string) {
+  if (raw === '') return setProp(name, { default: undefined })
+  const n = Number(raw)
+  setProp(name, { default: def.type === 'number' && Number.isFinite(n) ? n : raw })
+}
+
+// ── Parts — compound-part token groups (Tabs `indicator`, Table `header`, …) ──
+const partGroups = computed(() =>
+  Object.keys(bp.value?.tokens ?? {}).filter((k) => k !== 'base' && !(bp.value?.variants ?? []).includes(k)),
+)
 </script>
 
 <template>
@@ -124,6 +143,29 @@ const activeOverrides = computed(() => Object.keys(bp.value?.responsive ?? {}))
           <input type="checkbox" :checked="def.required" @change="setProp(name, { required: ($event.target as HTMLInputElement).checked })" />
           req
         </label>
+        <select
+          v-if="def.type === 'enum'"
+          class="be__default"
+          :value="def.default ?? ''"
+          :aria-label="`${name} default`"
+          @change="setProp(name, { default: ($event.target as HTMLSelectElement).value })"
+        >
+          <option v-for="v in def.values ?? []" :key="v" :value="v">{{ v }}</option>
+        </select>
+        <label v-else-if="def.type === 'boolean'" class="be__req">
+          <input type="checkbox" :checked="def.default === true" :aria-label="`${name} default`" @change="setProp(name, { default: ($event.target as HTMLInputElement).checked })" />
+          on
+        </label>
+        <input
+          v-else-if="def.type !== 'slot'"
+          class="be__default"
+          :type="def.type === 'number' ? 'number' : 'text'"
+          :value="def.default ?? ''"
+          :aria-label="`${name} default`"
+          placeholder="default"
+          @change="setPropDefault(name, def, ($event.target as HTMLInputElement).value)"
+        />
+        <span v-else />
         <button class="be__x" :aria-label="`Remove ${name}`" @click="removeProp(name)">×</button>
       </div>
       <div class="be__add">
@@ -162,6 +204,14 @@ const activeOverrides = computed(() => Object.keys(bp.value?.responsive ?? {}))
           @remove="(p) => removeVariantToken(variant, p)"
         />
       </template>
+      <template v-for="part in partGroups" :key="part">
+        <h4 class="be__list-head">{{ part }} <span class="be__muted">(part)</span></h4>
+        <TokenGroupEditor
+          :tokens="((bp.tokens[part] ?? {}) as Record<string, unknown>)"
+          @update="(p, v) => setVariantToken(part, p, v)"
+          @remove="(p) => removeVariantToken(part, p)"
+        />
+      </template>
     </div>
 
     <!-- Examples -->
@@ -192,6 +242,16 @@ const activeOverrides = computed(() => Object.keys(bp.value?.responsive ?? {}))
           {{ selectedBp }} override
           <button class="be__x" :aria-label="`Clear ${selectedBp} override`" @click="removeBreakpointOverride(selectedBp)">clear</button>
         </h4>
+        <label class="be__layout">
+          <span class="be__muted">Layout at this breakpoint</span>
+          <input
+            :value="bp.responsive?.[selectedBp]?.layout ?? ''"
+            placeholder="e.g. links render inline; below this they collapse"
+            aria-label="Layout note"
+            data-testid="responsive-layout-note"
+            @change="setResponsiveLayout(selectedBp, ($event.target as HTMLInputElement).value)"
+          />
+        </label>
         <TokenGroupEditor
           :tokens="overrideTokens(selectedBp)"
           :inherited="baseTokens"
@@ -259,7 +319,7 @@ const activeOverrides = computed(() => Object.keys(bp.value?.responsive ?? {}))
 }
 .be__prop {
   display: grid;
-  grid-template-columns: 1fr 90px auto auto;
+  grid-template-columns: 1fr 90px auto 96px auto;
   align-items: center;
   gap: var(--spacing-sm);
   padding: 3px 0;
@@ -270,6 +330,8 @@ const activeOverrides = computed(() => Object.keys(bp.value?.responsive ?? {}))
   color: var(--color-on-surface);
 }
 .be__prop select,
+.be__default,
+.be__layout input,
 .be__add input,
 .be__add select {
   font-family: var(--font-mono);
@@ -279,6 +341,19 @@ const activeOverrides = computed(() => Object.keys(bp.value?.responsive ?? {}))
   border: 1px solid var(--color-surface-border);
   border-radius: var(--radius-sm);
   padding: 3px 6px;
+}
+.be__default {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+.be__layout {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--spacing-sm);
+  font-family: var(--font-sans);
+  font-size: 11px;
 }
 .be__req {
   display: flex;
