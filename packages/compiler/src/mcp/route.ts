@@ -53,6 +53,44 @@ function editDistance(a: string, b: string): number {
  * case-insensitive ("button" → "Button"); then the closest-spelled name within a
  * tolerance (typos). Returns the key plus whether it was an exact/insensitive hit.
  */
+/** Lowercase with every non-alphanumeric dropped: "Nav Bar" → "navbar". */
+function normalizeName(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+/**
+ * Common names agents use for a component → its blueprint name (keys are
+ * normalized). An alias only resolves when that blueprint is in the schema.
+ */
+const COMPONENT_ALIASES: Record<string, string> = {
+  header: 'Navbar',
+  topbar: 'Navbar',
+  appbar: 'Navbar',
+  navigation: 'Navbar',
+  nav: 'Navbar',
+  sidenav: 'Sidebar',
+  sidenavigation: 'Sidebar',
+  sheet: 'Drawer',
+  bottomsheet: 'Drawer',
+  sidepanel: 'Drawer',
+  progressbar: 'Progress',
+  loadingbar: 'Progress',
+  breadcrumb: 'Breadcrumbs',
+  pager: 'Pagination',
+  datatable: 'Table',
+  tab: 'Tabs',
+  tabbar: 'Tabs',
+  collapse: 'Accordion',
+  disclosure: 'Accordion',
+  empty: 'EmptyState',
+  error: 'ErrorState',
+  notfound: 'ErrorState',
+  '404': 'ErrorState',
+  select: 'Dropdown',
+  textfield: 'Input',
+  banner: 'Alert',
+}
+
 function resolveComponentKey(
   keys: string[],
   name: string,
@@ -61,6 +99,15 @@ function resolveComponentKey(
   const lower = name.toLowerCase()
   const ci = keys.find((k) => k.toLowerCase() === lower)
   if (ci) return { key: ci, fuzzy: false } // case-insensitive counts as a real match
+
+  // Separator-insensitive ("empty state" / "nav-bar" → EmptyState / Navbar), then
+  // well-known synonyms. Both are real matches, but only when the target exists.
+  const norm = normalizeName(name)
+  const sep = keys.find((k) => normalizeName(k) === norm)
+  if (sep) return { key: sep, fuzzy: false }
+  const alias = COMPONENT_ALIASES[norm]
+  const aliased = alias ? keys.find((k) => normalizeName(k) === normalizeName(alias)) : undefined
+  if (aliased) return { key: aliased, fuzzy: false }
 
   // Closest-spelled name (typo/abbreviation tolerance), deterministic on ties.
   // Two guards compose to reject no-signal input: only consider candidates that

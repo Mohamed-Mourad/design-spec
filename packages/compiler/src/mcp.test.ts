@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest'
 import fc from 'fast-check'
 import { defaultSchema } from './defaultSchema.js'
 import { get_component_tokens, get_layout_system, get_semantic_colors } from './mcp/route.js'
+import { tier2Schema } from './fixtures/tier2.fixture.js'
 
 const schema = defaultSchema
 const componentNames = Object.keys(schema.componentBlueprints)
@@ -83,5 +84,39 @@ describe('get_semantic_colors — role-only slice', () => {
     expect(roles.primary).toBe('#2563EB')
     expect(roles['primary-60']).toBeUndefined()
     expect(roles['primary-70']).toBeUndefined()
+  })
+})
+
+describe('get_component_tokens — Tier 2 names and aliases', () => {
+  it.each([
+    ['header', 'Navbar'],
+    ['Nav Bar', 'Navbar'],
+    ['side nav', 'Sidebar'],
+    ['sheet', 'Drawer'],
+    ['bottom-sheet', 'Drawer'],
+    ['progress bar', 'Progress'],
+    ['breadcrumb', 'Breadcrumbs'],
+    ['pager', 'Pagination'],
+    ['data table', 'Table'],
+    ['empty state', 'EmptyState'],
+    ['error_state', 'ErrorState'],
+    ['404', 'ErrorState'],
+    ['tab', 'Tabs'],
+    ['collapse', 'Accordion'],
+  ])('%s → %s, exact (no note)', (query, component) => {
+    const slice = get_component_tokens(tier2Schema, query)!
+    expect(slice.component).toBe(component)
+    expect(slice.note).toBeUndefined()
+  })
+
+  it('returns the compound-part sub-groups resolved', () => {
+    const slice = get_component_tokens(tier2Schema, 'tabs')!
+    expect(slice.tokens.indicator.backgroundColor).toBe('#3B6EF5')
+    expect(JSON.stringify(slice)).not.toMatch(/"\{[^}]+\}"/)
+  })
+
+  it('an alias never resolves to a component the schema lacks', () => {
+    // The compiler default schema has only Button + Input.
+    expect(get_component_tokens(defaultSchema, 'sheet')).toBeNull()
   })
 })
