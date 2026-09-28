@@ -137,6 +137,30 @@ export function mergeForPush(local: DesignSystemSchema, remote: DesignSystemSche
   }
 }
 
+/**
+ * Whether two schemas are the same once on the wire: compared as parsed JSON,
+ * so key order is ignored and undefined fields (which JSON drops) don't count.
+ * Array order does count.
+ */
+export function sameSchema(a: unknown, b: unknown): boolean {
+  return canonical(a) === canonical(b)
+}
+
+function canonical(value: unknown): string {
+  return JSON.stringify(sortKeys(JSON.parse(JSON.stringify(value ?? null))))
+}
+
+function sortKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortKeys)
+  if (value !== null && typeof value === 'object') {
+    const obj = value as Record<string, unknown>
+    const out: Record<string, unknown> = {}
+    for (const k of Object.keys(obj).sort()) out[k] = sortKeys(obj[k])
+    return out
+  }
+  return value
+}
+
 /** Project slug from a schema name — kebab-case, the §16.3 commit-scope rule. */
 export function projectSlug(name: string): string {
   const slug = name

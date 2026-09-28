@@ -227,8 +227,34 @@ describe('sync / push', () => {
     expect(stored.revision).toBe(3)
   })
 
+  it('pushing an unchanged schema sends nothing and keeps the revision', async () => {
+    await cli(['push', '--key', KEY])
+    const r = await cli(['push', '--json'])
+    expect(r.code).toBe(0)
+    expect(JSON.parse(r.stdout)).toMatchObject({ ok: true, unchanged: true, revision: 1 })
+    expect(api.writes()).toBe(1)
+    expect(api.projects.get('acme-web')!.revision).toBe(1)
+
+    // Key order is not a change: the dashboard may hand the schema back reordered.
+    const stored = api.projects.get('acme-web')!
+    stored.schema = Object.fromEntries(Object.entries(stored.schema).reverse())
+    const human = await cli(['push'])
+    expect(human.stdout + human.stderr).toMatch(/"acme-web" is already up to date \(rev 1\)/)
+    expect(api.writes()).toBe(1)
+
+    // …while a presentation-only local difference is kept remote, so still a no-op.
+    const s = await readSchema()
+    s.presentation = { ogImageStrategy: 'client-canvas' }
+    await writeFile(schemaPath(), JSON.stringify(s, null, 2) + '\n')
+    expect(JSON.parse((await cli(['push', '--json'])).stdout).unchanged).toBe(true)
+    expect(api.writes()).toBe(1)
+  })
+
   it('a dashboard save that lands mid-push is a conflict, not a lost edit', async () => {
     await cli(['push', '--key', KEY])
+    const s = await readSchema()
+    s.colors.primary = '#123456'
+    await writeFile(schemaPath(), JSON.stringify(s, null, 2) + '\n')
     api.raceNextWrite = true
     const r = await cli(['push'])
     expect(r.code).toBe(9) // ExitCode.REMOTE
@@ -294,10 +320,13 @@ describe('sync / push', () => {
     expect(sync.stdout).toMatch(/Acme Studio/)
     expect(await readFile(schemaPath(), 'utf8')).toBe(before)
 
+    const s = await readSchema()
+    s.colors.primary = '#654321'
+    await writeFile(schemaPath(), JSON.stringify(s, null, 2) + '\n')
     const writes = api.writes()
     const push = await cli(['--dry-run', 'push', '--json'])
     expect(push.code).toBe(0)
-    expect(JSON.parse(push.stdout)).toMatchObject({ dryRun: true, revision: null })
+    expect(JSON.parse(push.stdout)).toMatchObject({ dryRun: true, unchanged: false, revision: null })
     expect(api.writes()).toBe(writes)
   })
 
@@ -369,6 +398,67 @@ describe('watch --sync', () => {
     } finally {
       // Wait for the exit: on Windows a live child holds its cwd, and the temp
       // dir can't be removed until it lets go.
+      const exited = new Promise((r) => child.once('exit', r))
+      child.kill()
+      await exited
+    }
+  })
+
+  it('picks up a dashboard edit mid-session, and one PUT per real change — none after a pull', async () => {
+    const url = await api.listen()
+    const env = {
+      ...process.env,
+      NO_UPDATE_NOTIFIER: '1',
+      NO_COLOR: '1',
+      DESIGN_SPEC_API_URL: url,
+      DESIGN_SPEC_CONFIG_DIR: configDir,
+      DESIGN_SPEC_SYNC_INTERVAL_MS: '400',
+    }
+    expect((await runCli(['push', '--key', KEY], dir, env as Record<string, string>)).code).toBe(0)
+
+    const child = spawn(process.execPath, [resolve(__dirname, '../dist/index.js'), 'watch', '--sync'], { cwd: dir, env })
+    let output = ''
+    child.stdout.on('data', (d) => (output += d))
+    child.stderr.on('data', (d) => (output += d))
+    const waitFor = async (pred: () => boolean | Promise<boolean>, what: string, ms = 10_000) => {
+      const until = Date.now() + ms
+      while (!(await pred())) {
+        if (Date.now() > until) throw new Error(`timed out waiting for ${what}\n${output}`)
+        await new Promise((r) => setTimeout(r, 50))
+      }
+    }
+    const schemaPath = join(dir, 'design-spec.schema.json')
+    const local = async () => JSON.parse(await readFile(schemaPath, 'utf8'))
+    const puts = () => api.writes()
+
+    try {
+      await waitFor(() => /Synced "acme-web"/.test(output), 'the initial sync')
+      await new Promise((r) => setTimeout(r, 300)) // let chokidar reach ready
+      const before = puts()
+
+      // A designer saves presentation in the dashboard while the watch runs.
+      api.webEdit('acme-web', (x) => (x.presentation = presentation))
+      const revAfterWeb = api.projects.get('acme-web')!.revision
+      await waitFor(async () => JSON.stringify((await local()).presentation) === JSON.stringify(presentation), 'the pull to land', 2_000)
+      await waitFor(() => /pulled \d+ presentation change\(s\) from the dashboard \(rev \d+\)/.test(output), 'the pull report')
+
+      // The pull's write recompiled; the push after it had nothing to send.
+      await waitFor(async () => (await readFile(join(dir, 'tokens.css'), 'utf8')).length > 0, 'the recompile')
+      await new Promise((r) => setTimeout(r, 1_500)) // several intervals
+      expect(puts()).toBe(before)
+      expect(api.projects.get('acme-web')!.revision).toBe(revAfterWeb)
+
+      // A real local change is exactly one PUT, carrying the pulled presentation.
+      const s = await local()
+      s.colors.primary = '#0A0B0C'
+      await writeFile(schemaPath, JSON.stringify(s, null, 2) + '\n')
+      await waitFor(() => puts() > before, 'a push after the save')
+      await new Promise((r) => setTimeout(r, 1_500))
+      expect(puts()).toBe(before + 1)
+      const stored = api.projects.get('acme-web')!
+      expect(stored.schema.colors.primary).toBe('#0A0B0C')
+      expect(stored.schema.presentation).toEqual(presentation)
+    } finally {
       const exited = new Promise((r) => child.once('exit', r))
       child.kill()
       await exited

@@ -10,7 +10,15 @@ import { validateSchema } from '../validate.js'
 import { CliError, ExitCode } from '../errors.js'
 import { SyncClient, type ProjectMeta } from './client.js'
 import { resolveCredentials, rememberKey, maskKey, type Credentials } from './credentials.js'
-import { mergeForPush, mergeForSync, projectSlug, type PushMerge, type SyncMerge } from './merge.js'
+import {
+  mergeForPush,
+  mergeForSync,
+  projectSlug,
+  sameSchema,
+  type LayerChange,
+  type PushMerge,
+  type SyncMerge,
+} from './merge.js'
 
 export interface SyncOptions {
   key?: string
@@ -105,8 +113,13 @@ export async function runSync(cwd: string, opts: SyncOptions): Promise<SyncResul
 
 export interface PushResult extends PushMerge {
   project: string
-  /** The revision written, or null on a dry run. */
+  /**
+   * The revision written, or null on a dry run. When `unchanged`, the revision
+   * the dashboard already had — nothing was written.
+   */
   saved: ProjectMeta | null
+  /** The dashboard already holds exactly this schema, so no PUT was sent. */
+  unchanged: boolean
   keyHint: string
   rememberedAt: string | null
 }
@@ -125,6 +138,15 @@ export async function runPush(
 
   const remote = await s.client.getProject(s.project)
   const merge = mergeForPush(local, remote?.schema_json ?? null)
+  const base = { project: s.project, keyHint: maskKey(s.creds.key) }
+
+  // Nothing to send: a PUT would only bump the revision and make a designer's
+  // open workspace look stale over no change at all.
+  if (remote && sameSchema(merge.schema, remote.schema_json)) {
+    const { schema_json: _schema, ...meta } = remote
+    if (!opts.dryRun && !session) s.rememberedAt = await rememberKey(s.creds)
+    return { ...merge, ...base, saved: meta, unchanged: true, rememberedAt: s.rememberedAt }
+  }
 
   // A dry run reads (to show the real delta) but sends nothing and remembers
   // nothing.
@@ -133,5 +155,40 @@ export async function runPush(
     saved = await s.client.putProject(s.project, merge.schema, remote?.revision ?? 0)
     if (!session) s.rememberedAt = await rememberKey(s.creds)
   }
-  return { ...merge, project: s.project, saved, keyHint: maskKey(s.creds.key), rememberedAt: s.rememberedAt }
+  return { ...merge, ...base, saved, unchanged: false, rememberedAt: s.rememberedAt }
+}
+
+export interface PullResult {
+  /** The dashboard revision this pull saw. */
+  revision: number
+  /** Presentation leaves written locally; empty when nothing changed. */
+  presentation: LayerChange[]
+}
+
+/**
+ * The periodic pull inside `watch --sync`: once the dashboard revision has
+ * moved past `knownRevision`, take its presentation (remote wins) and write the
+ * schema. Export and tokens stay local — this is `sync` without --force, and
+ * without the compile: the write itself wakes the watcher, which recompiles.
+ */
+export async function runPull(cwd: string, session: Session, knownRevision: number): Promise<PullResult> {
+  const remote = await session.client.getProject(session.project)
+  if (!remote || remote.revision === knownRevision) {
+    return { revision: remote?.revision ?? knownRevision, presentation: [] }
+  }
+
+  const { schema: local, path } = await loadSchema(cwd)
+  const merge = mergeForSync(local, remote.schema_json)
+  if (merge.presentation.length === 0) return { revision: remote.revision, presentation: [] }
+
+  const issues = validateSchema(merge.schema)
+  if (issues.length > 0) {
+    const first = issues[0]
+    throw new CliError(`The dashboard's config is invalid at ${first.path || '<root>'}: ${first.message}`, {
+      code: 'E_REMOTE_INVALID',
+      exitCode: ExitCode.INVALID_SCHEMA,
+    })
+  }
+  await saveSchema(path, merge.schema)
+  return { revision: remote.revision, presentation: merge.presentation }
 }

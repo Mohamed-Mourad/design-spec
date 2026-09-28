@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { defaultSchema, type DesignSystemSchema } from '@design-spec/compiler'
-import { diffLayer, mergeForPush, mergeForSync, projectSlug } from './merge.js'
+import { diffLayer, mergeForPush, mergeForSync, projectSlug, sameSchema } from './merge.js'
 
 // The §20 layer policy, pinned without any I/O:
 //   presentation → remote wins (removal too)
@@ -139,5 +139,35 @@ describe('projectSlug', () => {
     ['a'.repeat(80), 'a'.repeat(64)],
   ])('%s → %s', (name, slug) => {
     expect(projectSlug(name)).toBe(slug)
+  })
+})
+
+describe('sameSchema', () => {
+  it('ignores key order at every depth', () => {
+    const reorder = (v: unknown): unknown =>
+      Array.isArray(v)
+        ? v.map(reorder)
+        : v && typeof v === 'object'
+          ? Object.fromEntries(Object.entries(v).reverse().map(([k, x]) => [k, reorder(x)]))
+          : v
+    expect(sameSchema(schema(), reorder(schema()))).toBe(true)
+  })
+
+  it('ignores undefined fields, which never reach the wire', () => {
+    expect(sameSchema(schema(), { ...schema(), presentation: undefined })).toBe(true)
+  })
+
+  it('sees a changed leaf, an added key and a reordered array', () => {
+    expect(sameSchema(schema(), schema((s) => (s.colors.primary = '#000001')))).toBe(false)
+    expect(sameSchema(schema(), schema((s) => (s.presentation = remotePresentation)))).toBe(false)
+    expect(sameSchema(schema(), schema((s) => s.export.frameworks.reverse()))).toBe(
+      schema().export.frameworks.length < 2,
+    )
+  })
+
+  it('a push merge of a pulled schema equals the remote', () => {
+    const remote = schema((s) => (s.presentation = remotePresentation))
+    const pulled = mergeForSync(schema(), remote).schema
+    expect(sameSchema(mergeForPush(pulled, remote).schema, remote)).toBe(true)
   })
 })

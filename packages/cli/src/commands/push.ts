@@ -42,6 +42,7 @@ export function registerPush(program: Command): void {
           project: r.project,
           created: r.created,
           dryRun,
+          unchanged: r.unchanged,
           revision: r.saved?.revision ?? null,
           tokens: r.tokens,
           export: r.exportDiff,
@@ -59,6 +60,12 @@ export function registerPush(program: Command): void {
           ui.info(
             `${r.presentationKept.length} presentation setting(s) differ locally — kept the dashboard's (remote wins). Run "design-spec sync" to pull them.`,
           )
+        }
+
+        if (r.unchanged) {
+          // Nothing was sent, so the revision did not move.
+          ui.success(`"${r.project}" is already up to date (rev ${r.saved?.revision}).`)
+          return
         }
 
         const summary = `${r.tokens.changes.length} token change(s), ${r.exportDiff.length} export change(s)`
