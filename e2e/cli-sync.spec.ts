@@ -29,6 +29,7 @@ async function mockSync(page: Page, opts: { conflictOnSave?: boolean } = {}) {
     updated_at: '2026-09-28T10:00:00Z',
   }
   let schemaJson: Record<string, unknown> | null = null
+  let deleted = false
 
   await page.route('**/api/v1/api-keys**', async (route) => {
     const req = route.request()
@@ -52,7 +53,11 @@ async function mockSync(page: Page, opts: { conflictOnSave?: boolean } = {}) {
     const req = route.request()
     const body = req.method() === 'PUT' ? req.postDataJSON() : null
     calls.push({ method: req.method(), url: req.url(), body })
-    if (req.url().endsWith('/projects')) return route.fulfill({ json: { data: [project] } })
+    if (req.url().endsWith('/projects')) return route.fulfill({ json: { data: deleted ? [] : [project] } })
+    if (req.method() === 'DELETE') {
+      deleted = true
+      return route.fulfill({ status: 204 })
+    }
     if (req.method() === 'GET') {
       return route.fulfill({ json: { ...project, schema_json: schemaJson } })
     }
@@ -147,5 +152,58 @@ test.describe('CLI sync — dashboard side', () => {
     await expect(page).toHaveURL(/\/workspace$/)
     await page.getByTestId('save-to-dashboard').click()
     await expect(page.getByTestId('save-to-dashboard-error')).toContainText('changed since you opened')
+  })
+
+  test('an Export-tab edit is what the dashboard save sends', async ({ page }) => {
+    await mockApi(page)
+    const api = await mockSync(page)
+    await seedSession(page)
+    await seedRemoteSchema(page, api)
+
+    // Open the pushed project, then change its export config in Settings.
+    await page.goto('/settings')
+    await page.getByTestId('open-acme-ui').click()
+    await expect(page).toHaveURL(/\/workspace$/)
+
+    await page.goto('/settings?tab=export')
+    await expect(page.getByTestId('settings-tab-export')).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByTestId('export-sync-note')).toContainText('design-spec sync --force')
+    const prefix = page.getByTestId('export-css-prefix')
+    await prefix.fill('acme-')
+    await prefix.press('Tab')
+    await expect(page.getByTestId('export-settings')).toContainText('--acme-color-primary')
+
+    await page.getByTestId('export-settings').getByTestId('save-to-dashboard').click()
+    await expect(page.getByTestId('save-to-dashboard')).toContainText('Saved · rev 4')
+    const put = api.calls.find((c) => c.method === 'PUT')!
+    expect(put.url).toMatch(/\/api\/v1\/projects\/acme-ui$/)
+    expect(put.body!.base_revision).toBe(3)
+    expect(put.body!.schema_json.export.cssVariablePrefix).toBe('acme-')
+
+    // The tab survives a reload.
+    await page.reload()
+    await expect(page.getByTestId('export-settings')).toBeVisible()
+  })
+
+  test('a dashboard project can be deleted, after a confirm', async ({ page }) => {
+    await mockApi(page)
+    const api = await mockSync(page)
+    await seedSession(page)
+
+    await page.goto('/settings')
+    const card = page.getByTestId('developer-card')
+    await expect(card.getByTestId('open-acme-ui')).toBeVisible()
+
+    await card.getByTestId('delete-acme-ui').click()
+    // Nothing is sent until the confirm.
+    expect(api.calls.some((c) => c.method === 'DELETE')).toBe(false)
+    await card.getByRole('button', { name: 'Keep it' }).click()
+    await expect(card.getByTestId('open-acme-ui')).toBeVisible()
+
+    await card.getByTestId('delete-acme-ui').click()
+    await card.getByTestId('confirm-delete-acme-ui').click()
+    await expect(card.getByTestId('open-acme-ui')).toHaveCount(0)
+    const del = api.calls.find((c) => c.method === 'DELETE')!
+    expect(del.url).toMatch(/\/api\/v1\/projects\/acme-ui$/)
   })
 })

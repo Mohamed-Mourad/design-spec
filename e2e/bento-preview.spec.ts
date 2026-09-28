@@ -82,6 +82,19 @@ test('layout edits survive into the shared link', async ({ page }) => {
   await reader.close()
 })
 
+test('Settings → Presentation opens the existing layout and branding editors', async ({ page }) => {
+  await page.goto('/settings?tab=presentation')
+  await expect(page.getByTestId('presentation-summary')).toContainText('Bento layout')
+
+  await page.getByTestId('edit-layout').click()
+  await expect(page).toHaveURL(/\/preview\?panel=layout$/)
+  await expect(page.getByTestId('bento-layout-editor')).toBeVisible()
+
+  await page.goto('/settings?tab=presentation')
+  await page.getByTestId('edit-branding').click()
+  await expect(page.getByRole('tab', { name: 'Branding' })).toHaveAttribute('aria-selected', 'true')
+})
+
 test('a damaged link shows the viewer their own workspace, not an error page', async ({ page }) => {
   await page.goto('/preview#this-is-not-a-real-hash')
 

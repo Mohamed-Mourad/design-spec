@@ -8,6 +8,7 @@ import SettingsView from '@/views/SettingsView.vue'
 import { useDesignSystemStore } from '@/stores/useDesignSystemStore'
 import { defaultSchema } from '@design-spec/compiler'
 import { createHead } from '@unhead/vue/client'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import type { ImportExtraction } from '@design-spec/compiler'
 
 // Mount smoke tests.
@@ -20,10 +21,13 @@ import type { ImportExtraction } from '@design-spec/compiler'
 
 // SettingsView sets a document title, so it needs an unhead context; RouterLink
 // needs a stub because there is no router in a component test.
+// SettingsView reads its tab from the route, so it needs a router, not a stub.
 const settingsMountOptions = () => ({
   global: {
-    plugins: [createHead()],
-    stubs: { RouterLink: { template: '<a><slot /></a>' } },
+    plugins: [
+      createHead(),
+      createRouter({ history: createMemoryHistory(), routes: [{ path: '/:p(.*)*', component: { template: '<div />' } }] }),
+    ],
   },
 })
 

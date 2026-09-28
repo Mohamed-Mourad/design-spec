@@ -120,10 +120,13 @@ function openInWorkspace() {
  * the only place its result is visible. A shared link is someone else's system,
  * so it is read-only — the viewer can copy it into a workspace and edit that.
  */
-const customizing = ref(false)
+// `?panel=layout|branding` opens the drawer on that tab — Settings →
+// Presentation links here rather than duplicating either editor.
+const initialPanel = route.query.panel
+const customizing = ref(initialPanel === 'layout' || initialPanel === 'branding')
 
 /** Which drawer tab is showing: the layout, or the Pro branding fields. */
-const drawerTab = ref<'layout' | 'branding'>('layout')
+const drawerTab = ref<'layout' | 'branding'>(initialPanel === 'branding' ? 'branding' : 'layout')
 
 // ── Pro: publishing ──
 const publishing = ref(false)
