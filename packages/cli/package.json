@@ -1,5 +1,5 @@
 {
-  "name": "design-spec",
+  "name": "@design-spec/cli",
   "version": "0.1.0",
   "description": "The local-first design-system engine: detect, synthesize design-spec.schema.json, compile DESIGN.md/SKILL.md + framework tokens, watch, pre-commit hook, and a local MCP server that feeds AI agents only the token context they need.",
   "license": "MIT",
@@ -8,7 +8,11 @@
     "design-spec": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.map",
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=18"
@@ -44,5 +48,23 @@
     "@types/node": "^25.9.1",
     "typescript": "^5.8.3",
     "vitest": "^3.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mohamed-Mourad/design-spec.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/Mohamed-Mourad/design-spec/tree/main/packages/cli#readme",
+  "bugs": {
+    "url": "https://github.com/Mohamed-Mourad/design-spec/issues"
+  },
+  "keywords": [
+    "design-system",
+    "design-tokens",
+    "tailwind",
+    "css-variables",
+    "flutter",
+    "mcp",
+    "cli"
+  ]
 }

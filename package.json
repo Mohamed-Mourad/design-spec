@@ -15,7 +15,9 @@
     "test:run": "vitest run",
     "test:e2e": "playwright test",
     "build:compiler": "npm run build --workspace @design-spec/compiler",
-    "publish:compiler": "npm publish --workspace @design-spec/compiler"
+    "publish:compiler": "npm publish --workspace @design-spec/compiler",
+    "build:cli": "npm run build --workspace @design-spec/cli",
+    "publish:cli": "npm publish --workspace @design-spec/cli"
   },
   "dependencies": {
     "@design-spec/compiler": "*",

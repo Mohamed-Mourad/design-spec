@@ -52,17 +52,32 @@ npm run build && npx yalc push
 ### Manifest discipline
 
 - The plugin's `package.json` always pins the real semver:
-  `"@design-spec/compiler": "^0.0.1"`.
+  `"@design-spec/compiler": "^0.7.0"`.
 - The yalc overlay lives only in `node_modules` + `.yalc/`, both git-ignored.
 - **Never commit** `file:../` or `link:` paths. The committed manifest is
   already production-shaped, so nothing has to change at publish time.
 
 ## Publish gate (end of build sprint)
 
+The CLI ships as **`@design-spec/cli`** (command name `design-spec`). The
+unscoped npm name `design-spec` belongs to an unrelated third party, so every
+instruction uses `npx @design-spec/cli …` — never `npx design-spec …`, which
+would run their binary. `src/test/npxName.test.ts` fails the web suite on a
+regression. Before publishing, prove the tarballs work without the registry:
+
+```bash
+npm run build:compiler && npm run build --workspace @design-spec/cli
+npm pack --workspace @design-spec/compiler --workspace @design-spec/cli --dry-run   # dist + README + LICENSE only
+npm pack --workspace @design-spec/compiler --workspace @design-spec/cli --pack-destination /tmp/ds
+cd /tmp/ds && npm init -y && npm i ./design-spec-compiler-*.tgz ./design-spec-cli-*.tgz
+npx design-spec init --yes && npx design-spec compile && npx design-spec lint
+```
+
 ```bash
 # publish the real package
 cd design-spec
-npm run publish:compiler                 # @design-spec/compiler@0.0.1 -> npm
+npm run publish:compiler                 # @design-spec/compiler -> npm (always first)
+npm run publish:cli                      # @design-spec/cli -> npm (exact-pins the compiler)
 
 # drop the local overlay in the plugin; resolve from the registry
 cd ../design-spec-figma-plugin

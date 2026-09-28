@@ -8,5 +8,5 @@ import { resolve } from 'node:path'
 export default function setup(): void {
   const repoRoot = resolve(__dirname, '../../..')
   execSync('npm run build --workspace @design-spec/compiler', { cwd: repoRoot, stdio: 'inherit' })
-  execSync('npm run build --workspace design-spec', { cwd: repoRoot, stdio: 'inherit' })
+  execSync('npm run build --workspace @design-spec/cli', { cwd: repoRoot, stdio: 'inherit' })
 }
