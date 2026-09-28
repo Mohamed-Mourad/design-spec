@@ -55,7 +55,7 @@ export async function resolveCredentials(flagKey?: string): Promise<Credentials>
     throw new CliError('No API key.', {
       code: 'E_AUTH',
       exitCode: ExitCode.AUTH,
-      hint: 'Generate one in Settings → Developer on design-spec.ai, then run with --key ds_live_…',
+      hint: 'Generate one in Settings → Developer on design-spec.ai, then set DESIGN_SPEC_API_KEY (or pass --key once; it is remembered).',
     })
   }
   if (!isWellFormedKey(key)) {

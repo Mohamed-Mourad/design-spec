@@ -109,7 +109,7 @@ onMounted(async () => {
       <p v-if="!imports.available" class="card__text">
         Cloud import isn't enabled in this build. The local CLI runs the same scan on your machine,
         unmetered and without an account:
-        <code class="code">npx design-spec init</code>
+        <code class="code">npx @design-spec/cli init</code>
       </p>
 
       <template v-else>
@@ -246,7 +246,11 @@ onMounted(async () => {
             <span class="stored__value" data-testid="revealed-key-value">{{ revealedKey.key }}</span>
             <button class="stored__link" @click="copyKey">{{ keyCopied ? 'Copied' : 'Copy' }}</button>
           </div>
-          <code class="code">npx design-spec sync --key {{ revealedKey.key }}</code>
+          <p class="card__fine">
+            Set it in your shell's environment rather than on the command line, where it would land
+            in your history. Then:
+          </p>
+          <code class="code" data-testid="revealed-key-usage">DESIGN_SPEC_API_KEY=… npx @design-spec/cli sync</code>
           <div class="card__actions">
             <button class="btn btn--ghost" @click="sync.dismissRevealedKey()">Done</button>
           </div>
@@ -294,7 +298,7 @@ onMounted(async () => {
 
         <h3 class="card__sub">Dashboard projects</h3>
         <p v-if="projects.length === 0" class="card__fine">
-          None yet. Run <span class="mono">npx design-spec push --key …</span> in a project, or save a
+          None yet. Run <span class="mono">design-spec push</span> in a project, or save a
           workspace to the dashboard from its header.
         </p>
         <ul v-else class="projects" data-testid="dashboard-projects">
@@ -337,7 +341,7 @@ onMounted(async () => {
         limit — and it can read configs the cloud scanner can't, because it may evaluate your own
         JavaScript.
       </p>
-      <code class="code">npx design-spec init</code>
+      <code class="code">npx @design-spec/cli init</code>
     </section>
 
     <p class="stub">Export settings, font loading, and naming conventions are still to come.</p>

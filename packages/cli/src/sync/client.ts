@@ -90,7 +90,7 @@ export function remoteError(status: number, message?: string): CliError {
       return new CliError('The dashboard rejected your API key.', {
         code: 'E_AUTH',
         exitCode: ExitCode.AUTH,
-        hint: 'Generate a new key in Settings → Developer, then pass it with --key.',
+        hint: 'Generate a new key in Settings → Developer, then set DESIGN_SPEC_API_KEY or pass it once with --key.',
       })
     case 403:
       return new CliError(`The dashboard refused this${said}.`, {

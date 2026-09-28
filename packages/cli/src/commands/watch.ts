@@ -98,9 +98,9 @@ export function registerWatch(program: Command): void {
     .command('watch')
     .description('recompile whenever design-spec.schema.json is saved (schema only)')
     .option('--sync', 'also sync with your dashboard: pull presentation at start, push after each recompile', false)
-    .option('--key <key>', 'API key for --sync (ds_live_… / ds_test_…)')
+    .option('--key <key>', 'API key for --sync (ds_live_… / ds_test_…); prefer DESIGN_SPEC_API_KEY (a flag lands in shell history)')
     .option('--project <slug>', 'dashboard project for --sync (default: the schema name, kebab-cased)')
-    .addHelpText('after', '\nExamples:\n  $ design-spec watch\n  $ design-spec watch --sync --key ds_live_xxxxx')
+    .addHelpText('after', '\nExamples:\n  $ design-spec watch\n  $ DESIGN_SPEC_API_KEY=ds_live_xxxxx design-spec watch --sync')
     .action(
       action(async (opts: { sync?: boolean; key?: string; project?: string }) => {
         // watch is a continuous writer with no terminal state to diff — a one-shot

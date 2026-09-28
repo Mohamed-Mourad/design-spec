@@ -20,9 +20,9 @@ export function registerPush(program: Command): void {
   program
     .command('push')
     .description('push your local schema to your dashboard (not git); the dashboard keeps its presentation config')
-    .option('--key <key>', 'API key (ds_live_… / ds_test_…); remembered for next time')
+    .option('--key <key>', 'API key (ds_live_… / ds_test_…); remembered, so pass it once — or use DESIGN_SPEC_API_KEY (a flag lands in shell history)')
     .option('--project <slug>', 'dashboard project (default: the schema name, kebab-cased)')
-    .addHelpText('after', '\nExamples:\n  $ design-spec push --key ds_live_xxxxx\n  $ design-spec --dry-run push')
+    .addHelpText('after', '\nExamples:\n  $ DESIGN_SPEC_API_KEY=ds_live_xxxxx design-spec push\n  $ design-spec --dry-run push')
     .action(
       action(async (opts: KeyedOptions) => {
         // push writes no files, so the file-diff plan report has nothing to

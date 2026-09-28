@@ -29,12 +29,12 @@ export function registerSync(program: Command): void {
   program
     .command('sync')
     .description('pull presentation config from your dashboard (remote wins); export config stays local unless --force')
-    .option('--key <key>', 'API key (ds_live_… / ds_test_…); remembered for next time')
+    .option('--key <key>', 'API key (ds_live_… / ds_test_…); remembered, so pass it once — or use DESIGN_SPEC_API_KEY (a flag lands in shell history)')
     .option('--project <slug>', 'dashboard project (default: the schema name, kebab-cased)')
     .option('--force', 'also take the dashboard export config, overwriting local', false)
     .addHelpText(
       'after',
-      '\nExamples:\n  $ design-spec sync --key ds_live_xxxxx\n  $ design-spec sync --force\n  $ design-spec --dry-run sync',
+      '\nExamples:\n  $ DESIGN_SPEC_API_KEY=ds_live_xxxxx design-spec sync\n  $ design-spec sync --force\n  $ design-spec --dry-run sync',
     )
     .action(
       action(async (opts: KeyedOptions & { force?: boolean }) => {

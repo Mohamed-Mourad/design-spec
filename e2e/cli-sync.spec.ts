@@ -100,10 +100,12 @@ test.describe('CLI sync — dashboard side', () => {
     const card = page.getByTestId('developer-card')
     await expect(card.getByTestId('key-live')).toContainText('No key')
 
-    // A key is shown once, with the command that uses it.
+    // A key is shown once. The usage line names the variable, never the value.
     await card.getByTestId('generate-live').click()
     await expect(card.getByTestId('revealed-key-value')).toHaveText(PLAINTEXT)
-    await expect(card.getByText(`npx design-spec sync --key ${PLAINTEXT}`)).toBeVisible()
+    const usage = card.getByTestId('revealed-key-usage')
+    await expect(usage).toHaveText('DESIGN_SPEC_API_KEY=… npx @design-spec/cli sync')
+    await expect(card.locator('code', { hasText: PLAINTEXT })).toHaveCount(0)
     await card.getByRole('button', { name: 'Done' }).click()
     await expect(card.getByTestId('revealed-key')).toHaveCount(0)
     await expect(card.getByTestId('key-live')).toContainText(`ds_live_…${PLAINTEXT.slice(-4)}`)
