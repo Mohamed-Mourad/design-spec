@@ -88,7 +88,7 @@ function back() {
           <p class="notice__text">
             The local CLI does the same scan on your machine, with no account and no limits:
           </p>
-          <code class="notice__code">npx design-spec init</code>
+          <code class="notice__code">npx @design-spec/cli init</code>
         </div>
 
         <template v-else>
@@ -102,7 +102,7 @@ function back() {
               the same extraction on your machine — it can also read configs the cloud scanner can't,
               because it may evaluate your own JavaScript.
             </p>
-            <code class="notice__code"><Terminal :size="11" aria-hidden="true" /> npx design-spec init</code>
+            <code class="notice__code"><Terminal :size="11" aria-hidden="true" /> npx @design-spec/cli init</code>
           </div>
 
           <!-- Step: connect -->

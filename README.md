@@ -36,20 +36,20 @@ The export includes `DESIGN.md`, `SKILL.md`, theme config files, and typed compo
 Use the CLI to initialize Design Spec inside an existing project:
 
 ```bash
-npx design-spec init
+npx @design-spec/cli init
 ```
 
 The CLI scans your project, detects your framework, extracts existing tokens from `tailwind.config.js` or CSS variables, and generates `DESIGN.md` and `SKILL.md` in your project root.
 
 ```bash
 # Sync latest changes from your dashboard
-npx design-spec sync --key <your-api-key>
+DESIGN_SPEC_API_KEY=<your-api-key> npx @design-spec/cli sync
 
 # Push local token changes back to the dashboard
-npx design-spec push --key <your-api-key>
+npx @design-spec/cli push   # reuses DESIGN_SPEC_API_KEY, or the key from an earlier --key
 
 # Show drift between your config and DESIGN.md
-npx design-spec diff
+npx @design-spec/cli diff
 ```
 
 Get your API key from the dashboard under **Settings → Developer**.

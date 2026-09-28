@@ -105,7 +105,7 @@ test.describe('Git import', () => {
     const dialog = await scanStorefront(page)
 
     await expect(dialog.getByText("You've used your 2 cloud scans this month.")).toBeVisible()
-    await expect(dialog.getByText('npx design-spec init')).toBeVisible()
+    await expect(dialog.getByText('npx @design-spec/cli init')).toBeVisible()
     // Not framed as a failure.
     await expect(dialog.getByRole('alert')).toHaveCount(0)
   })

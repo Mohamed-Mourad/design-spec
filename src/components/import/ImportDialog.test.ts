@@ -60,7 +60,7 @@ describe('import components mount', () => {
   it('tells the user plainly when cloud import is not enabled', () => {
     const wrapper = mount(ImportDialog)
     expect(wrapper.text()).toContain("Cloud import isn't enabled in this build")
-    expect(wrapper.text()).toContain('npx design-spec init')
+    expect(wrapper.text()).toContain('npx @design-spec/cli init')
   })
 
   it('renders the settings view', () => {
