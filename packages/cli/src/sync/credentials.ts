@@ -11,6 +11,9 @@ import { chmod } from 'node:fs/promises'
 import { CliError, ExitCode } from '../errors.js'
 import { loadGlobalConfig, saveGlobalConfig } from '../globalConfig.js'
 
+// TODO: this host is not deployed yet. The backend now has a container image
+// and a deploy guide (design-spec-backend/docs/deploy.md); until the host is
+// live, point the CLI elsewhere with DESIGN_SPEC_API_URL.
 export const DEFAULT_API_URL = 'https://api.design-spec.ai'
 
 const KEY_PATTERN = /^ds_(live|test)_[0-9A-Za-z]{40}$/
