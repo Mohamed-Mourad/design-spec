@@ -15,6 +15,8 @@ export const ExitCode = {
   STALE_OUTPUT: 5, // generated output drifted from schema (lint/hook)
   IO: 6, // filesystem error
   NOT_IMPLEMENTED: 7, // command requires a surface not available yet
+  AUTH: 8, // missing, malformed, or rejected API key
+  REMOTE: 9, // the dashboard API refused or could not be reached
 } as const
 
 export type ExitCodeValue = (typeof ExitCode)[keyof typeof ExitCode]

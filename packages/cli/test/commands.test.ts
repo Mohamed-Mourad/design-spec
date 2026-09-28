@@ -215,7 +215,7 @@ describe('config', () => {
   })
 })
 
-describe('sync / push stubs', () => {
+describe('sync / push errors', () => {
   let dir: string
   beforeEach(async () => {
     dir = await tmpProject()
@@ -225,15 +225,11 @@ describe('sync / push stubs', () => {
     await cleanup(dir)
   })
 
-  it('sync fails cleanly with the not-implemented code and an actionable hint', async () => {
-    const r = await runCli(['sync', '--key', 'ds_live_x'], dir)
-    expect(r.code).toBe(7) // ExitCode.NOT_IMPLEMENTED
-    expect(r.stderr).toMatch(/account/i)
+  // The full flows live in sync.test.ts; this pins the error surface.
+  it.each(['sync', 'push'])('%s with a malformed key fails with the auth code and a hint, no stack', async (cmd) => {
+    const r = await runCli([cmd, '--key', 'ds_live_x'], dir)
+    expect(r.code).toBe(8) // ExitCode.AUTH
+    expect(r.stderr).toMatch(/ds_live_/)
     expect(r.stderr).not.toMatch(/at Object|node:internal/) // no raw stack
-  })
-
-  it('push fails cleanly with the not-implemented code', async () => {
-    const r = await runCli(['push', '--key', 'ds_live_x'], dir)
-    expect(r.code).toBe(7)
   })
 })

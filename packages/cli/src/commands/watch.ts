@@ -7,6 +7,12 @@
 //   - 50ms debounce + a compile lock — coalesce save bursts, drop concurrent
 //     ticks (a save during a compile re-runs once after, never overlaps).
 //   - atomic writes (via emit) — readers see complete old or complete new.
+//
+// --sync (§16.4): pull the dashboard's presentation once at start (remote wins,
+// export stays local — the same merge as `sync`), then push the schema to the
+// dashboard after every recompile. Pushes never write locally, so they cannot
+// re-trigger the watcher; they are serialized so two saves never race on the
+// dashboard revision. A failed push is reported and the watch carries on.
 
 import type { Command } from 'commander'
 import chokidar from 'chokidar'
@@ -17,6 +23,8 @@ import { emit } from '../emit.js'
 import { isPlanMode, disablePlan } from '../plan.js'
 import { splashContext } from '../branding.js'
 import * as ui from '../ui.js'
+import { runPush, runSync, type Session } from '../sync/run.js'
+import { createPushQueue } from '../sync/pushQueue.js'
 
 const DEBOUNCE_MS = 50
 
@@ -89,9 +97,12 @@ export function registerWatch(program: Command): void {
   program
     .command('watch')
     .description('recompile whenever design-spec.schema.json is saved (schema only)')
-    .addHelpText('after', '\nExample:\n  $ design-spec watch')
+    .option('--sync', 'also sync with your dashboard: pull presentation at start, push after each recompile', false)
+    .option('--key <key>', 'API key for --sync (ds_live_… / ds_test_…)')
+    .option('--project <slug>', 'dashboard project for --sync (default: the schema name, kebab-cased)')
+    .addHelpText('after', '\nExamples:\n  $ design-spec watch\n  $ design-spec watch --sync --key ds_live_xxxxx')
     .action(
-      action(async () => {
+      action(async (opts: { sync?: boolean; key?: string; project?: string }) => {
         // watch is a continuous writer with no terminal state to diff — a one-shot
         // preview makes no sense, so opt out of plan mode and run normally.
         if (isPlanMode()) {
@@ -100,12 +111,25 @@ export function registerWatch(program: Command): void {
         }
         // Validate + initial compile up front so a bad project fails fast.
         const cwd = process.cwd()
+        let session: Session | null = null
+        if (opts.sync) {
+          // The initial pull compiles too; an auth or network failure here
+          // stops the watch before it starts, rather than failing every save.
+          const pulled = await runSync(cwd, { key: opts.key, project: opts.project })
+          session = pulled.session
+          ui.info(
+            `Synced "${pulled.project}" (rev ${pulled.revision}): ${pulled.presentation.length} presentation change(s) pulled` +
+              (pulled.exportDiff.length > 0 ? `, export kept local (${pulled.exportDiff.length} difference(s))` : ''),
+          )
+        }
         const { schema, root } = await loadSchema(cwd)
         await emit(schema, root)
-        ui.json({ ok: true, watching: 'design-spec.schema.json' })
+        ui.json({ ok: true, watching: 'design-spec.schema.json', sync: Boolean(opts.sync) })
         ui.splash(
           splashContext(cwd, {
-            tip: 'Recompiles design-spec.schema.json on every save · Press Ctrl+C to stop.',
+            tip: opts.sync
+              ? 'Recompiles and pushes to your dashboard on every save · Press Ctrl+C to stop.'
+              : 'Recompiles design-spec.schema.json on every save · Press Ctrl+C to stop.',
             status: `${schema.name} · ${schema.export.frameworks.join(', ')}`,
           }),
         )
@@ -116,6 +140,19 @@ export function registerWatch(program: Command): void {
           onError: (m) => sp.fail(m),
         })
         handle.onCompiled((files, ms) => sp.done(`recompiled ${files.length} file(s) in ${ms}ms`))
+
+        if (session) {
+          const live = session
+          const pushes = createPushQueue(async () => {
+            try {
+              const r = await runPush(cwd, {}, live)
+              ui.info(`pushed "${r.project}" (rev ${r.saved?.revision}) — ${r.tokens.changes.length} token change(s)`)
+            } catch (e) {
+              ui.warn(`push failed: ${e instanceof Error ? e.message : String(e)} — will retry on the next save`)
+            }
+          })
+          handle.onCompiled(() => pushes.kick())
+        }
 
         await new Promise<void>((resolve) => {
           process.on('SIGINT', () => {

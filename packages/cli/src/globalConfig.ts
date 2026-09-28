@@ -1,6 +1,6 @@
 // globalConfig.ts — machine-level config at ~/.config/design-spec/config.json.
 //
-// Holds cross-project user defaults and (later) the API key. Distinct from the
+// Holds cross-project user defaults and the dashboard API key. Distinct from the
 // per-project, git-tracked design-spec.schema.json. Located via env-paths so it
 // lands in the correct OS-specific config dir.
 
@@ -12,16 +12,19 @@ import { atomicWrite } from '@design-spec/compiler/node'
 import type { ExportConfig } from '@design-spec/compiler'
 
 export interface GlobalConfig {
-  /** API key for dashboard sync/push (a later surface). */
+  /** API key for dashboard sync/push — remembered from `--key`. Never printed. */
   apiKey?: string
+  /** Dashboard API origin override (default https://api.design-spec.ai). */
+  apiUrl?: string
   /** Machine-wide defaults applied to `init` when no project signal exists. */
   defaults?: Partial<ExportConfig>
 }
 
 const paths = envPaths('design-spec', { suffix: '' })
 
+/** `DESIGN_SPEC_CONFIG_DIR` relocates it (CI runners, tests). */
 export function globalConfigPath(): string {
-  return join(paths.config, 'config.json')
+  return join(process.env.DESIGN_SPEC_CONFIG_DIR || paths.config, 'config.json')
 }
 
 export async function loadGlobalConfig(): Promise<GlobalConfig> {
