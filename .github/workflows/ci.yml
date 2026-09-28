@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  packages:
+    name: Compiler, CLI, Janitor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run build:compiler
+      - run: npm run build:cli
+      - run: npm run build --workspace @design-spec/janitor
+      # Per-package `vitest run`: `npm run test --workspaces` starts vitest in
+      # watch mode and never returns. The compiler suite is wrapped in a
+      # timeout because of a known intermittent hang in the staticJs fuzz test.
+      - name: Compiler tests
+        working-directory: packages/compiler
+        run: timeout 120 npx vitest run
+      - name: CLI tests
+        working-directory: packages/cli
+        run: npx vitest run
+      - name: Janitor tests
+        working-directory: packages/janitor
+        run: npx vitest run
+      - name: Tarballs hold dist, README and LICENSE only
+        run: |
+          npm pack --workspace @design-spec/compiler --workspace @design-spec/cli --dry-run --json > pack.json
+          node -e '
+            const packs = require("./pack.json")
+            const bad = packs.flatMap((p) => p.files.map((f) => p.name + ": " + f.path))
+              .filter((f) => !/: (dist\/.+\.(js|d\.ts)|package\.json|README\.md|LICENSE)$/.test(f) || /(\.test\.|__fixtures__|\.map$)/.test(f))
+            if (bad.length) { console.error("unexpected files in tarball:\n" + bad.join("\n")); process.exit(1) }
+            console.log(packs.map((p) => p.name + "@" + p.version + ": " + p.files.length + " files").join("\n"))
+          '
+
+  web:
+    name: Web app
+    runs-on: ubuntu-latest
+    env:
+      E2E_PORT: 5199
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run build:compiler
+      - run: npm run type-check
+      - run: npx vitest run
+      - run: npm run build
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(node -p 'require("@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - run: npx playwright test
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
+  flutter:
+    name: Flutter output analyzes clean
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.8
+          cache: true
+      - run: npm ci
+      - run: npm run build:compiler
+      # The default schema in all three naming modes, each in its own lib/<mode>/.
+      - run: flutter create --empty --platforms=web "$RUNNER_TEMP/flutter_check"
+      - run: node packages/compiler/scripts/emit-flutter.mjs "$RUNNER_TEMP/flutter_check"
+      - run: flutter analyze
+        working-directory: ${{ runner.temp }}/flutter_check
