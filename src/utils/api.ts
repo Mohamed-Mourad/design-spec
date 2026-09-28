@@ -506,3 +506,60 @@ export const portfolio = {
   /** Public — a reader of `/preview/{id}` has no account either. */
   getSnapshot: (id: string) => publicRequest<SnapshotLink>(`/snapshots/${encodeURIComponent(id)}`),
 }
+
+// ── CLI sync: developer keys + dashboard projects (mirrors docs/sync-contract.md)
+
+export interface DeveloperKey {
+  id: string
+  environment: 'live' | 'test'
+  prefix: string
+  last4: string
+  /** Only on the response that minted it — shown once, never stored by this app. */
+  key?: string
+  created_at: string
+  last_used_at: string | null
+}
+
+export interface DashboardProject {
+  project: string
+  name: string
+  revision: number
+  updated_by: 'cli' | 'web'
+  created_at: string
+  updated_at: string
+}
+
+export interface DashboardProjectWithSchema extends DashboardProject {
+  schema_json: unknown
+}
+
+/**
+ * The dashboard copy of a design system — what `design-spec sync` pulls and
+ * `design-spec push` writes. Never git: nothing here opens a branch or a PR.
+ */
+export const dashboard = {
+  keys: () => request<{ data: DeveloperKey[] }>('/api-keys'),
+
+  /** Mint (or regenerate) a key. The plaintext is in this response only. */
+  createKey: (environment: 'live' | 'test') =>
+    request<DeveloperKey>('/api-keys', { method: 'POST', body: { environment } }),
+
+  revokeKey: (id: string) => request<void>(`/api-keys/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  projects: () => request<{ data: DashboardProject[] }>('/projects'),
+
+  project: (slug: string) => request<DashboardProjectWithSchema>(`/projects/${encodeURIComponent(slug)}`),
+
+  /**
+   * Save a schema. `baseRevision` is the revision this workspace last saw (0 =
+   * expect a new project); a stale one is a 409 rather than a silent overwrite
+   * of a developer's `design-spec push`.
+   */
+  save: (slug: string, schema: unknown, baseRevision: number) =>
+    request<DashboardProject>(`/projects/${encodeURIComponent(slug)}`, {
+      method: 'PUT',
+      body: { schema_json: schema, base_revision: baseRevision },
+    }),
+
+  remove: (slug: string) => request<void>(`/projects/${encodeURIComponent(slug)}`, { method: 'DELETE' }),
+}

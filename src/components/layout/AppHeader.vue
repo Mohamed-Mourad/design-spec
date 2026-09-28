@@ -8,6 +8,7 @@ import ImportBadge from '@/components/import/ImportBadge.vue'
 import FigmaSyncBadge from '@/components/import/FigmaSyncBadge.vue'
 import PushTokensButton from '@/components/import/PushTokensButton.vue'
 import StageToFigmaButton from '@/components/import/StageToFigmaButton.vue'
+import SaveToDashboardButton from '@/components/sync/SaveToDashboardButton.vue'
 import { downloadBundle } from '@/utils/exportBundle'
 import { trackEvent } from '@/utils/telemetry'
 
@@ -84,6 +85,7 @@ function commitName(e: Event) {
       </RouterLink>
       <PushTokensButton />
       <StageToFigmaButton />
+      <SaveToDashboardButton />
       <button
         class="header__icon-btn"
         :disabled="!canUndo"

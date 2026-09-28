@@ -2,10 +2,11 @@
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useHead } from '@unhead/vue'
-import { ArrowLeft, Check, Copy, Frame, GitFork, ShieldCheck, Terminal } from '@lucide/vue'
-import { RouterLink } from 'vue-router'
+import { ArrowLeft, Check, Copy, Frame, GitFork, KeyRound, ShieldCheck, Terminal } from '@lucide/vue'
+import { RouterLink, useRouter } from 'vue-router'
 import { useImportStore } from '@/stores/useImportStore'
 import { useFigmaStore } from '@/stores/useFigmaStore'
+import { useSyncStore } from '@/stores/useSyncStore'
 import { sessionToken } from '@/utils/api'
 import { maskedPat } from '@/utils/figma/pat'
 
@@ -22,8 +23,47 @@ useHead({ title: 'Settings — Design Spec' })
 
 const imports = useImportStore()
 const figma = useFigmaStore()
+const sync = useSyncStore()
 const { busy, error, connected, canPush, login } = storeToRefs(imports)
 const { pat } = storeToRefs(figma)
+const { keys, projects, revealedKey, busy: syncBusy, error: syncError } = storeToRefs(sync)
+
+// A key is shown once, straight from the response that minted it. Copying is a
+// convenience; the value is on screen and selectable either way.
+const keyCopied = ref(false)
+async function copyKey() {
+  if (!revealedKey.value?.key) return
+  try {
+    await navigator.clipboard.writeText(revealedKey.value.key)
+    keyCopied.value = true
+    setTimeout(() => (keyCopied.value = false), 2000)
+  } catch {
+    /* clipboard denied — the key is still visible */
+  }
+}
+
+const ENVIRONMENTS = ['live', 'test'] as const
+
+function keyFor(env: 'live' | 'test') {
+  return keys.value.find((k) => k.environment === env) ?? null
+}
+
+function when(iso: string | null): string {
+  return iso ? new Date(iso).toLocaleString() : 'never'
+}
+
+const router = useRouter()
+
+/** Open a dashboard project as a linked workspace, then go edit it. */
+async function openProject(slug: string) {
+  await sync.openProject(slug)
+  if (!syncError.value) await router.push('/workspace')
+}
+
+async function generate(env: 'live' | 'test') {
+  keyCopied.value = false
+  await sync.generateKey(env)
+}
 
 const hasPat = computed(() => pat.value.trim().length > 0)
 
@@ -46,6 +86,7 @@ async function copySession() {
 onMounted(async () => {
   await imports.init()
   await figma.init()
+  await sync.init()
 })
 </script>
 
@@ -175,6 +216,115 @@ onMounted(async () => {
         </p>
       </template>
       <p v-else class="card__fine">Connect GitHub above to get a session the plugin can use.</p>
+    </section>
+
+    <section class="card" data-testid="developer-card">
+      <h2 class="card__title">
+        <KeyRound :size="15" aria-hidden="true" />
+        Developer
+      </h2>
+
+      <p v-if="!sync.available" class="card__fine">
+        Connect GitHub above to create API keys for the CLI's
+        <span class="mono">sync</span> and <span class="mono">push</span>.
+      </p>
+
+      <template v-else>
+        <p class="card__text">
+          API keys let the CLI pull this dashboard's presentation settings
+          (<span class="mono">design-spec sync</span>) and push your schema to it
+          (<span class="mono">design-spec push</span>). They reach your dashboard projects and
+          nothing else — not GitHub, not billing.
+        </p>
+        <p v-if="syncError" class="error" role="alert">{{ syncError }}</p>
+
+        <div v-if="revealedKey?.key" class="reveal" data-testid="revealed-key" role="status">
+          <p class="reveal__head">
+            New {{ revealedKey.environment }} key — copy it now. It won't be shown again.
+          </p>
+          <div class="stored">
+            <span class="stored__value" data-testid="revealed-key-value">{{ revealedKey.key }}</span>
+            <button class="stored__link" @click="copyKey">{{ keyCopied ? 'Copied' : 'Copy' }}</button>
+          </div>
+          <code class="code">npx design-spec sync --key {{ revealedKey.key }}</code>
+          <div class="card__actions">
+            <button class="btn btn--ghost" @click="sync.dismissRevealedKey()">Done</button>
+          </div>
+        </div>
+
+        <ul class="keys">
+          <li v-for="env in ENVIRONMENTS" :key="env" class="key" :data-testid="'key-' + env">
+            <div class="key__main">
+              <span class="key__label">{{ env === 'live' ? 'Live' : 'Test' }}</span>
+              <span v-if="keyFor(env)" class="mono key__mask">
+                {{ keyFor(env)!.prefix }}…{{ keyFor(env)!.last4 }}
+              </span>
+              <span v-else class="key__none">No key</span>
+            </div>
+            <span v-if="keyFor(env)" class="card__fine">
+              Created {{ when(keyFor(env)!.created_at) }} · last used
+              {{ when(keyFor(env)!.last_used_at) }}
+            </span>
+            <div class="card__actions">
+              <button
+                class="btn btn--primary"
+                :data-testid="'generate-' + env"
+                :disabled="syncBusy"
+                @click="generate(env)"
+              >
+                {{ keyFor(env) ? 'Regenerate' : 'Generate' }}
+              </button>
+              <button
+                v-if="keyFor(env)"
+                class="btn btn--ghost"
+                :data-testid="'revoke-' + env"
+                :disabled="syncBusy"
+                @click="sync.revokeKey(keyFor(env)!.id)"
+              >
+                Revoke
+              </button>
+            </div>
+          </li>
+        </ul>
+        <p class="card__fine">
+          Keys are stored only as a hash. Regenerating revokes the old key immediately. The CLI keeps
+          your key in <span class="mono">~/.config/design-spec/config.json</span>, never in the
+          project.
+        </p>
+
+        <h3 class="card__sub">Dashboard projects</h3>
+        <p v-if="projects.length === 0" class="card__fine">
+          None yet. Run <span class="mono">npx design-spec push --key …</span> in a project, or save a
+          workspace to the dashboard from its header.
+        </p>
+        <ul v-else class="projects" data-testid="dashboard-projects">
+          <li v-for="p in projects" :key="p.project" class="project">
+            <div class="key__main">
+              <span class="key__label">{{ p.name || p.project }}</span>
+              <span class="mono key__mask">{{ p.project }} · rev {{ p.revision }}</span>
+            </div>
+            <span class="card__fine">
+              Last saved from {{ p.updated_by === 'cli' ? 'the CLI' : 'the web' }} ·
+              {{ when(p.updated_at) }}
+            </span>
+            <div class="card__actions">
+              <button
+                class="btn btn--primary"
+                :data-testid="'open-' + p.project"
+                :disabled="syncBusy"
+                @click="openProject(p.project)"
+              >
+                Open in workspace
+              </button>
+            </div>
+          </li>
+        </ul>
+        <p class="card__fine">
+          Presentation settings (bento layout, branding, sharing) saved here win on the developer's
+          next <span class="mono">sync</span>. Their export settings stay theirs unless they pass
+          <span class="mono">--force</span>.
+        </p>
+      </template>
     </section>
 
     <section class="card">
@@ -427,6 +577,67 @@ onMounted(async () => {
   font-family: var(--font-sans);
   font-size: 12px;
   color: var(--color-on-surface);
+}
+
+.reveal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border: 1px solid color-mix(in srgb, var(--color-status-warning) 45%, transparent);
+  border-radius: var(--radius-sm);
+  background-color: color-mix(in srgb, var(--color-status-warning) 8%, transparent);
+}
+.reveal__head {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+.reveal .code {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.keys,
+.projects {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.key,
+.project {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-sm);
+}
+.key__main {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+.key__label {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+.key__mask {
+  font-size: 12px;
+}
+.key__none {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-on-surface-subtle);
 }
 
 .stub {

@@ -357,6 +357,20 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     return id
   }
 
+  /**
+   * Open a schema that came from elsewhere (the dashboard) as a new workspace
+   * and switch to it. Missing groups are filled from the default, the same as
+   * a stored workspace, so an older schema still opens.
+   */
+  function createWorkspaceFromSchema(name: string, incoming: unknown): string {
+    const id = newId()
+    const filled = fillMissingDefaults(structuredClone(incoming) as Record<string, unknown>)
+    workspaces.value = [...workspaces.value, { id, name: uniqueName(name.trim() || 'Dashboard project') }]
+    localStorage.setItem(wsSchemaKey(id), JSON.stringify(filled))
+    switchWorkspace(id)
+    return id
+  }
+
   /** Clone a workspace (its schema) into a new one and switch to it. */
   function duplicateWorkspace(id: string): string | undefined {
     const src = workspaces.value.find((w) => w.id === id)
@@ -560,6 +574,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     activeWorkspaceName,
     switchWorkspace,
     createWorkspace,
+    createWorkspaceFromSchema,
     duplicateWorkspace,
     renameWorkspace,
     deleteWorkspace,
