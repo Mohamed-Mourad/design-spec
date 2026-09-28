@@ -165,6 +165,45 @@ describe('useSyncStore', () => {
     expect(sync.saveError).toBeNull()
   })
 
+  it('deletes a dashboard project and unlinks any workspace pointing at it', async () => {
+    const remoteSchema = { ...structuredClone(defaultSchema), name: 'Acme UI' }
+    const calls = stubApi((c) => {
+      if (c.url.endsWith('/projects') && c.method === 'GET') return { status: 200, body: { data: [project()] } }
+      if (c.url.endsWith('/projects/acme-ui') && c.method === 'GET') {
+        return { status: 200, body: { ...project(), schema_json: remoteSchema } }
+      }
+      if (c.url.endsWith('/projects/acme-ui') && c.method === 'DELETE') return { status: 204 }
+      return { status: 200, body: { data: [] } }
+    })
+    const sync = useSyncStore()
+    const ds = useDesignSystemStore()
+    await sync.init()
+    await sync.openProject('acme-ui')
+    const workspaceId = ds.activeWorkspaceId
+    expect(sync.activeLink?.project).toBe('acme-ui')
+
+    await sync.deleteProject('acme-ui')
+    expect(calls.some((c) => c.method === 'DELETE' && c.url === `${API}/api/v1/projects/acme-ui`)).toBe(true)
+    expect(sync.projects.map((p) => p.project)).not.toContain('acme-ui')
+    expect(sync.activeLink).toBeNull()
+    // The workspace itself stays — it may hold unsaved work.
+    expect(ds.workspaces.some((w) => w.id === workspaceId)).toBe(true)
+    expect(sync.error).toBeNull()
+  })
+
+  it('a refused delete leaves the project listed and says why', async () => {
+    stubApi((c) => {
+      if (c.url.endsWith('/projects') && c.method === 'GET') return { status: 200, body: { data: [project()] } }
+      if (c.method === 'DELETE') return { status: 403, body: { error: 'deleting a project needs a signed-in session' } }
+      return { status: 200, body: { data: [] } }
+    })
+    const sync = useSyncStore()
+    await sync.init()
+    await sync.deleteProject('acme-ui')
+    expect(sync.projects.map((p) => p.project)).toContain('acme-ui')
+    expect(sync.error).toContain('signed-in session')
+  })
+
   it('a stale save is a conflict the designer is told about', async () => {
     stubApi((c) => {
       if (c.method === 'GET' && c.url.endsWith('/projects/acme-ui')) {

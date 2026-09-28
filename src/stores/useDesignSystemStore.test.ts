@@ -35,6 +35,31 @@ describe('useDesignSystemStore — compiler wiring', () => {
     expect(store.schema.export.flutterNaming).toBe('prefixed-class')
   })
 
+  it('updateExport patches the export layer as one undo step, tracing keys only', () => {
+    const store = useDesignSystemStore()
+    const before = JSON.parse(JSON.stringify(store.schema.export))
+    store.updateExport({ cssVariablePrefix: 'ds-', tailwindClassPrefix: 'tw-' })
+    expect(store.schema.export).toEqual({ ...before, cssVariablePrefix: 'ds-', tailwindClassPrefix: 'tw-' })
+    expect(store.outputFiles.find((f) => f.filename === 'tokens.css')?.content).toContain('--ds-color-primary')
+
+    const entry = store.actionTrace[store.actionTrace.length - 1]
+    expect(entry.action).toBe('updateExport')
+    expect(JSON.stringify(entry.args)).not.toContain('ds-') // field names, never values
+
+    store.undo()
+    expect(store.schema.export).toEqual(before)
+  })
+
+  it('updateExport keeps a custom font URL only while the source is custom', () => {
+    const store = useDesignSystemStore()
+    store.updateExport({ fontSource: 'custom', fontSourceUrl: 'https://fonts.example.com/a.css' })
+    expect(store.schema.export.fontSourceUrl).toBe('https://fonts.example.com/a.css')
+    store.updateExport({ fontSource: 'google' })
+    expect('fontSourceUrl' in store.schema.export).toBe(false)
+    store.updateExport({ fontSource: 'custom', fontSourceUrl: '  ' })
+    expect('fontSourceUrl' in store.schema.export).toBe(false)
+  })
+
   it('setPath creates intermediate objects for a responsive override', () => {
     const store = useDesignSystemStore()
     store.setPath(['componentBlueprints', 'Button', 'responsive', 'md', 'tokens', 'paddingX'], '{spacing.lg}')

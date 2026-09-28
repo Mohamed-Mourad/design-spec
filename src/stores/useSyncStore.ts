@@ -202,6 +202,28 @@ export const useSyncStore = defineStore('dashboardSync', () => {
     }
   }
 
+  /**
+   * Delete a dashboard project (session only — the API refuses a key). Any
+   * workspace linked to it is unlinked; the workspace itself stays, since it
+   * lives in this browser and may hold unsaved work.
+   */
+  async function deleteProject(slug: string): Promise<void> {
+    busy.value = true
+    error.value = null
+    try {
+      await dashboard.remove(slug)
+      for (const w of ds.workspaces) {
+        if (readLink(w.id)?.project === slug) localStorage.removeItem(linkKey(w.id))
+      }
+      linkTick.value++
+      projects.value = projects.value.filter((p) => p.project !== slug)
+    } catch (e) {
+      error.value = message(e)
+    } finally {
+      busy.value = false
+    }
+  }
+
   return {
     keys,
     projects,
@@ -223,5 +245,6 @@ export const useSyncStore = defineStore('dashboardSync', () => {
     refreshProjects,
     openProject,
     saveActive,
+    deleteProject,
   }
 })

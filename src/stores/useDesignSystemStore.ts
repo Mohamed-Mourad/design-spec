@@ -2,7 +2,7 @@ import { ref, computed, watch, watchEffect } from 'vue'
 import { defineStore } from 'pinia'
 import { compileDesignMd, compileSkillMd, compileAll, defaultSchema } from '@design-spec/compiler'
 import type { ExtractionSignal, TokenState, TokenStateMap } from '@design-spec/compiler'
-import type { BentoLayoutConfig, DesignSystemSchema, WebPresentationConfig } from '@/types/schema'
+import type { BentoLayoutConfig, DesignSystemSchema, ExportConfig, WebPresentationConfig } from '@/types/schema'
 import type { FileOutput, Framework } from '@/types/compiler'
 import { applyFigmaImport as foldFigmaImport, type FigmaImport, type FigmaMergeMode } from '@/utils/figma/map'
 
@@ -546,6 +546,22 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     snapshot()
   }
 
+  /**
+   * Patch the export config (Layer 1) — Settings → Export. One undo step per
+   * call; the trace records which fields changed, never their values. A
+   * developer takes these with `design-spec sync --force`; a plain sync keeps
+   * theirs.
+   */
+  function updateExport(patch: Partial<ExportConfig>) {
+    logAction('updateExport', [Object.keys(patch)])
+    const next: ExportConfig = { ...schema.value.export, ...patch }
+    // A blank custom URL, or any URL once the source isn't custom, is dropped
+    // rather than exported as an empty string.
+    if (next.fontSource !== 'custom' || !next.fontSourceUrl?.trim()) delete next.fontSourceUrl
+    schema.value.export = next
+    snapshot()
+  }
+
   function loadPreset(preset: DesignSystemSchema) {
     logAction('loadPreset', [preset.name])
     // A JSON round-trip rather than structuredClone, for the same reason
@@ -613,6 +629,7 @@ export const useDesignSystemStore = defineStore('designSystem', () => {
     updatePresentation,
     updateFrameworks,
     updateFlutterNaming,
+    updateExport,
     loadPreset,
     importFromJson,
     reset,
