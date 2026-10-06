@@ -8,7 +8,7 @@ import { emit } from '../emit.js'
 import { isPlanMode } from '../plan.js'
 import { validateSchema } from '../validate.js'
 import { CliError, ExitCode } from '../errors.js'
-import { SyncClient, type ProjectMeta } from './client.js'
+import { SyncClient, UNCHANGED, type ProjectMeta } from './client.js'
 import { resolveCredentials, rememberKey, maskKey, type Credentials } from './credentials.js'
 import {
   mergeForPush,
@@ -170,9 +170,13 @@ export interface PullResult {
  * moved past `knownRevision`, take its presentation (remote wins) and write the
  * schema. Export and tokens stay local — this is `sync` without --force, and
  * without the compile: the write itself wakes the watcher, which recompiles.
+ *
+ * The read is conditional on `knownRevision`, so a poll that finds nothing new
+ * is a 304: no schema on the wire and no sync counted by the dashboard.
  */
 export async function runPull(cwd: string, session: Session, knownRevision: number): Promise<PullResult> {
-  const remote = await session.client.getProject(session.project)
+  const remote = await session.client.getProjectIfChanged(session.project, knownRevision)
+  if (remote === UNCHANGED) return { revision: knownRevision, presentation: [] }
   if (!remote || remote.revision === knownRevision) {
     return { revision: remote?.revision ?? knownRevision, presentation: [] }
   }

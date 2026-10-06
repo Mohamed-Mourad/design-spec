@@ -3,7 +3,8 @@
 // Contract: design-spec-backend/docs/sync-contract.md. Two calls — read a
 // project, write a project — both authenticated with a developer API key as
 // `Authorization: Bearer ds_live_…`. Nothing here talks to git: a push lands in
-// the dashboard's database and stops there.
+// the dashboard's database and stops there. A read can be conditional on a
+// revision already held, which is how a poll costs the dashboard nothing.
 //
 // The key is a secret. It is attached to the request header and nowhere else:
 // never in a URL, an error message, a log line, or --json output.
@@ -24,6 +25,9 @@ export interface RemoteProject extends ProjectMeta {
   schema_json: DesignSystemSchema
 }
 
+/** A conditional read found the project still at the revision asked about. */
+export const UNCHANGED = Symbol('unchanged')
+
 type Fetch = typeof fetch
 
 export class SyncClient {
@@ -40,13 +44,29 @@ export class SyncClient {
     return (await this.parse(res)) as RemoteProject
   }
 
+  /**
+   * Read a project only if it has moved past `knownRevision`: the dashboard
+   * answers 304 (UNCHANGED) while it has not, and does not count that as a sync.
+   */
+  async getProjectIfChanged(project: string, knownRevision: number): Promise<RemoteProject | null | typeof UNCHANGED> {
+    const res = await this.request('GET', project, undefined, { 'If-None-Match': `"rev-${knownRevision}"` })
+    if (res.status === 304) return UNCHANGED
+    if (res.status === 404) return null
+    return (await this.parse(res)) as RemoteProject
+  }
+
   /** Write a project, guarded by the revision it was read at (0 = must not exist). */
   async putProject(project: string, schema: DesignSystemSchema, baseRevision: number): Promise<ProjectMeta> {
     const res = await this.request('PUT', project, { schema_json: schema, base_revision: baseRevision })
     return (await this.parse(res)) as ProjectMeta
   }
 
-  private async request(method: 'GET' | 'PUT', project: string, body?: unknown): Promise<Response> {
+  private async request(
+    method: 'GET' | 'PUT',
+    project: string,
+    body?: unknown,
+    extraHeaders: Record<string, string> = {},
+  ): Promise<Response> {
     const url = `${this.baseUrl}/api/v1/projects/${encodeURIComponent(project)}`
     try {
       return await this.fetchImpl(url, {
@@ -55,6 +75,7 @@ export class SyncClient {
           Authorization: `Bearer ${this.key}`,
           Accept: 'application/json',
           ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+          ...extraHeaders,
         },
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: AbortSignal.timeout(30_000),

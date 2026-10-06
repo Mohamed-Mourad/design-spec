@@ -25,7 +25,9 @@ interface Stored {
 
 class FakeDashboard {
   projects = new Map<string, Stored>()
-  requests: { method: string; path: string; auth?: string; body?: any }[] = []
+  requests: { method: string; path: string; auth?: string; ifNoneMatch?: string; status?: number; body?: any }[] = []
+  /** Calls the real API would record as sync activity: every 200/201 on a project. */
+  activity = 0
   /** Bump the revision between a read and the next write, like a designer saving. */
   raceNextWrite = false
   server: Server
@@ -36,9 +38,13 @@ class FakeDashboard {
       req.on('data', (c) => (raw += c))
       req.on('end', () => {
         const body = raw ? JSON.parse(raw) : undefined
-        this.requests.push({ method: req.method!, path: req.url!, auth: req.headers.authorization, body })
-        const send = (status: number, payload?: unknown) => {
-          res.writeHead(status, { 'Content-Type': 'application/json' })
+        const ifNoneMatch = req.headers['if-none-match'] as string | undefined
+        const seen: FakeDashboard['requests'][number] = { method: req.method!, path: req.url!, auth: req.headers.authorization, ifNoneMatch, body }
+        this.requests.push(seen)
+        const send = (status: number, payload?: unknown, headers: Record<string, string> = {}) => {
+          seen.status = status
+          if (status === 200 || status === 201) this.activity++
+          res.writeHead(status, { 'Content-Type': 'application/json', ...headers })
           res.end(payload === undefined ? '' : JSON.stringify(payload))
         }
         if (req.headers.authorization !== `Bearer ${KEY}`) return send(401, { error: 'authentication required' })
@@ -56,7 +62,9 @@ class FakeDashboard {
         })
         if (req.method === 'GET') {
           if (!cur) return send(404, { error: 'not found' })
-          return send(200, { ...meta(cur), schema_json: cur.schema })
+          const etag = `"rev-${cur.revision}"`
+          if (ifNoneMatch === etag) return send(304, undefined, { ETag: etag })
+          return send(200, { ...meta(cur), schema_json: cur.schema }, { ETag: etag, 'Cache-Control': 'no-store' })
         }
         if (req.method === 'PUT') {
           if (this.raceNextWrite && cur) {
@@ -227,6 +235,15 @@ describe('sync / push', () => {
     expect(stored.revision).toBe(3)
   })
 
+  it('sync and push read with plain GETs — only the watch poll is conditional', async () => {
+    await cli(['push', '--key', KEY])
+    await cli(['sync'])
+    await cli(['push'])
+    const reads = api.requests.filter((q) => q.method === 'GET')
+    expect(reads.length).toBeGreaterThanOrEqual(3)
+    expect(reads.every((q) => q.ifNoneMatch === undefined)).toBe(true)
+  })
+
   it('pushing an unchanged schema sends nothing and keeps the revision', async () => {
     await cli(['push', '--key', KEY])
     const r = await cli(['push', '--json'])
@@ -342,6 +359,7 @@ describe('watch --sync', () => {
   let dir: string
   let configDir: string
   let api: FakeDashboard
+  const polls = () => api.requests.filter((q) => q.method === 'GET' && q.ifNoneMatch !== undefined)
 
   beforeEach(async () => {
     dir = await tmpProject()
@@ -404,6 +422,49 @@ describe('watch --sync', () => {
     }
   })
 
+  it('an idle session polls with 304s and adds no sync activity', async () => {
+    const url = await api.listen()
+    const env = {
+      ...process.env,
+      NO_UPDATE_NOTIFIER: '1',
+      NO_COLOR: '1',
+      DESIGN_SPEC_API_URL: url,
+      DESIGN_SPEC_CONFIG_DIR: configDir,
+      DESIGN_SPEC_SYNC_INTERVAL_MS: '200',
+    }
+    expect((await runCli(['push', '--key', KEY], dir, env as Record<string, string>)).code).toBe(0)
+
+    const child = spawn(process.execPath, [resolve(__dirname, '../dist/index.js'), 'watch', '--sync'], { cwd: dir, env })
+    let output = ''
+    child.stdout.on('data', (d) => (output += d))
+    child.stderr.on('data', (d) => (output += d))
+    const waitFor = async (pred: () => boolean, what: string) => {
+      const until = Date.now() + 10_000
+      while (!pred()) {
+        if (Date.now() > until) throw new Error(`timed out waiting for ${what}\n${output}`)
+        await new Promise((r) => setTimeout(r, 50))
+      }
+    }
+
+    try {
+      await waitFor(() => /Synced "acme-web"/.test(output), 'the initial sync')
+      // The initial sync is a real one and counts; everything after it is idle.
+      const activity = api.activity
+      const schema = await readFile(join(dir, 'design-spec.schema.json'), 'utf8')
+
+      await waitFor(() => polls().filter((q) => q.status !== undefined).length >= 4, 'four polls')
+      expect(polls().filter((q) => q.status !== undefined).every((q) => q.ifNoneMatch === '"rev-1"' && q.status === 304)).toBe(true)
+      expect(api.activity).toBe(activity)
+      expect(api.writes()).toBe(1) // the push that created the project, nothing since
+      expect(await readFile(join(dir, 'design-spec.schema.json'), 'utf8')).toBe(schema)
+      expect(output).not.toMatch(/from the dashboard|pushed "|failed/)
+    } finally {
+      const exited = new Promise((r) => child.once('exit', r))
+      child.kill()
+      await exited
+    }
+  })
+
   it('picks up a dashboard edit mid-session, and one PUT per real change — none after a pull', async () => {
     const url = await api.listen()
     const env = {
@@ -455,6 +516,11 @@ describe('watch --sync', () => {
       await waitFor(() => puts() > before, 'a push after the save')
       await new Promise((r) => setTimeout(r, 1_500))
       expect(puts()).toBe(before + 1)
+      // The poll follows the revision: after the web edit, then after its own push.
+      const asked = polls().map((q) => q.ifNoneMatch)
+      expect(asked).toContain('"rev-1"')
+      expect(asked).toContain(`"rev-${revAfterWeb}"`)
+      expect(asked.at(-1)).toBe(`"rev-${revAfterWeb + 1}"`)
       const stored = api.projects.get('acme-web')!
       expect(stored.schema.colors.primary).toBe('#0A0B0C')
       expect(stored.schema.presentation).toEqual(presentation)
