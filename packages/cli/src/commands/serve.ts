@@ -8,6 +8,10 @@
 //
 // CRITICAL: stdout is the MCP protocol channel. Nothing but protocol frames may
 // be written to it here — all human/diagnostic output goes to stderr.
+//
+// With DESIGN_SPEC_TELEMETRY=1 and an API key, each tool call also reports its
+// token counts to the dashboard (mcpTaskTelemetry.ts). Off by default; a
+// report is sent after the answer is built and can never change or delay it.
 
 import type { Command } from 'commander'
 import { resolve } from 'node:path'
@@ -22,6 +26,7 @@ import { splashContext } from '../branding.js'
 import { currentInvocation, connectHints, printableConfig } from '../mcpConfig.js'
 import { disablePlan } from '../plan.js'
 import * as ui from '../ui.js'
+import { clientId, createMcpTaskReporter, type McpTaskReporter } from '../mcpTaskTelemetry.js'
 import {
   get_component_tokens,
   get_layout_system,
@@ -36,9 +41,26 @@ function jsonContent(value: unknown) {
 /**
  * Build the MCP server around a schema accessor. The accessor is read on every
  * call so hot-reload is transparent to handlers. Exported for tests.
+ *
+ * `reporter` is the opt-in token telemetry; without one nothing is reported.
  */
-export function buildMcpServer(getSchema: () => DesignSystemSchema): McpServer {
+export function buildMcpServer(getSchema: () => DesignSystemSchema, reporter: McpTaskReporter | null = null): McpServer {
   const server = new McpServer({ name: 'design-spec', version: '0.1.0' })
+
+  /** Answer with `value`, and report the call's size when telemetry is on. */
+  const answer = (args: unknown, value: unknown, blueprint?: string) => {
+    const result = jsonContent(value)
+    if (reporter) {
+      const client = server.server.getClientVersion()
+      reporter.report({
+        blueprint,
+        input: JSON.stringify(args ?? {}),
+        output: result.content[0].text,
+        client: clientId(client?.name, client?.version),
+      })
+    }
+    return result
+  }
 
   server.registerTool(
     'get_component_tokens',
@@ -46,23 +68,24 @@ export function buildMcpServer(getSchema: () => DesignSystemSchema): McpServer {
       description: 'Resolved design tokens for a single component (e.g. "Button"). Returns only that component.',
       inputSchema: { component: z.string().describe('Component blueprint name, e.g. "Button"') },
     },
-    ({ component }) => {
-      const slice = get_component_tokens(getSchema(), component)
-      if (!slice) return { content: [{ type: 'text', text: `Unknown component: ${component}` }], isError: true }
-      return jsonContent(slice)
+    (args) => {
+      const slice = get_component_tokens(getSchema(), args.component)
+      if (!slice) return { content: [{ type: 'text', text: `Unknown component: ${args.component}` }], isError: true }
+      // The resolved blueprint's own name — never the caller's free text.
+      return answer(args, slice, slice.component)
     },
   )
 
   server.registerTool(
     'get_layout_system',
     { description: 'The layout system only: grid, container, spacing scale, and breakpoints.', inputSchema: {} },
-    () => jsonContent(get_layout_system(getSchema())),
+    (args) => answer(args, get_layout_system(getSchema())),
   )
 
   server.registerTool(
     'get_semantic_colors',
     { description: 'Semantic color roles (excludes raw palette scale steps).', inputSchema: {} },
-    () => jsonContent(get_semantic_colors(getSchema())),
+    (args) => answer(args, get_semantic_colors(getSchema())),
   )
 
   return server
@@ -130,7 +153,7 @@ export function registerServe(program: Command): void {
             .catch((e) => process.stderr.write(`design-spec: reload skipped (${(e as Error).message})\n`))
         })
 
-        const server = buildMcpServer(() => current)
+        const server = buildMcpServer(() => current, await createMcpTaskReporter())
         const transport = new StdioServerTransport()
         await server.connect(transport)
         // The TTY splash already says "ready"; only log for non-TTY MCP clients.

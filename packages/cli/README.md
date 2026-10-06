@@ -49,6 +49,7 @@ key from **Settings → Developer**.
 |---|---|
 | `DESIGN_SPEC_API_KEY` | The API key (`ds_live_…` or `ds_test_…`). |
 | `DESIGN_SPEC_API_URL` | The API host. Defaults to `https://api.design-spec.ai`. `http://` is accepted only for `localhost`. |
+| `DESIGN_SPEC_TELEMETRY` | Off unless set to `1`. With it and an API key, `serve` reports each MCP tool call's size to your dashboard: a session id, the blueprint name, two token estimates and the client's name. Never a tool argument, a result, or anything from your schema. |
 
 Set the key in your environment rather than on the command line, where it would
 land in your shell history:
