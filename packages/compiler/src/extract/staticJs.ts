@@ -13,8 +13,9 @@
 // statically safe sibling. That is the "isolate only the unparseable layers"
 // half of Smart Fallback; the compiled-CSS read is the other half.
 //
-// Pure and deterministic. Bounded: source length, nesting depth, and node count
-// are all capped so a pathological or minified file can never wedge the scan.
+// Pure and deterministic. Bounded: source length, nesting depth, node count and
+// loop steps are all capped, and every container loop must consume input on
+// each pass, so a pathological or minified file can never wedge the scan.
 
 export type JsValue = string | number | boolean | null | JsValue[] | { [key: string]: JsValue }
 
@@ -30,6 +31,9 @@ export interface StaticParseResult {
 const MAX_SOURCE = 2 * 1024 * 1024 // 2 MiB
 const MAX_DEPTH = 32
 const MAX_NODES = 50_000
+// A pass of a container loop consumes at least one character, so honest input
+// can never need more passes than it has characters. This is the backstop.
+const MAX_STEPS = MAX_SOURCE + 1
 
 /** Sentinel for "syntactically present, not statically evaluable". */
 const OPAQUE = Symbol('opaque')
@@ -42,6 +46,7 @@ class Reader {
   readonly src: string
   pos = 0
   nodes = 0
+  steps = 0
   readonly unparseable: string[] = []
   /** 1 where the source character sits inside a comment or a string literal. */
   mask: Uint8Array | null = null
@@ -83,6 +88,16 @@ class Reader {
 
   budget(): void {
     if (++this.nodes > MAX_NODES) throw new RangeError('node budget exceeded')
+  }
+
+  /**
+   * Close one pass of a container loop that began at `from`. A pass that
+   * consumed nothing would repeat forever — nothing skips a stray `)` or `]`
+   * sitting where a key or an element belongs — so it fails the parse instead.
+   */
+  step(from: number): void {
+    if (this.pos <= from) throw new SyntaxError(`unexpected '${this.peek()}'`)
+    if (++this.steps > MAX_STEPS) throw new RangeError('step budget exceeded')
   }
 }
 
@@ -294,7 +309,7 @@ function parseValue(r: Reader, path: string, depth: number): Parsed {
 function parseArray(r: Reader, path: string, depth: number): Parsed {
   r.pos++ // [
   const out: JsValue[] = []
-  for (;;) {
+  for (let from = r.pos; ; r.step(from), from = r.pos) {
     r.skipTrivia()
     if (r.done) throw new SyntaxError('unterminated array')
     if (r.peek() === ']') {
@@ -320,7 +335,7 @@ function parseArray(r: Reader, path: string, depth: number): Parsed {
 function parseObject(r: Reader, path: string, depth: number): Record<string, JsValue> {
   r.pos++ // {
   const out: Record<string, JsValue> = {}
-  for (;;) {
+  for (let from = r.pos; ; r.step(from), from = r.pos) {
     r.skipTrivia()
     if (r.done) throw new SyntaxError('unterminated object')
     const c = r.peek()

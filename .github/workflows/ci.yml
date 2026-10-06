@@ -25,11 +25,10 @@ jobs:
       - run: npm run build:cli
       - run: npm run build --workspace @design-spec/janitor
       # Per-package `vitest run`: `npm run test --workspaces` starts vitest in
-      # watch mode and never returns. The compiler suite is wrapped in a
-      # timeout because of a known intermittent hang in the staticJs fuzz test.
+      # watch mode and never returns.
       - name: Compiler tests
         working-directory: packages/compiler
-        run: timeout 120 npx vitest run
+        run: npx vitest run
       - name: CLI tests
         working-directory: packages/cli
         run: npx vitest run

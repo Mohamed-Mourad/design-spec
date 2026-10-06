@@ -117,13 +117,57 @@ describe('parseStaticConfigObject', () => {
     expect(parseStaticConfigObject(huge).error).toBe('config too large to parse statically')
   })
 
+  // The inputs the fuzz property used to spin on forever: a closing bracket
+  // where a key or a value belongs, which no branch of the object loop consumed.
+  it.each([
+    ['module.exports = {)', "unexpected ')'"],
+    ['module.exports = {]', "unexpected ']'"],
+    ['module.exports = { a: ) }', "unexpected ')'"],
+    ['export default { a: 1, ] }', "unexpected ']'"],
+    ['export default { theme: { colors: { primary: "#fff", ) } } }', "unexpected ')'"],
+    ['export default { list: [1, ) ] }', "unexpected ')'"],
+  ])('fails %j as unparseable instead of hanging', (src, error) => {
+    const r = parseStaticConfigObject(src)
+    expect(r.value).toBeNull()
+    expect(r.error).toBe(error)
+  })
+
+  it('stops a stalled array on its first pass, not at the node budget', () => {
+    const r = parseStaticConfigObject('export default { list: [) ] }')
+    expect(r.error).toBe("unexpected ')'")
+    expect(r.unparseable).toEqual(['list[0]'])
+  })
+
+  it('still reads a large flat object — the step budget never trips on honest input', () => {
+    const keys = Array.from({ length: 20_000 }, (_, i) => `k${i}: ${i}`)
+    const r = parseStaticConfigObject(`export default { ${keys.join(',\n')} }`)
+    expect(r.error).toBeUndefined()
+    expect(Object.keys(r.value ?? {})).toHaveLength(20_000)
+  })
+
+  // A parse that stalls is synchronous, so fast-check can only notice between
+  // runs: the time limit turns a regression into a failure rather than a
+  // suite that never ends.
+  const fuzz = { numRuns: 500, interruptAfterTimeLimit: 20_000, markInterruptAsFailure: true }
+
   it('never throws, whatever it is fed', () => {
     fc.assert(
       fc.property(fc.string({ maxLength: 400 }), (s) => {
         expect(() => parseStaticConfigObject(`module.exports = ${s}`)).not.toThrow()
         expect(() => parseStaticConfigObject(s)).not.toThrow()
       }),
-      { numRuns: 500 },
+      fuzz,
+    )
+  })
+
+  it('never throws or stalls on bracket soup', () => {
+    const unit = fc.constantFrom(...'{}[]()', ',', ':', ';', '.', '"', "'", '`', '\\', '/', '*', '$', 'a', '1', ' ', '\n')
+    fc.assert(
+      fc.property(fc.string({ unit, maxLength: 200 }), (s) => {
+        expect(() => parseStaticConfigObject(`module.exports = {${s}`)).not.toThrow()
+        expect(() => parseStaticConfigObject(`export default [${s}`)).not.toThrow()
+      }),
+      { ...fuzz, numRuns: 2000 },
     )
   })
 
