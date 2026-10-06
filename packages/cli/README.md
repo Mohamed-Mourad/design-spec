@@ -18,7 +18,7 @@ npm i -D @design-spec/cli          # or install it into the project
 npx @design-spec/cli compile      # uses the installed copy
 ```
 
-Requires Node 18 or newer.
+Requires Node 22 or newer.
 
 ## Commands
 
