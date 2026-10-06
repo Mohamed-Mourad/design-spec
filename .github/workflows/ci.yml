@@ -24,17 +24,8 @@ jobs:
       - run: npm run build:compiler
       - run: npm run build:cli
       - run: npm run build --workspace @design-spec/janitor
-      # Per-package `vitest run`: `npm run test --workspaces` starts vitest in
-      # watch mode and never returns.
-      - name: Compiler tests
-        working-directory: packages/compiler
-        run: npx vitest run
-      - name: CLI tests
-        working-directory: packages/cli
-        run: npx vitest run
-      - name: Janitor tests
-        working-directory: packages/janitor
-        run: npx vitest run
+      - name: Compiler, CLI and Janitor tests
+        run: npm run test --workspaces --if-present
       - name: Tarballs hold dist, README and LICENSE only
         run: |
           npm pack --workspace @design-spec/compiler --workspace @design-spec/cli --dry-run --json > pack.json

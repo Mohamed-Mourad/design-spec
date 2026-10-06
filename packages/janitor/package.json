@@ -12,7 +12,8 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "type-check": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@design-spec/compiler": "0.7.0"
