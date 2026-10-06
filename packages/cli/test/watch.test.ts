@@ -2,7 +2,28 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { runCli, tmpProject, cleanup, seedReactTailwind } from './helpers'
-import { startWatch } from '../src/commands/watch.js'
+import { startWatch, syncIntervalMs } from '../src/commands/watch.js'
+
+describe('syncIntervalMs', () => {
+  it('ignores DESIGN_SPEC_SYNC_INTERVAL_MS outside a test run', () => {
+    const env = { DESIGN_SPEC_SYNC_INTERVAL_MS: '50' }
+    expect(syncIntervalMs(undefined, env)).toBe(60_000)
+    expect(syncIntervalMs('30', env)).toBe(30_000)
+    // …so the floor still holds for anyone who sets it.
+    expect(syncIntervalMs('1', env)).toBe(15_000)
+  })
+
+  it('honours the override only under Vitest', () => {
+    expect(syncIntervalMs('30', { VITEST: 'true', DESIGN_SPEC_SYNC_INTERVAL_MS: '50' })).toBe(50)
+    expect(syncIntervalMs('30', { VITEST: 'true', DESIGN_SPEC_SYNC_INTERVAL_MS: 'soon' })).toBe(30_000)
+  })
+
+  it('applies the 15 second floor to --sync-interval', () => {
+    expect(syncIntervalMs('5', {})).toBe(15_000)
+    expect(syncIntervalMs('nope', {})).toBe(15_000)
+    expect(syncIntervalMs(undefined, {})).toBe(60_000)
+  })
+})
 
 describe('watch', () => {
   let dir: string

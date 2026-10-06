@@ -37,12 +37,16 @@ const SYNC_INTERVAL_DEFAULT_S = 60
 const SYNC_INTERVAL_MIN_S = 15
 
 /**
- * The re-pull period. DESIGN_SPEC_SYNC_INTERVAL_MS overrides it without the
- * floor — a test hook, so an integration test needn't wait 15 seconds.
+ * The re-pull period. Under Vitest only, DESIGN_SPEC_SYNC_INTERVAL_MS overrides
+ * it without the floor, so an integration test needn't wait 15 seconds (the
+ * spawned CLI inherits VITEST from the runner). Anywhere else the variable is
+ * ignored: the floor is what keeps a watch from hammering the dashboard.
  */
-export function syncIntervalMs(flag?: string): number {
-  const override = Number(process.env.DESIGN_SPEC_SYNC_INTERVAL_MS)
-  if (Number.isFinite(override) && override > 0) return override
+export function syncIntervalMs(flag?: string, env: NodeJS.ProcessEnv = process.env): number {
+  if (env.VITEST) {
+    const override = Number(env.DESIGN_SPEC_SYNC_INTERVAL_MS)
+    if (Number.isFinite(override) && override > 0) return override
+  }
   const seconds = flag === undefined ? SYNC_INTERVAL_DEFAULT_S : Number(flag)
   if (!Number.isFinite(seconds) || seconds < SYNC_INTERVAL_MIN_S) {
     ui.warn(`--sync-interval must be at least ${SYNC_INTERVAL_MIN_S}s; using ${SYNC_INTERVAL_MIN_S}s.`)
